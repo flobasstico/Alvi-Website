@@ -28,10 +28,22 @@ export type Database = {
         Relationships: []
       }
       escalation_sessions: {
-        Row: { challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; interval_s: number; pool_exhausted: boolean; result: string | null; started_at: string | null; status: string; title: string | null }
-        Insert: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null }
-        Update: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null }
+        Row: { challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; interval_s: number; pool_exhausted: boolean; result: string | null; started_at: string | null; status: string; title: string | null; winner_id: string | null; winner_name: string | null }
+        Insert: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null }
+        Update: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null }
         Relationships: Rel[]
+      }
+      escalation_players: {
+        Row: { avatar_url: string | null; display_name: string | null; joined_at: string; session_id: number; user_id: string }
+        Insert: { avatar_url?: string | null; display_name?: string | null; joined_at?: string; session_id: number; user_id: string }
+        Update: { avatar_url?: string | null; display_name?: string | null; joined_at?: string; session_id?: number; user_id?: string }
+        Relationships: Rel[]
+      }
+      site_settings: {
+        Row: { key: string; value: string }
+        Insert: { key: string; value: string }
+        Update: { key?: string; value?: string }
+        Relationships: []
       }
       escalation_session_rules: {
         Row: { added_at: string; position: number; rule_id: number | null; session_id: number; text: string }
@@ -125,6 +137,10 @@ export type Database = {
       }
     }
     Views: {
+      escalation_leaderboard: {
+        Row: { last_win: string | null; name: string | null; winner_id: string | null; wins: number | null }
+        Relationships: Rel[]
+      }
       challenge_stats: {
         Row: { finished: number | null; lost: number | null; source: string | null; total: number | null; won: number | null }
         Relationships: []
@@ -139,7 +155,9 @@ export type Database = {
       escalation_create: { Args: { p_interval_s: number; p_title: string }; Returns: number }
       escalation_draw_base: { Args: { p_session: number }; Returns: number }
       escalation_start: { Args: { p_session: number }; Returns: undefined }
-      escalation_stop: { Args: { p_result: string | null; p_session: number }; Returns: undefined }
+      escalation_finish: { Args: { p_session: number; p_winner: string | null }; Returns: undefined }
+      escalation_join: { Args: { p_session: number }; Returns: undefined }
+      escalation_leave: { Args: { p_session: number; p_user?: string | null }; Returns: undefined }
       escalation_tick: { Args: { p_session: number }; Returns: number }
       card_has_bingo: { Args: { p_game_id: number; p_task_ids: number[] }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }

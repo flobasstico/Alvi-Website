@@ -2,6 +2,7 @@ import type { Tables } from "./database.types"
 
 export type EscSession = Tables<"escalation_sessions">
 export type EscRule = Tables<"escalation_session_rules">
+export type EscPlayer = Tables<"escalation_players">
 
 /** Gut lesbare, klar unterscheidbare Farben für die nummerierten Regeln (auch auf Spielszenen im Stream). */
 export const RULE_COLORS = [

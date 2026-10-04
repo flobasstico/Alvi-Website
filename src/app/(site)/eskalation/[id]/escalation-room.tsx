@@ -7,6 +7,7 @@ import { RuleBoard } from "@/components/escalation/rule-board"
 import { useEscalation, type EscState } from "@/components/escalation/use-escalation"
 import { buildSlices, spinTo, WheelSvg } from "@/components/wheel-svg"
 import { audioReady, playAlarm, unlockAudio } from "@/lib/alarm"
+import type { EscPlayer } from "@/lib/escalation"
 import { celebrate } from "@/lib/confetti"
 
 type PoolRule = { id: number; text: string }
@@ -14,16 +15,18 @@ type PoolRule = { id: number; text: string }
 export function EscalationRoom({
   initial,
   pool,
-  isHost,
+  userId,
   serverNow,
 }: {
   initial: EscState
   pool: PoolRule[]
-  isHost: boolean
+  userId: string | null
   serverNow: number
 }) {
   const [sound, setSound] = useState(false)
-  const { session, rules, allRules, now, newest, refetch, supabase } = useEscalation(initial, serverNow, { sound })
+  const { session, rules, allRules, players, now, newest, refetch, supabase } = useEscalation(initial, serverNow, { sound })
+  const isHost = !!userId && userId === session.host_id
+  const isPlayer = !!userId && players.some((p) => p.user_id === userId)
   const [busy, setBusy] = useState(false)
   const [spinning, setSpinning] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -104,10 +107,23 @@ export function EscalationRoom({
               status={session.status}
               busy={busy}
               onStart={() => call(() => supabase.rpc("escalation_start", { p_session: session.id }))}
-              onStop={(result) => call(() => supabase.rpc("escalation_stop", { p_session: session.id, p_result: result }))}
-              hasChallenge={!!session.challenge_id}
+              onFinish={(winner) => call(() => supabase.rpc("escalation_finish", { p_session: session.id, p_winner: winner }))}
+              players={players}
+              winnerName={session.winner_name}
             />
           )}
+
+          <PlayersPanel
+            players={players}
+            hostId={session.host_id}
+            ended={session.status === "beendet"}
+            userId={userId}
+            isHost={isHost}
+            isPlayer={isPlayer}
+            busy={busy}
+            onJoin={() => call(() => supabase.rpc("escalation_join", { p_session: session.id }))}
+            onLeave={(user) => call(() => supabase.rpc("escalation_leave", { p_session: session.id, p_user: user }))}
+          />
 
           <div className="panel flex flex-col gap-2">
             <h2 className="font-display text-xl">OBS-Overlay</h2>
@@ -135,64 +151,146 @@ function HostPanel({
   status,
   busy,
   onStart,
-  onStop,
-  hasChallenge,
+  onFinish,
+  players,
+  winnerName,
 }: {
   isHost: boolean
   status: string
   busy: boolean
   onStart: () => void
-  onStop: (result: "geschafft" | "gescheitert" | null) => void
-  hasChallenge: boolean
+  onFinish: (winner: string | null) => void
+  players: EscPlayer[]
+  winnerName: string | null
 }) {
+  const [choosing, setChoosing] = useState(false)
+
+  if (status === "beendet") {
+    return (
+      <div className="panel flex flex-col gap-2 text-center">
+        <div className="font-display text-3xl text-accent">{winnerName ? `🏆 ${winnerName} gewinnt!` : "Runde beendet"}</div>
+        <p className="text-sm text-muted">
+          {winnerName ? "Das Ergebnis ist in den Stats eingetragen." : "Ohne Wertung beendet."}{" "}
+          <Link href="/eskalation" className="text-accent-2 underline">Neue Runde</Link>
+        </p>
+      </div>
+    )
+  }
   if (!isHost) {
     return (
       <div className="panel text-muted">
-        {status === "bereit" && "Warte auf den Start – der Host startet die Runde."}
+        {status === "bereit" && "Warte auf den Start – wer die Runde eröffnet hat, startet sie."}
         {status === "laeuft" && "Die Runde läuft. Neue Regeln erscheinen automatisch."}
-        {status === "beendet" && "Diese Runde ist beendet."}
       </div>
     )
   }
-  if (status === "bereit") {
-    return (
-      <div className="panel flex flex-col items-center gap-3 text-center">
-        <p className="text-muted">Grundregel steht. Startet jetzt gemeinsam die Fortnite-Runde und drückt dann Start.</p>
-        <button className="btn-primary px-12 py-5 font-display text-3xl" onClick={onStart} disabled={busy}>
-          ▶ START
-        </button>
-        <p className="text-xs text-muted">Danach kommt automatisch nach jedem Timer-Ablauf eine neue Regel dazu.</p>
-      </div>
-    )
-  }
-  if (status === "laeuft") {
+  if (choosing) {
     return (
       <div className="panel flex flex-col gap-3">
-        <h2 className="font-display text-xl">Runde beenden</h2>
+        <h2 className="font-display text-2xl">Wer hat gewonnen?</h2>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {players.map((p) => (
+            <button
+              key={p.user_id}
+              className="btn-secondary justify-start py-3 text-left text-lg"
+              disabled={busy}
+              onClick={() => confirm(`${p.display_name} als Sieger eintragen und Runde beenden?`) && onFinish(p.user_id)}
+            >
+              🏆 {p.display_name}
+            </button>
+          ))}
+        </div>
         <div className="flex flex-wrap gap-2">
-          <button className="btn-win" disabled={busy} onClick={() => onStop("geschafft")}>🏆 Geschafft</button>
-          <button className="btn-danger" disabled={busy} onClick={() => onStop("gescheitert")}>💀 Gescheitert</button>
-          <button
-            className="btn-secondary"
-            disabled={busy}
-            onClick={() => confirm("Runde ohne Wertung beenden?") && onStop(null)}
-          >
+          <button className="btn-secondary" disabled={busy} onClick={() => confirm("Runde ohne Sieger beenden?") && onFinish(null)}>
             Ohne Wertung beenden
           </button>
+          <button className="btn-secondary" disabled={busy} onClick={() => setChoosing(false)}>
+            Zurück
+          </button>
         </div>
-        <p className="text-xs text-muted">Mit Ergebnis landet die Runde in den Stats.</p>
+        <p className="text-xs text-muted">Der Sieg zählt für die Bestenliste in den Stats.</p>
       </div>
     )
   }
   return (
-    <div className="panel text-muted">
-      Runde beendet{hasChallenge ? " – in den Stats eingetragen." : "."}{" "}
-      <Link href="/eskalation" className="text-accent-2 underline">Neue Runde eröffnen</Link>
+    <div className="panel flex flex-col items-center gap-3 text-center">
+      {status === "bereit" && (
+        <>
+          <p className="text-muted">Grundregel steht. Startet jetzt gemeinsam die Fortnite-Runde und drückt dann Start.</p>
+          <button className="btn-primary px-12 py-5 font-display text-3xl" onClick={onStart} disabled={busy}>
+            ▶ START
+          </button>
+          <p className="text-xs text-muted">Danach kommt automatisch nach jedem Timer-Ablauf eine neue Regel dazu.</p>
+        </>
+      )}
+      <button className="btn-danger px-8 py-3 font-display text-2xl" onClick={() => setChoosing(true)} disabled={busy}>
+        ⏹ ENDE
+      </button>
     </div>
   )
 }
 
-function CopyButton({ text }: { text: string }) {
+function PlayersPanel({
+  players,
+  hostId,
+  ended,
+  userId,
+  isHost,
+  isPlayer,
+  busy,
+  onJoin,
+  onLeave,
+}: {
+  players: EscPlayer[]
+  hostId: string
+  ended: boolean
+  userId: string | null
+  isHost: boolean
+  isPlayer: boolean
+  busy: boolean
+  onJoin: () => void
+  onLeave: (user: string | null) => void
+}) {
+  const pageUrl = typeof window === "undefined" ? "" : location.href
+  return (
+    <div className="panel flex flex-col gap-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <h2 className="font-display text-xl">Mitspieler ({players.length})</h2>
+        {!ended && userId && !isPlayer && (
+          <button className="btn-primary ml-auto px-3 py-1 text-sm" disabled={busy} onClick={onJoin}>Mitspielen</button>
+        )}
+        {!ended && isPlayer && !isHost && (
+          <button className="btn-secondary ml-auto px-3 py-1 text-sm" disabled={busy} onClick={() => onLeave(null)}>Austreten</button>
+        )}
+      </div>
+      <ul className="flex flex-wrap gap-2">
+        {players.map((p) => (
+          <li key={p.user_id} className="flex items-center gap-2 rounded-full border border-line bg-panel-2 py-1 pl-1 pr-3 text-sm font-semibold">
+            {p.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={p.avatar_url} alt="" className="h-6 w-6 rounded-full" />
+            ) : (
+              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-line text-xs">👤</span>
+            )}
+            {p.display_name}
+            {p.user_id === hostId && <span className="text-xs text-accent">Host</span>}
+            {isHost && !ended && p.user_id !== hostId && (
+              <button className="text-muted hover:text-fail" title="Entfernen" disabled={busy} onClick={() => onLeave(p.user_id)}>✕</button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {!ended && (
+        <p className="text-xs text-muted">
+          {userId ? "" : "Zum Mitspielen mit Twitch einloggen. "}Diesen Seitenlink an die Mitspieler schicken – nur Mitspieler können als Sieger gewählt werden.
+          <span className="ml-1 inline-block align-middle"><CopyButton text={pageUrl} label="Einladungslink kopieren" /></span>
+        </p>
+      )}
+    </div>
+  )
+}
+
+function CopyButton({ text, label = "Kopieren" }: { text: string; label?: string }) {
   const [done, setDone] = useState(false)
   return (
     <button
@@ -203,7 +301,7 @@ function CopyButton({ text }: { text: string }) {
         setTimeout(() => setDone(false), 2000)
       }}
     >
-      {done ? "Kopiert ✓" : "Kopieren"}
+      {done ? "Kopiert ✓" : label}
     </button>
   )
 }

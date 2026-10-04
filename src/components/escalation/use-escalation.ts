@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { playAlarm } from "@/lib/alarm"
-import { dueRuleCount, type EscRule, type EscSession } from "@/lib/escalation"
+import { dueRuleCount, type EscPlayer, type EscRule, type EscSession } from "@/lib/escalation"
 import { createClient } from "@/lib/supabase/client"
 
-export type EscState = { session: EscSession; rules: EscRule[] }
+export type EscState = { session: EscSession; rules: EscRule[]; players: EscPlayer[] }
 
 /** So lange dreht das Glücksrad – die Grundregel erscheint erst danach (keine Spoiler im Overlay). */
 export const BASE_REVEAL_MS = 6000
@@ -25,11 +25,12 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
   soundRef.current = sound
 
   const refetch = useCallback(async () => {
-    const [s, r] = await Promise.all([
+    const [s, r, p] = await Promise.all([
       supabase.from("escalation_sessions").select("*").eq("id", id).single(),
       supabase.from("escalation_session_rules").select("*").eq("session_id", id).order("position"),
+      supabase.from("escalation_players").select("*").eq("session_id", id).order("joined_at"),
     ])
-    if (s.data) setState({ session: s.data, rules: r.data ?? [] })
+    if (s.data) setState({ session: s.data, rules: r.data ?? [], players: p.data ?? [] })
   }, [supabase, id])
 
   useEffect(() => {
@@ -42,6 +43,7 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
       .channel(`escalation-${id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "escalation_sessions", filter: `id=eq.${id}` }, schedule)
       .on("postgres_changes", { event: "*", schema: "public", table: "escalation_session_rules", filter: `session_id=eq.${id}` }, schedule)
+      .on("postgres_changes", { event: "*", schema: "public", table: "escalation_players", filter: `session_id=eq.${id}` }, schedule)
       .subscribe()
     const poll = setInterval(refetch, 10000)
     return () => {
@@ -58,7 +60,7 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
 
   // Fällige Regel nachziehen, sobald der Timer abläuft
   const lastTick = useRef(0)
-  const { session, rules } = state
+  const { session, rules, players } = state
   const due = dueRuleCount(session, now)
   useEffect(() => {
     if (session.status !== "laeuft" || session.pool_exhausted) return
@@ -86,5 +88,5 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
     return () => clearTimeout(t)
   }, [newest])
 
-  return { session, rules: visible, allRules: rules, now, newest, refetch, supabase }
+  return { session, rules: visible, allRules: rules, players, now, newest, refetch, supabase }
 }

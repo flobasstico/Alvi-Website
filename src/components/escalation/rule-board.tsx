@@ -27,7 +27,7 @@ export function RuleBoard({
     timerLabel = rules.length ? "Wartet auf Start" : "Grundregel wird gedreht…"
     timerValue = formatClock(session.interval_s)
   } else if (session.status === "beendet") {
-    timerLabel = session.result === "geschafft" ? "Geschafft! 🏆" : session.result === "gescheitert" ? "Gescheitert 💀" : "Beendet"
+    timerLabel = session.winner_name ? `🏆 ${session.winner_name} gewinnt!` : "Beendet"
     timerValue = "--:--"
   } else if (left === null) {
     timerLabel = "Alle Regeln gezogen"
