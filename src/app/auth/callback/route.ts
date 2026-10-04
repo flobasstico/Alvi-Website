@@ -9,8 +9,20 @@ export async function GET(request: Request) {
 
   if (code) {
     const supabase = await createClient()
-    const { error } = await supabase.auth.exchangeCodeForSession(code)
-    if (!error) return NextResponse.redirect(`${origin}${safeNext}`)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    if (!error) {
+      const res = NextResponse.redirect(`${origin}${safeNext}`)
+      // Chat-Schreibrechte für die Chat-Brücke der Regel-Eskalation (Twitch-Token gilt ca. 4 Stunden)
+      const token = data.session?.provider_token
+      const meta = data.session?.user.user_metadata ?? {}
+      const login = String(meta.slug ?? meta.name ?? meta.preferred_username ?? "").toLowerCase()
+      if (searchParams.get("chat") === "1" && token && /^[a-z0-9_]{3,25}$/.test(login)) {
+        const opts = { path: "/", maxAge: 4 * 3600, sameSite: "lax" as const, secure: origin.startsWith("https") }
+        res.cookies.set("twitch_chat_token", token, opts)
+        res.cookies.set("twitch_chat_login", login, opts)
+      }
+      return res
+    }
   }
   return NextResponse.redirect(`${origin}/?login=fehler`)
 }

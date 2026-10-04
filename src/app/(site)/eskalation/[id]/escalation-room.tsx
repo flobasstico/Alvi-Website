@@ -3,6 +3,7 @@
 import { useMotionValue } from "framer-motion"
 import Link from "next/link"
 import { useEffect, useMemo, useState } from "react"
+import { ChatBridge } from "@/components/escalation/chat-bridge"
 import { RuleBoard } from "@/components/escalation/rule-board"
 import { useEscalation, type EscState } from "@/components/escalation/use-escalation"
 import { buildSlices, spinTo, WheelSvg } from "@/components/wheel-svg"
@@ -24,7 +25,7 @@ export function EscalationRoom({
   serverNow: number
 }) {
   const [sound, setSound] = useState(false)
-  const { session, rules, allRules, players, now, newest, refetch, supabase } = useEscalation(initial, serverNow, { sound })
+  const { session, rules, allRules, players, polls, openPoll, now, newest, refetch, supabase } = useEscalation(initial, serverNow, { sound })
   const isHost = !!userId && userId === session.host_id
   const isPlayer = !!userId && players.some((p) => p.user_id === userId)
   const [busy, setBusy] = useState(false)
@@ -113,6 +114,8 @@ export function EscalationRoom({
             />
           )}
 
+          {isHost && session.mode === "chat" && <ChatBridge session={session} polls={polls} supabase={supabase} />}
+
           <PlayersPanel
             players={players}
             hostId={session.host_id}
@@ -139,7 +142,7 @@ export function EscalationRoom({
         </div>
 
         <div className="self-start lg:sticky lg:top-20">
-          <RuleBoard session={session} rules={rules} now={now} newest={newest} />
+          <RuleBoard session={session} rules={rules} now={now} newest={newest} poll={openPoll} />
         </div>
       </div>
     </div>

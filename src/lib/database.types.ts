@@ -28,9 +28,21 @@ export type Database = {
         Relationships: []
       }
       escalation_sessions: {
-        Row: { challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; interval_s: number; pool_exhausted: boolean; result: string | null; started_at: string | null; status: string; title: string | null; winner_id: string | null; winner_name: string | null }
-        Insert: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null }
-        Update: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null }
+        Row: { challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; interval_s: number; pool_exhausted: boolean; result: string | null; started_at: string | null; status: string; title: string | null; winner_id: string | null; winner_name: string | null; mode: string; twitch_channel: string | null }
+        Insert: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null; mode?: string; twitch_channel?: string | null }
+        Update: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null; mode?: string; twitch_channel?: string | null }
+        Relationships: Rel[]
+      }
+      escalation_polls: {
+        Row: { announced_at: string | null; closes_at: string; id: number; opens_at: string; options: Json; position: number; result_announced_at: string | null; session_id: number; status: string; total_votes: number | null; winner_option: number | null; winner_votes: number | null }
+        Insert: { announced_at?: string | null; closes_at: string; id?: never; opens_at: string; options: Json; position: number; result_announced_at?: string | null; session_id: number; status?: string; total_votes?: number | null; winner_option?: number | null; winner_votes?: number | null }
+        Update: { announced_at?: string | null; closes_at?: string; id?: never; opens_at?: string; options?: Json; position?: number; result_announced_at?: string | null; session_id?: number; status?: string; total_votes?: number | null; winner_option?: number | null; winner_votes?: number | null }
+        Relationships: Rel[]
+      }
+      escalation_votes: {
+        Row: { option: number; poll_id: number; voted_at: string; voter: string }
+        Insert: { option: number; poll_id: number; voted_at?: string; voter: string }
+        Update: { option?: number; poll_id?: number; voted_at?: string; voter?: string }
         Relationships: Rel[]
       }
       escalation_players: {
@@ -137,6 +149,10 @@ export type Database = {
       }
     }
     Views: {
+      escalation_poll_counts: {
+        Row: { option: number | null; poll_id: number | null; votes: number | null }
+        Relationships: Rel[]
+      }
       escalation_leaderboard: {
         Row: { last_win: string | null; name: string | null; winner_id: string | null; wins: number | null }
         Relationships: Rel[]
@@ -152,7 +168,9 @@ export type Database = {
       auction_leave: { Args: { p_auction: number; p_seat?: number | null }; Returns: undefined }
       auction_resolve_expired: { Args: { p_round: number }; Returns: undefined }
       auction_start: { Args: { p_auction: number }; Returns: undefined }
-      escalation_create: { Args: { p_interval_s: number; p_title: string }; Returns: number }
+      escalation_create: { Args: { p_channel: string | null; p_interval_s: number; p_mode: string; p_title: string }; Returns: number }
+      escalation_poll_mark: { Args: { p_kind: string; p_poll: number }; Returns: boolean }
+      escalation_poll_vote: { Args: { p_option: number; p_poll: number; p_voter: string }; Returns: boolean }
       escalation_draw_base: { Args: { p_session: number }; Returns: number }
       escalation_start: { Args: { p_session: number }; Returns: undefined }
       escalation_finish: { Args: { p_session: number; p_winner: string | null }; Returns: undefined }

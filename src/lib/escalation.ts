@@ -3,6 +3,12 @@ import type { Tables } from "./database.types"
 export type EscSession = Tables<"escalation_sessions">
 export type EscRule = Tables<"escalation_session_rules">
 export type EscPlayer = Tables<"escalation_players">
+export type EscPoll = Tables<"escalation_polls">
+export type PollOption = { rule_id: number; text: string }
+
+export function pollOptions(p: Pick<EscPoll, "options">): PollOption[] {
+  return Array.isArray(p.options) ? (p.options as PollOption[]) : []
+}
 
 /** Gut lesbare, klar unterscheidbare Farben für die nummerierten Regeln (auch auf Spielszenen im Stream). */
 export const RULE_COLORS = [
@@ -40,4 +46,18 @@ export function formatClock(total: number): string {
   const m = Math.floor(total / 60)
   const sec = total % 60
   return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`
+}
+
+/** Abstimmungen des Chat-Modus mit aktuellen Stimmen je Option (Index 0 = !1). */
+export type PollWithCounts = EscPoll & { counts: number[] }
+export type EscState = { session: EscSession; rules: EscRule[]; players: EscPlayer[]; polls: PollWithCounts[] }
+
+type CountRow = { poll_id: number | null; option: number | null; votes: number | null }
+
+export function withCounts(polls: EscPoll[], counts: CountRow[]): PollWithCounts[] {
+  return polls.map((p) => {
+    const n = pollOptions(p).length
+    const c = Array.from({ length: n }, (_, i) => counts.find((x) => x.poll_id === p.id && x.option === i + 1)?.votes ?? 0)
+    return { ...p, counts: c }
+  })
 }

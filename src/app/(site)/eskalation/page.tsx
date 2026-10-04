@@ -18,7 +18,7 @@ export default async function EskalationPage() {
     <>
       <PageTitle
         title="Regel-Eskalation"
-        subtitle="Grundregel per Glücksrad, dann kommt alle 4 Minuten eine neue Zufallsregel dazu – mit Alarm und OBS-Overlay."
+        subtitle="Grundregel per Glücksrad, dann kommt alle 4 Minuten eine neue Regel dazu – per Zufall oder per Twitch-Chat-Abstimmung, mit Alarm und OBS-Overlay."
       />
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="panel">
@@ -28,7 +28,9 @@ export default async function EskalationPage() {
               <li key={s.id}>
                 <Link href={`/eskalation/${s.id}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-bg/40 p-3 hover:border-accent">
                   <span className="font-display text-xl">{s.title ?? `Runde #${s.id}`}</span>
-                  <span className="text-sm text-muted">alle {Math.round(s.interval_s / 6) / 10} Min.</span>
+                  <span className="text-sm text-muted">
+                    alle {Math.round(s.interval_s / 6) / 10} Min.{s.mode === "chat" && ` · 💬 Chat-Abstimmung #${s.twitch_channel}`}
+                  </span>
                   <span className="chip ml-auto">
                     {STATUS[s.status]}
                     {s.result && ` · ${s.result}`}

@@ -2,10 +2,10 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { playAlarm } from "@/lib/alarm"
-import { dueRuleCount, type EscPlayer, type EscRule, type EscSession } from "@/lib/escalation"
+import { dueRuleCount, withCounts, type EscState } from "@/lib/escalation"
 import { createClient } from "@/lib/supabase/client"
 
-export type EscState = { session: EscSession; rules: EscRule[]; players: EscPlayer[] }
+export type { EscState }
 
 /** So lange dreht das Glücksrad – die Grundregel erscheint erst danach (keine Spoiler im Overlay). */
 export const BASE_REVEAL_MS = 6000
@@ -25,12 +25,23 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
   soundRef.current = sound
 
   const refetch = useCallback(async () => {
-    const [s, r, p] = await Promise.all([
+    const [s, r, p, polls] = await Promise.all([
       supabase.from("escalation_sessions").select("*").eq("id", id).single(),
       supabase.from("escalation_session_rules").select("*").eq("session_id", id).order("position"),
       supabase.from("escalation_players").select("*").eq("session_id", id).order("joined_at"),
+      supabase.from("escalation_polls").select("*").eq("session_id", id).order("position"),
     ])
-    if (s.data) setState({ session: s.data, rules: r.data ?? [], players: p.data ?? [] })
+    if (!s.data) return
+    const pollIds = (polls.data ?? []).map((x) => x.id)
+    const { data: counts } = pollIds.length
+      ? await supabase.from("escalation_poll_counts").select("*").in("poll_id", pollIds)
+      : { data: [] }
+    setState({
+      session: s.data,
+      rules: r.data ?? [],
+      players: p.data ?? [],
+      polls: withCounts(polls.data ?? [], counts ?? []),
+    })
   }, [supabase, id])
 
   useEffect(() => {
@@ -44,14 +55,17 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
       .on("postgres_changes", { event: "*", schema: "public", table: "escalation_sessions", filter: `id=eq.${id}` }, schedule)
       .on("postgres_changes", { event: "*", schema: "public", table: "escalation_session_rules", filter: `session_id=eq.${id}` }, schedule)
       .on("postgres_changes", { event: "*", schema: "public", table: "escalation_players", filter: `session_id=eq.${id}` }, schedule)
+      .on("postgres_changes", { event: "*", schema: "public", table: "escalation_polls", filter: `session_id=eq.${id}` }, schedule)
+      .on("postgres_changes", { event: "*", schema: "public", table: "escalation_votes" }, schedule)
       .subscribe()
-    const poll = setInterval(refetch, 10000)
+    // Im Chat-Modus öfter nachladen, damit die Stimmbalken auch ohne Realtime mitlaufen
+    const poll = setInterval(refetch, initial.session.mode === "chat" ? 3000 : 10000)
     return () => {
       clearTimeout(timer)
       clearInterval(poll)
       supabase.removeChannel(channel)
     }
-  }, [supabase, id, refetch])
+  }, [supabase, id, refetch, initial.session.mode])
 
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 250)
@@ -60,7 +74,7 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
 
   // Fällige Regel nachziehen, sobald der Timer abläuft
   const lastTick = useRef(0)
-  const { session, rules, players } = state
+  const { session, rules, players, polls } = state
   const due = dueRuleCount(session, now)
   useEffect(() => {
     if (session.status !== "laeuft" || session.pool_exhausted) return
@@ -88,5 +102,6 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
     return () => clearTimeout(t)
   }, [newest])
 
-  return { session, rules: visible, allRules: rules, players, now, newest, refetch, supabase }
+  const openPoll = polls.find((p) => p.status === "offen") ?? null
+  return { session, rules: visible, allRules: rules, players, polls, openPoll, now, newest, refetch, supabase }
 }

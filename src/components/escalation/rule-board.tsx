@@ -2,7 +2,15 @@
 
 import clsx from "clsx"
 import { AnimatePresence, motion } from "framer-motion"
-import { formatClock, ruleColor, secondsToNextRule, type EscRule, type EscSession } from "@/lib/escalation"
+import {
+  formatClock,
+  pollOptions,
+  ruleColor,
+  secondsToNextRule,
+  type EscRule,
+  type EscSession,
+  type PollWithCounts,
+} from "@/lib/escalation"
 
 /** Die Regelkachel: Timer oben, darunter nummerierte, farbige Regeln. Wird auf der Seite und im OBS-Overlay genutzt. */
 export function RuleBoard({
@@ -10,12 +18,14 @@ export function RuleBoard({
   rules,
   now,
   newest,
+  poll = null,
   overlay = false,
 }: {
   session: EscSession
   rules: EscRule[]
   now: number
   newest: number | null
+  poll?: PollWithCounts | null
   overlay?: boolean
 }) {
   const left = secondsToNextRule(session, now)
@@ -33,7 +43,7 @@ export function RuleBoard({
     timerLabel = "Alle Regeln gezogen"
     timerValue = "∞"
   } else {
-    timerLabel = "Nächste Regel in"
+    timerLabel = session.mode === "chat" ? "Chat-Abstimmung endet in" : "Nächste Regel in"
     timerValue = formatClock(left)
   }
 
@@ -56,6 +66,8 @@ export function RuleBoard({
         </div>
         <div className="font-display text-4xl tabular-nums drop-shadow-[0_3px_0_rgba(0,0,0,.4)] sm:text-5xl">{timerValue}</div>
       </div>
+
+      {session.mode === "chat" && session.status === "laeuft" && poll && <PollBox poll={poll} />}
 
       <ol className="flex flex-col gap-2 p-3">
         <AnimatePresence initial={false}>
@@ -92,6 +104,52 @@ export function RuleBoard({
         </AnimatePresence>
         {rules.length === 0 && <li className="px-2 py-3 text-center text-white/70">Noch keine Regel – gleich wird gedreht.</li>}
       </ol>
+    </div>
+  )
+}
+
+const POLL_COLORS = ["#a855f7", "#22d3ee", "#facc15"]
+
+function PollBox({ poll }: { poll: PollWithCounts }) {
+  const options = pollOptions(poll)
+  const total = poll.counts.reduce((a, b) => a + b, 0)
+  const max = Math.max(...poll.counts, 0)
+  return (
+    <div className="border-b-2 border-white/10 bg-white/5 px-3 py-3">
+      <div className="mb-2 flex items-baseline justify-between gap-2">
+        <span className="text-sm font-black uppercase tracking-wider">💬 Chat stimmt ab: Regel {poll.position}</span>
+        <span className="text-xs font-bold text-white/70">{total} {total === 1 ? "Stimme" : "Stimmen"}</span>
+      </div>
+      <ul className="flex flex-col gap-1.5">
+        {options.map((o, i) => {
+          const votes = poll.counts[i] ?? 0
+          const pct = total ? Math.round((votes / total) * 100) : 0
+          const leading = total > 0 && votes === max
+          return (
+            <li key={i} className="relative overflow-hidden rounded-xl border border-white/15 bg-black/30">
+              <motion.div
+                className="absolute inset-y-0 left-0"
+                style={{ background: `${POLL_COLORS[i]}55` }}
+                initial={false}
+                animate={{ width: `${pct}%` }}
+                transition={{ type: "spring", stiffness: 120, damping: 20 }}
+              />
+              <div className="relative flex items-center gap-2 px-2 py-1.5">
+                <span
+                  className="rounded-md px-1.5 font-display text-lg leading-tight text-black"
+                  style={{ background: POLL_COLORS[i] }}
+                >
+                  !{i + 1}
+                </span>
+                <span className={clsx("flex-1 font-extrabold leading-snug", leading && "text-white")} style={{ textShadow: "0 2px 3px rgba(0,0,0,.9)" }}>
+                  {o.text}
+                </span>
+                <span className="font-display text-lg tabular-nums">{votes}</span>
+              </div>
+            </li>
+          )
+        })}
+      </ul>
     </div>
   )
 }
