@@ -8,6 +8,7 @@ const TOOLS = [
   { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Zufälliger Landeort plus Zusatzregel." },
   { href: "/bingo", emoji: "🔢", title: "Bingo", text: "5×5-Karte mit Aufgaben – Zuschauer spielen live mit." },
   { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "4 Creator, je 500 Gold, verdeckte Gebote – bis jeder 5 Items hat." },
+  { href: "/eskalation", emoji: "🚨", title: "Regel-Eskalation", text: "Grundregel per Glücksrad, alle 4 Minuten eine neue Regel – mit Alarm und OBS-Overlay." },
 ]
 
 export default async function Home() {

@@ -6,7 +6,7 @@ import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
 import { requireAdmin } from "@/lib/supabase/server"
 
-const TOGGLE_TABLES = ["rules", "loot_items", "drop_spots", "bingo_tasks"] as const
+const TOGGLE_TABLES = ["rules", "loot_items", "drop_spots", "bingo_tasks", "escalation_rules"] as const
 const DELETE_TABLES = [...TOGGLE_TABLES, "challenges"] as const
 type ToggleTable = (typeof TOGGLE_TABLES)[number]
 type DeleteTable = (typeof DELETE_TABLES)[number]
@@ -152,6 +152,24 @@ export async function addDropSpot(input: { name: string; x: number; y: number })
         .insert({ name: input.name.trim(), x: clamp(input.x), y: clamp(input.y), season_id: season.id })
     ).error,
   )
+}
+
+export async function addEscalationRules(form: FormData) {
+  const supabase = await requireAdmin()
+  const lines = str(form, "text")
+    .split("\n")
+    .map((l) => l.replace(/^\s*(?:[•\-*–·]|\d+[.)])\s*/, "").trim())
+    .filter(Boolean)
+    .map((l) => l.slice(0, 200))
+  if (!lines.length) return
+  done((await supabase.from("escalation_rules").insert(lines.map((text) => ({ text })))).error)
+}
+
+export async function updateEscalationRule(form: FormData) {
+  const supabase = await requireAdmin()
+  const text = str(form, "text").slice(0, 200)
+  if (!text) throw new Error("Regeltext fehlt")
+  done((await supabase.from("escalation_rules").update({ text }).eq("id", Number(str(form, "id")))).error)
 }
 
 export async function addBingoTask(form: FormData) {

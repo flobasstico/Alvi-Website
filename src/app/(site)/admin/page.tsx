@@ -16,6 +16,7 @@ import { getCurrentSeason } from "@/lib/season"
 import { getViewer } from "@/lib/supabase/server"
 import {
   addBingoTask,
+  addEscalationRules,
   addLoot,
   addManualChallenge,
   addRule,
@@ -25,6 +26,7 @@ import {
   setRuleWeight,
   toggleActive,
   updateChallenge,
+  updateEscalationRule,
   updateLootItem,
 } from "./actions"
 import { ItemIconUpload } from "./item-icon-upload"
@@ -40,6 +42,7 @@ const TABS = {
   loot: "Loot-Pool",
   spots: "Drop-Spots",
   bingo: "Bingo-Aufgaben",
+  eskalation: "Eskalations-Regeln",
   seasons: "Seasons & Map",
 } as const
 type Tab = keyof typeof TABS
@@ -79,6 +82,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       {tab === "loot" && <LootTab seasonId={season?.id ?? null} />}
       {tab === "spots" && <SpotsTab seasonId={season?.id ?? null} mapUrl={season?.map_image_url ?? null} />}
       {tab === "bingo" && <BingoTab />}
+      {tab === "eskalation" && <EscalationTab />}
       {tab === "seasons" && <SeasonsTab />}
     </>
   )
@@ -335,6 +339,44 @@ async function SpotsTab({ seasonId, mapUrl }: { seasonId: number | null; mapUrl:
           ))}
         </ul>
       </section>
+    </div>
+  )
+}
+
+async function EscalationTab() {
+  const { supabase } = await getViewer()
+  const { data } = await supabase.from("escalation_rules").select("*").order("id")
+  const active = data?.filter((r) => r.active).length ?? 0
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <section className="panel">
+        <h2 className="mb-1 font-display text-2xl">Regelpool der Regel-Eskalation</h2>
+        <p className="mb-3 text-sm text-muted">
+          {data?.length ?? 0} Regeln, {active} aktiv. Grundregel und Zusatzregeln werden zufällig aus den aktiven Regeln gezogen,
+          keine Regel doppelt pro Runde.
+        </p>
+        <ul className="divide-y divide-line">
+          {data?.map((r) => (
+            <Row key={r.id} inactive={!r.active}>
+              <form action={updateEscalationRule} className="flex flex-1 gap-2">
+                <input type="hidden" name="id" value={r.id} />
+                <input name="text" defaultValue={r.text} maxLength={200} required className="input py-1 text-sm" />
+                <button className="btn-secondary px-2 py-1 text-xs">Speichern</button>
+              </form>
+              <ToggleButton table="escalation_rules" id={r.id} active={r.active} />
+              <DeleteButton table="escalation_rules" id={r.id} />
+            </Row>
+          ))}
+          {!data?.length && <li className="py-2 text-muted">Der Pool ist noch leer – rechts Regeln hinzufügen.</li>}
+        </ul>
+      </section>
+      <aside className="panel h-fit">
+        <h2 className="mb-3 font-display text-xl">Regeln hinzufügen</h2>
+        <form action={addEscalationRules} className="flex flex-col gap-3">
+          <textarea name="text" className="input min-h-40" placeholder={"Eine Regel pro Zeile\nz. B. Nur graue Waffen\nKein Bauen"} required />
+          <button className="btn-primary">Hinzufügen</button>
+        </form>
+      </aside>
     </div>
   )
 }
