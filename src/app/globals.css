@@ -1,0 +1,61 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --color-bg: #0b0a1f;
+  --color-panel: #17143a;
+  --color-panel-2: #221d52;
+  --color-line: #3a3380;
+  --color-accent: #ffd60a;
+  --color-accent-2: #00c2ff;
+  --color-win: #22c55e;
+  --color-fail: #ef4444;
+  --color-muted: #a5a1d6;
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 10% -10%, #3b1d8f55, transparent),
+    radial-gradient(900px 500px at 110% 10%, #0077ff33, transparent),
+    var(--color-bg);
+  color: #f5f3ff;
+  min-height: 100dvh;
+}
+
+.font-display {
+  font-family: var(--font-display), system-ui, sans-serif;
+  letter-spacing: 0.02em;
+}
+
+@utility panel {
+  @apply rounded-2xl border border-line bg-panel/80 p-5 shadow-xl shadow-black/30 backdrop-blur;
+}
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+}
+@utility btn-primary {
+  @apply btn bg-accent text-black hover:brightness-110;
+}
+@utility btn-secondary {
+  @apply btn border border-line bg-panel-2 text-white hover:bg-line;
+}
+@utility btn-danger {
+  @apply btn bg-fail text-white hover:brightness-110;
+}
+@utility btn-win {
+  @apply btn bg-win text-black hover:brightness-110;
+}
+@utility input {
+  @apply w-full rounded-xl border border-line bg-bg/60 px-3 py-2 text-white placeholder:text-muted/60 focus:border-accent focus:outline-none;
+}
+@utility label {
+  @apply mb-1 block text-sm text-muted;
+}
+@utility chip {
+  @apply inline-flex items-center rounded-full border border-line bg-panel-2 px-2.5 py-0.5 text-xs font-medium;
+}
