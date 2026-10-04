@@ -38,11 +38,11 @@ Das Projekt **Alvi** (`bvkpbqsmwmaczqfxvvgn`, eu-central-1) ist schon angelegt. 
 2. Im Supabase-Dashboard unter **Authentication → Sign In / Providers → Twitch** den Provider aktivieren und Client-ID und Client-Secret eintragen.
 3. Unter **Authentication → URL Configuration** die Site-URL (z. B. `https://alvi.vercel.app`) eintragen. Dazu kommen als Redirect-URLs `https://<deine-domain>/auth/callback` und für lokal `http://localhost:3000/auth/callback`.
 
-### 3. Alvi zum Admin machen
-Alvi loggt sich einmal mit Twitch ein. Danach führst du im Supabase SQL-Editor aus:
+### 3. Admins festlegen
+Admin-Rechte vergibt eine Liste von Twitch-Namen in der Tabelle `admin_logins`. Wer dort steht, wird beim ersten Twitch-Login automatisch Admin. Hat er sich schon eingeloggt, wird er sofort befördert. `flobasstico` ist bereits eingetragen. Alvi trägst du im Supabase SQL-Editor so nach (Twitch-Name kleingeschrieben):
 
 ```sql
-update public.profiles set role = 'admin' where twitch_login = 'alvis_twitch_name';
+insert into public.admin_logins (twitch_login) values ('alvis_twitch_name');
 ```
 
 ### 4. Deployment (Vercel)
