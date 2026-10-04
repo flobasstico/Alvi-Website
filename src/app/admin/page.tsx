@@ -25,9 +25,10 @@ import {
   setRuleWeight,
   toggleActive,
   updateChallenge,
-  updateLootDescription,
+  updateLootItem,
 } from "./actions"
 import { ItemIconUpload } from "./item-icon-upload"
+import { LootImport } from "./loot-import"
 import { MapUpload } from "./map-upload"
 import { SpotEditor } from "./spot-editor"
 
@@ -204,48 +205,128 @@ async function RulesTab() {
 async function LootTab({ seasonId }: { seasonId: number | null }) {
   const { supabase } = await getViewer()
   const { data } = seasonId
-    ? await supabase.from("loot_items").select("*").eq("season_id", seasonId).order("type").order("name")
+    ? await supabase.from("loot_items").select("*").eq("season_id", seasonId).order("name")
     : { data: [] }
+  const items = data ?? []
+  const rarityOrder = (r: string) => RARITIES.indexOf(r as Rarity)
+  // Gruppiert nach Typ und Name: ein Icon gilt für alle Seltenheiten einer Waffe
+  const groups = ITEM_TYPES.map((type) => {
+    const ofType = items.filter((i) => i.type === type)
+    const names = [...new Set(ofType.map((i) => i.name))]
+    return {
+      type,
+      entries: names.map((name) => ofType.filter((i) => i.name === name).sort((a, b) => rarityOrder(a.rarity) - rarityOrder(b.rarity))),
+    }
+  })
+  const missingIcons = new Set(items.filter((i) => !i.icon_url).map((i) => i.name)).size
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <section className="panel">
-        <h2 className="mb-2 font-display text-2xl">Loot-Pool der aktuellen Season</h2>
-        <ul className="divide-y divide-line">
-          {data?.map((i) => (
-            <Row key={i.id} inactive={!i.active}>
-              <ItemIconUpload itemId={i.id} current={i.icon_url} rarity={i.rarity} type={i.type} name={i.name} />
-              <span className="flex-1 font-semibold">{i.name}</span>
-              <span className="chip">{RARITY_LABEL[i.rarity as Rarity]}</span>
-              <span className="chip">{ITEM_TYPE_LABEL[i.type as keyof typeof ITEM_TYPE_LABEL]}</span>
-              <ToggleButton table="loot_items" id={i.id} active={i.active} />
-              <DeleteButton table="loot_items" id={i.id} />
-              <form action={updateLootDescription} className="flex w-full gap-2 pl-14">
-                <input type="hidden" name="id" value={i.id} />
-                <input name="description" defaultValue={i.description ?? ""} maxLength={300} placeholder="Kurzbeschreibung (für die Auktion)" className="input py-1 text-sm" />
-                <button className="btn-secondary px-2 py-1 text-xs">OK</button>
-              </form>
-            </Row>
-          ))}
-        </ul>
+        <h2 className="mb-1 font-display text-2xl">Lootpool der aktuellen Season</h2>
+        <p className="mb-4 text-sm text-muted">
+          {items.length} Items ({items.filter((i) => i.active).length} aktiv)
+          {missingIcons > 0 && ` · ${missingIcons} Items ohne Bild – auf das Feld klicken zum Hochladen (gilt für alle Seltenheiten)`}
+        </p>
+        {groups.map(
+          (g) =>
+            g.entries.length > 0 && (
+              <div key={g.type} className="mb-6">
+                <h3 className="mb-2 font-display text-xl text-accent-2">{ITEM_TYPE_LABEL[g.type]}</h3>
+                <ul className="divide-y divide-line">
+                  {g.entries.map((variants) => {
+                    const first = variants[0]
+                    return (
+                      <li key={first.name} className="flex flex-wrap items-start gap-3 py-3">
+                        <ItemIconUpload
+                          itemId={first.id}
+                          current={first.icon_url}
+                          rarity={variants.at(-1)!.rarity}
+                          type={first.type}
+                          name={first.name}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <div className="font-semibold">{first.name}</div>
+                          {first.description && <div className="text-xs text-muted">{first.description}</div>}
+                          <div className="mt-1.5 flex flex-wrap gap-1.5">
+                            {variants.map((v) => (
+                              <details key={v.id} className="group relative">
+                                <summary
+                                  className={clsx(
+                                    "chip cursor-pointer list-none select-none",
+                                    v.active ? "border-white/40" : "line-through opacity-40",
+                                  )}
+                                >
+                                  {RARITY_LABEL[v.rarity as Rarity]}
+                                </summary>
+                                <div className="absolute left-0 top-full z-20 mt-1 flex w-72 flex-col gap-2 rounded-xl border border-line bg-panel p-3 shadow-xl">
+                                  <form action={updateLootItem} className="flex flex-col gap-2">
+                                    <input type="hidden" name="id" value={v.id} />
+                                    <input name="name" defaultValue={v.name} className="input py-1 text-sm" required />
+                                    <div className="grid grid-cols-2 gap-2">
+                                      <select name="rarity" defaultValue={v.rarity} className="input py-1 text-sm">
+                                        {RARITIES.map((r) => (
+                                          <option key={r} value={r}>{RARITY_LABEL[r]}</option>
+                                        ))}
+                                      </select>
+                                      <select name="type" defaultValue={v.type} className="input py-1 text-sm">
+                                        {ITEM_TYPES.map((t) => (
+                                          <option key={t} value={t}>{ITEM_TYPE_LABEL[t]}</option>
+                                        ))}
+                                      </select>
+                                    </div>
+                                    <textarea
+                                      name="description"
+                                      defaultValue={v.description ?? ""}
+                                      maxLength={300}
+                                      placeholder="Kurzbeschreibung (für die Auktion)"
+                                      className="input min-h-14 py-1 text-sm"
+                                    />
+                                    <button className="btn-primary py-1 text-sm">Speichern</button>
+                                  </form>
+                                  <div className="flex gap-2">
+                                    <ToggleButton table="loot_items" id={v.id} active={v.active} />
+                                    <DeleteButton table="loot_items" id={v.id} />
+                                  </div>
+                                </div>
+                              </details>
+                            ))}
+                          </div>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            ),
+        )}
+        {items.length === 0 && <p className="text-muted">Noch keine Items – rechts eine Liste einfügen.</p>}
       </section>
-      <aside className="panel h-fit">
-        <h2 className="mb-3 font-display text-xl">Neues Item</h2>
-        <form action={addLoot} className="flex flex-col gap-3">
-          <input name="name" className="input" placeholder="z. B. Pump-Shotgun" required />
-          <select name="rarity" className="input">
-            {RARITIES.map((r) => (
-              <option key={r} value={r}>{RARITY_LABEL[r]}</option>
-            ))}
-          </select>
-          <select name="type" className="input">
-            {ITEM_TYPES.map((t) => (
-              <option key={t} value={t}>{ITEM_TYPE_LABEL[t]}</option>
-            ))}
-          </select>
-          <textarea name="description" maxLength={300} className="input min-h-16" placeholder="Kurzbeschreibung (optional)" />
-          <button className="btn-primary" disabled={!seasonId}>Hinzufügen</button>
-          <p className="text-xs text-muted">Icons lädst du danach direkt in der Liste hoch (PNG/WebP mit transparentem Hintergrund sieht am besten aus).</p>
-        </form>
+      <aside className="flex h-fit flex-col gap-6">
+        <div className="panel">
+          <h2 className="mb-3 font-display text-xl">Lootpool aktualisieren</h2>
+          <LootImport disabled={!seasonId} />
+        </div>
+        <div className="panel">
+          <h2 className="mb-3 font-display text-xl">Einzelnes Item</h2>
+          <form action={addLoot} className="flex flex-col gap-3">
+            <input name="name" className="input" placeholder="z. B. Pump Shotgun" required />
+            <div className="grid grid-cols-2 gap-2">
+              <select name="rarity" className="input">
+                {RARITIES.map((r) => (
+                  <option key={r} value={r}>{RARITY_LABEL[r]}</option>
+                ))}
+              </select>
+              <select name="type" className="input">
+                {ITEM_TYPES.map((t) => (
+                  <option key={t} value={t}>{ITEM_TYPE_LABEL[t]}</option>
+                ))}
+              </select>
+            </div>
+            <textarea name="description" maxLength={300} className="input min-h-16" placeholder="Kurzbeschreibung (optional)" />
+            <button className="btn-primary" disabled={!seasonId}>Hinzufügen</button>
+          </form>
+        </div>
       </aside>
     </div>
   )

@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { ITEM_TYPES, RARITIES, STATUSES, type Status } from "@/lib/constants"
+import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
 import { requireAdmin } from "@/lib/supabase/server"
 
@@ -63,15 +64,94 @@ export async function addLoot(form: FormData) {
   done((await supabase.from("loot_items").insert({ name, rarity, type, description, season_id: season.id })).error)
 }
 
-export async function updateLootDescription(form: FormData) {
+export async function updateLootItem(form: FormData) {
   const supabase = await requireAdmin()
+  const name = str(form, "name").slice(0, 80)
+  const rarity = str(form, "rarity")
+  const type = str(form, "type")
+  if (!name) throw new Error("Name fehlt")
+  if (!RARITIES.includes(rarity as never) || !ITEM_TYPES.includes(type as never)) throw new Error("Ungültige Werte")
   const description = str(form, "description").slice(0, 300) || null
-  done((await supabase.from("loot_items").update({ description }).eq("id", Number(str(form, "id")))).error)
+  done(
+    (await supabase.from("loot_items").update({ name, rarity, type, description }).eq("id", Number(str(form, "id")))).error,
+  )
 }
 
-export async function setLootIcon(id: number, url: string | null) {
+/** Setzt das Icon für ein Item – optional für alle Seltenheiten mit demselben Namen in der Season. */
+export async function setLootIcon(id: number, url: string | null, allRarities = true) {
   const supabase = await requireAdmin()
-  done((await supabase.from("loot_items").update({ icon_url: url }).eq("id", id)).error)
+  const { data: item, error } = await supabase.from("loot_items").select("name, season_id").eq("id", id).single()
+  if (error) throw new Error(error.message)
+  let query = supabase.from("loot_items").update({ icon_url: url })
+  query = allRarities
+    ? item.season_id === null
+      ? query.eq("name", item.name).is("season_id", null)
+      : query.eq("name", item.name).eq("season_id", item.season_id)
+    : query.eq("id", id)
+  done((await query).error)
+}
+
+/**
+ * Lootpool aus einer eingefügten Liste übernehmen. „ersetzen“ löscht den bisherigen Pool der
+ * aktuellen Season (laufende/alte Auktionen behalten ihre Item-Kopien). Vorhandene Icons und
+ * Beschreibungen werden per Name übernommen.
+ */
+export async function importLoot(_: unknown, form: FormData): Promise<{ ok: boolean; message: string }> {
+  const supabase = await requireAdmin()
+  const season = await getCurrentSeason(supabase)
+  if (!season) return { ok: false, message: "Keine aktuelle Season" }
+  const defaultType = (ITEM_TYPES.includes(str(form, "default_type") as never) ? str(form, "default_type") : "waffe") as ItemType
+  const defaultRarity = RARITIES.includes(str(form, "default_rarity") as never) ? str(form, "default_rarity") : "gruen"
+  const parsed = parseLootList(str(form, "list"), defaultType)
+  if (parsed.length === 0) return { ok: false, message: "Keine Items erkannt" }
+  if (parsed.length > 500) return { ok: false, message: "Maximal 500 Items auf einmal" }
+
+  const { data: existing } = await supabase
+    .from("loot_items")
+    .select("id, name, rarity, icon_url, description")
+    .eq("season_id", season.id)
+  const iconByName = new Map<string, string>()
+  const descByName = new Map<string, string>()
+  for (const e of existing ?? []) {
+    if (e.icon_url) iconByName.set(e.name.toLowerCase(), e.icon_url)
+    if (e.description) descByName.set(e.name.toLowerCase(), e.description)
+  }
+
+  const replace = str(form, "mode") === "ersetzen"
+  const seen = new Set(replace ? [] : (existing ?? []).map((e) => `${e.name.toLowerCase()}|${e.rarity}`))
+  const rows = []
+  for (const p of parsed) {
+    const rarity = p.rarity ?? defaultRarity
+    const key = `${p.name.toLowerCase()}|${rarity}`
+    if (seen.has(key)) continue
+    seen.add(key)
+    rows.push({
+      name: p.name,
+      rarity,
+      type: p.type,
+      season_id: season.id,
+      icon_url: iconByName.get(p.name.toLowerCase()) ?? null,
+      description: descByName.get(p.name.toLowerCase()) ?? null,
+    })
+  }
+
+  if (replace) {
+    const { error } = await supabase.from("loot_items").delete().eq("season_id", season.id)
+    if (error) return { ok: false, message: error.message }
+  }
+  if (rows.length) {
+    const { error } = await supabase.from("loot_items").insert(rows)
+    if (error) return { ok: false, message: error.message }
+  }
+  done(null)
+  const withoutRarity = parsed.filter((p) => !p.rarity).length
+  return {
+    ok: true,
+    message:
+      `${rows.length} Items ${replace ? "als neuer Pool übernommen" : "hinzugefügt"}` +
+      (parsed.length > rows.length ? `, ${parsed.length - rows.length} Duplikate übersprungen` : "") +
+      (withoutRarity ? `, ${withoutRarity} ohne Seltenheit → Standard gesetzt` : ""),
+  }
 }
 
 export async function addDropSpot(input: { name: string; x: number; y: number }) {
