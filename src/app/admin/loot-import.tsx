@@ -25,7 +25,7 @@ export function LootImport({ disabled }: { disabled: boolean }) {
       <p className="text-sm text-muted">
         Liste einfügen, z. B. <code className="text-white">• Pump Shotgun (Legendary)</code>. Überschriften wie „Waffen“, „Healing &amp;
         Consumables“ oder „Mobility &amp; Utility“ setzen den Typ. Seltenheit auf Englisch oder Deutsch in Klammern. Bilder bleiben
-        pro Item und Seltenheit erhalten, Beschreibungen pro Item.
+        pro Item und Seltenheit erhalten.
       </p>
       <textarea
         name="list"

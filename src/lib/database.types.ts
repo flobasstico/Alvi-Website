@@ -34,9 +34,9 @@ export type Database = {
         Relationships: Rel[]
       }
       auction_rounds: {
-        Row: { auction_id: number; deadline: string | null; id: number; item_description: string | null; item_icon_url: string | null; item_id: number | null; item_name: string; item_rarity: string; item_type: string; opens_at: string; price: number | null; resolved_at: string | null; round_no: number; status: string; tie: boolean; winner_seat: number | null }
-        Insert: { auction_id: number; deadline?: string | null; id?: never; item_description?: string | null; item_icon_url?: string | null; item_id?: number | null; item_name: string; item_rarity: string; item_type: string; opens_at?: string; price?: number | null; resolved_at?: string | null; round_no: number; status?: string; tie?: boolean; winner_seat?: number | null }
-        Update: { auction_id?: number; deadline?: string | null; id?: never; item_description?: string | null; item_icon_url?: string | null; item_id?: number | null; item_name?: string; item_rarity?: string; item_type?: string; opens_at?: string; price?: number | null; resolved_at?: string | null; round_no?: number; status?: string; tie?: boolean; winner_seat?: number | null }
+        Row: { auction_id: number; deadline: string | null; id: number; item_icon_url: string | null; item_id: number | null; item_name: string; item_rarity: string; item_type: string; opens_at: string; price: number | null; resolved_at: string | null; round_no: number; status: string; tie: boolean; winner_seat: number | null }
+        Insert: { auction_id: number; deadline?: string | null; id?: never; item_icon_url?: string | null; item_id?: number | null; item_name: string; item_rarity: string; item_type: string; opens_at?: string; price?: number | null; resolved_at?: string | null; round_no: number; status?: string; tie?: boolean; winner_seat?: number | null }
+        Update: { auction_id?: number; deadline?: string | null; id?: never; item_icon_url?: string | null; item_id?: number | null; item_name?: string; item_rarity?: string; item_type?: string; opens_at?: string; price?: number | null; resolved_at?: string | null; round_no?: number; status?: string; tie?: boolean; winner_seat?: number | null }
         Relationships: Rel[]
       }
       auction_bids: {
@@ -82,9 +82,9 @@ export type Database = {
         Relationships: Rel[]
       }
       loot_items: {
-        Row: { active: boolean; created_at: string; description: string | null; icon_url: string | null; id: number; name: string; rarity: string; season_id: number | null; type: string }
-        Insert: { active?: boolean; created_at?: string; description?: string | null; icon_url?: string | null; id?: never; name: string; rarity: string; season_id?: number | null; type: string }
-        Update: { active?: boolean; created_at?: string; description?: string | null; icon_url?: string | null; id?: never; name?: string; rarity?: string; season_id?: number | null; type?: string }
+        Row: { active: boolean; created_at: string; icon_url: string | null; id: number; name: string; rarity: string; season_id: number | null; type: string }
+        Insert: { active?: boolean; created_at?: string; icon_url?: string | null; id?: never; name: string; rarity: string; season_id?: number | null; type: string }
+        Update: { active?: boolean; created_at?: string; icon_url?: string | null; id?: never; name?: string; rarity?: string; season_id?: number | null; type?: string }
         Relationships: Rel[]
       }
       profiles: {

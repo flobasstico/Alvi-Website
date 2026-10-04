@@ -8,7 +8,7 @@ const auction = (over: Partial<Auction> = {}): Auction => ({
 })
 const round = (over: Partial<Round>): Round => ({
   id: 1, auction_id: 1, round_no: 1, item_id: 1, item_name: "X", item_rarity: "grau", item_type: "waffe", item_icon_url: null,
-  item_description: null, status: "bietet", opens_at: "2026-01-01T00:00:00Z", deadline: null, winner_seat: null, price: null,
+  status: "bietet", opens_at: "2026-01-01T00:00:00Z", deadline: null, winner_seat: null, price: null,
   tie: false, resolved_at: null, ...over,
 })
 const T = Date.parse("2026-01-01T00:00:10Z")

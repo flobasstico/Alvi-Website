@@ -240,7 +240,6 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
                       <li key={first.name} className="py-3">
                         <div className="mb-2 flex flex-wrap items-baseline gap-2">
                           <span className="font-semibold">{first.name}</span>
-                          {first.description && <span className="text-xs text-muted">{first.description}</span>}
                         </div>
                         <div className="flex flex-wrap gap-3">
                           {variants.map((v) => (
@@ -269,13 +268,6 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
                                         ))}
                                       </select>
                                     </div>
-                                    <textarea
-                                      name="description"
-                                      defaultValue={v.description ?? ""}
-                                      maxLength={300}
-                                      placeholder="Kurzbeschreibung (für die Auktion)"
-                                      className="input min-h-14 py-1 text-sm"
-                                    />
                                     <button className="btn-primary py-1 text-sm">Speichern</button>
                                   </form>
                                   <div className="flex gap-2">
@@ -317,7 +309,6 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
                 ))}
               </select>
             </div>
-            <textarea name="description" maxLength={300} className="input min-h-16" placeholder="Kurzbeschreibung (optional)" />
             <button className="btn-primary" disabled={!seasonId}>Hinzufügen</button>
           </form>
         </div>

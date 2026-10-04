@@ -311,7 +311,6 @@ function ItemShowcase({ round, children }: { round: Round; children?: React.Reac
       <div className="relative text-sm font-bold uppercase tracking-wider">
         {RARITY_LABEL[rarity] ?? round.item_rarity} · {ITEM_TYPE_LABEL[round.item_type as keyof typeof ITEM_TYPE_LABEL] ?? round.item_type}
       </div>
-      {round.item_description && <p className="relative max-w-md text-sm opacity-95">{round.item_description}</p>}
       {children}
     </motion.div>
   )

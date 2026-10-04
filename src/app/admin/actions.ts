@@ -60,8 +60,7 @@ export async function addLoot(form: FormData) {
   const type = str(form, "type")
   if (!name || !season) throw new Error("Name und aktuelle Season nötig")
   if (!RARITIES.includes(rarity as never) || !ITEM_TYPES.includes(type as never)) throw new Error("Ungültige Werte")
-  const description = str(form, "description").slice(0, 300) || null
-  done((await supabase.from("loot_items").insert({ name, rarity, type, description, season_id: season.id })).error)
+  done((await supabase.from("loot_items").insert({ name, rarity, type, season_id: season.id })).error)
 }
 
 export async function updateLootItem(form: FormData) {
@@ -71,10 +70,7 @@ export async function updateLootItem(form: FormData) {
   const type = str(form, "type")
   if (!name) throw new Error("Name fehlt")
   if (!RARITIES.includes(rarity as never) || !ITEM_TYPES.includes(type as never)) throw new Error("Ungültige Werte")
-  const description = str(form, "description").slice(0, 300) || null
-  done(
-    (await supabase.from("loot_items").update({ name, rarity, type, description }).eq("id", Number(str(form, "id")))).error,
-  )
+  done((await supabase.from("loot_items").update({ name, rarity, type }).eq("id", Number(str(form, "id")))).error)
 }
 
 /** Setzt das Icon einer einzelnen Variante – jede Seltenheit hat ihr eigenes Bild. */
@@ -86,7 +82,7 @@ export async function setLootIcon(id: number, url: string | null) {
 /**
  * Lootpool aus einer eingefügten Liste übernehmen. „ersetzen“ löscht den bisherigen Pool der
  * aktuellen Season (laufende/alte Auktionen behalten ihre Item-Kopien). Vorhandene Icons werden
- * pro Name + Seltenheit, Beschreibungen pro Name übernommen.
+ * pro Name + Seltenheit übernommen.
  */
 export async function importLoot(_: unknown, form: FormData): Promise<{ ok: boolean; message: string }> {
   const supabase = await requireAdmin()
@@ -100,14 +96,12 @@ export async function importLoot(_: unknown, form: FormData): Promise<{ ok: bool
 
   const { data: existing } = await supabase
     .from("loot_items")
-    .select("id, name, rarity, icon_url, description")
+    .select("id, name, rarity, icon_url")
     .eq("season_id", season.id)
-  // Bilder gehören zur Variante (Name + Seltenheit), Beschreibungen zum Item-Namen
+  // Bilder gehören zur Variante (Name + Seltenheit)
   const iconByVariant = new Map<string, string>()
-  const descByName = new Map<string, string>()
   for (const e of existing ?? []) {
     if (e.icon_url) iconByVariant.set(`${e.name.toLowerCase()}|${e.rarity}`, e.icon_url)
-    if (e.description) descByName.set(e.name.toLowerCase(), e.description)
   }
 
   const replace = str(form, "mode") === "ersetzen"
@@ -124,7 +118,6 @@ export async function importLoot(_: unknown, form: FormData): Promise<{ ok: bool
       type: p.type,
       season_id: season.id,
       icon_url: iconByVariant.get(key) ?? null,
-      description: descByName.get(p.name.toLowerCase()) ?? null,
     })
   }
 
