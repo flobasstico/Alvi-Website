@@ -26,7 +26,7 @@ export const ITEM_TYPE_LABEL: Record<(typeof ITEM_TYPES)[number], string> = {
   utility: "Utility",
 }
 
-export const SOURCES = ["rad", "loadout", "drop", "voting", "versus", "bingo", "manuell"] as const
+export const SOURCES = ["rad", "loadout", "drop", "voting", "versus", "bingo", "auktion", "manuell"] as const
 export type Source = (typeof SOURCES)[number]
 export const SOURCE_LABEL: Record<Source, string> = {
   rad: "Glücksrad",
@@ -35,6 +35,7 @@ export const SOURCE_LABEL: Record<Source, string> = {
   voting: "Community-Voting",
   versus: "Versus",
   bingo: "Bingo",
+  auktion: "Loot-Auktion",
   manuell: "Manuell",
 }
 
@@ -54,5 +55,6 @@ export const NAV = [
   { href: "/voting", label: "Voting" },
   { href: "/versus", label: "Versus" },
   { href: "/bingo", label: "Bingo" },
+  { href: "/auktion", label: "Auktion" },
   { href: "/stats", label: "Stats" },
 ] as const

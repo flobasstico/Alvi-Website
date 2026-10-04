@@ -152,7 +152,7 @@ export function BingoBoard({
             {winners.map((w, i) => (
               <li key={i} className="flex justify-between">
                 <span>{i === 0 ? "🏆" : `${i + 1}.`} {w.name}</span>
-                <span className="text-sm text-muted">{new Date(w.at).toLocaleTimeString("de-DE")}</span>
+                <span className="text-sm text-muted">{new Date(w.at).toLocaleTimeString("de-DE", { timeZone: "Europe/Berlin" })}</span>
               </li>
             ))}
             {winners.length === 0 && <li className="text-muted">Noch niemand hat Bingo.</li>}

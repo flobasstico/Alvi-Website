@@ -59,7 +59,19 @@ export async function addLoot(form: FormData) {
   const type = str(form, "type")
   if (!name || !season) throw new Error("Name und aktuelle Season nötig")
   if (!RARITIES.includes(rarity as never) || !ITEM_TYPES.includes(type as never)) throw new Error("Ungültige Werte")
-  done((await supabase.from("loot_items").insert({ name, rarity, type, season_id: season.id })).error)
+  const description = str(form, "description").slice(0, 300) || null
+  done((await supabase.from("loot_items").insert({ name, rarity, type, description, season_id: season.id })).error)
+}
+
+export async function updateLootDescription(form: FormData) {
+  const supabase = await requireAdmin()
+  const description = str(form, "description").slice(0, 300) || null
+  done((await supabase.from("loot_items").update({ description }).eq("id", Number(str(form, "id")))).error)
+}
+
+export async function setLootIcon(id: number, url: string | null) {
+  const supabase = await requireAdmin()
+  done((await supabase.from("loot_items").update({ icon_url: url }).eq("id", id)).error)
 }
 
 export async function addDropSpot(input: { name: string; x: number; y: number }) {

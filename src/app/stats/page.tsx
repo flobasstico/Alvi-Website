@@ -103,7 +103,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
               <span className="font-semibold">{c.title}</span>
               <span className="chip">{SOURCE_LABEL[c.source as Source]}</span>
               <span className="ml-auto text-xs text-muted">
-                {new Date(c.played_at ?? c.created_at).toLocaleDateString("de-DE")}
+                {new Date(c.played_at ?? c.created_at).toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" })}
               </span>
               {c.video_url && (
                 <a href={c.video_url} target="_blank" rel="noreferrer" className="text-sm text-accent-2 underline">

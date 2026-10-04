@@ -25,7 +25,9 @@ import {
   setRuleWeight,
   toggleActive,
   updateChallenge,
+  updateLootDescription,
 } from "./actions"
+import { ItemIconUpload } from "./item-icon-upload"
 import { MapUpload } from "./map-upload"
 import { SpotEditor } from "./spot-editor"
 
@@ -122,7 +124,7 @@ async function ChallengesTab() {
                 <div className="min-w-48 flex-1">
                   <div className="font-semibold">{c.title}</div>
                   <div className="text-xs text-muted">
-                    {SOURCE_LABEL[c.source as Source]} · {new Date(c.created_at).toLocaleDateString("de-DE")}
+                    {SOURCE_LABEL[c.source as Source]} · {new Date(c.created_at).toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" })}
                   </div>
                 </div>
                 <select name="status" defaultValue={c.status} className="input w-auto py-1 text-sm">
@@ -211,11 +213,17 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
         <ul className="divide-y divide-line">
           {data?.map((i) => (
             <Row key={i.id} inactive={!i.active}>
+              <ItemIconUpload itemId={i.id} current={i.icon_url} rarity={i.rarity} type={i.type} name={i.name} />
               <span className="flex-1 font-semibold">{i.name}</span>
               <span className="chip">{RARITY_LABEL[i.rarity as Rarity]}</span>
               <span className="chip">{ITEM_TYPE_LABEL[i.type as keyof typeof ITEM_TYPE_LABEL]}</span>
               <ToggleButton table="loot_items" id={i.id} active={i.active} />
               <DeleteButton table="loot_items" id={i.id} />
+              <form action={updateLootDescription} className="flex w-full gap-2 pl-14">
+                <input type="hidden" name="id" value={i.id} />
+                <input name="description" defaultValue={i.description ?? ""} maxLength={300} placeholder="Kurzbeschreibung (für die Auktion)" className="input py-1 text-sm" />
+                <button className="btn-secondary px-2 py-1 text-xs">OK</button>
+              </form>
             </Row>
           ))}
         </ul>
@@ -234,7 +242,9 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
               <option key={t} value={t}>{ITEM_TYPE_LABEL[t]}</option>
             ))}
           </select>
+          <textarea name="description" maxLength={300} className="input min-h-16" placeholder="Kurzbeschreibung (optional)" />
           <button className="btn-primary" disabled={!seasonId}>Hinzufügen</button>
+          <p className="text-xs text-muted">Icons lädst du danach direkt in der Liste hoch (PNG/WebP mit transparentem Hintergrund sieht am besten aus).</p>
         </form>
       </aside>
     </div>

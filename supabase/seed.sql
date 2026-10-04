@@ -63,3 +63,27 @@ insert into public.bingo_tasks (text) values
   ('Top 5'), ('Doppel-Kill'), ('Geschenk aus Kiste: Heilung'), ('Erste Landung überlebt'),
   ('Kill mit Raketenwerfer'), ('100 Schaden in einem Schuss'), ('Ohne Heilung Top 15'), ('Emote nach Kill'),
   ('Lagerfeuer genutzt'), ('Vom Bus als Letzter abspringen'), ('Kill aus der Luft'), ('Kill mit Pistole');
+
+-- Kurzbeschreibungen für die Loot-Auktion
+update public.loot_items set description = d.text
+from (values
+  ('Sturmgewehr', 'Solides Allround-Gewehr für mittlere Distanz.'),
+  ('Pump-Shotgun', 'Hoher Schaden auf kurze Distanz, langsames Nachladen.'),
+  ('Taktische Shotgun', 'Schnelle Schussfolge, verzeiht Fehlschüsse.'),
+  ('MP', 'Hohe Feuerrate für den Nahkampf.'),
+  ('Scharfschützengewehr', 'Ein Treffer, eine Ansage – auf große Distanz.'),
+  ('Pistole', 'Klein, präzise und unterschätzt.'),
+  ('Raketenwerfer', 'Räumt Builds und Gegner gleichermaßen ab.'),
+  ('Mythische Waffe', 'Die stärkste Waffe der Season – wer sie hat, hat Macht.'),
+  ('Kleiner Schildtrank', '+25 Schild, schnell getrunken.'),
+  ('Schildtrank', '+50 Schild, der Klassiker.'),
+  ('Medikit', 'Heilt komplett, dauert aber.'),
+  ('Verband', '+15 Leben bis maximal 75.'),
+  ('Flopper', 'Fisch, der sofort 40 Leben heilt.'),
+  ('Schildfisch', 'Fisch, der 50 Schild gibt.'),
+  ('Granate', 'Wurf, Bumm, Bauwerk weg.'),
+  ('Lagerfeuer', 'Heilt dich und dein Team langsam.'),
+  ('Rammbock', 'Bricht durch Wände und Türen.'),
+  ('Enterhaken', 'Schnell rauf, schnell weg.')
+) as d(name, text)
+where public.loot_items.name = d.name;

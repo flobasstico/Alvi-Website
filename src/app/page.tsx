@@ -9,6 +9,7 @@ const TOOLS = [
   { href: "/voting", emoji: "🗳️", title: "Community-Voting", text: "Challenges einreichen & voten – die Top 3 der Woche muss Alvi spielen." },
   { href: "/versus", emoji: "⚔️", title: "Versus-Scoreboard", text: "Duelle gegen andere Creator mit Punktestand, Timer und Checkliste." },
   { href: "/bingo", emoji: "🔢", title: "Bingo", text: "5×5-Karte mit Aufgaben – Zuschauer spielen live mit." },
+  { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "4 Creator, je 500 Gold, verdeckte Gebote – bis jeder 5 Items hat." },
   { href: "/stats", emoji: "📉", title: "Challenge-Stats", text: "Erfolgsquote, Serien und alle bisherigen Challenges." },
 ]
 

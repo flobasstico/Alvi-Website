@@ -21,6 +21,30 @@ export type Database = {
   }
   public: {
     Tables: {
+      auctions: {
+        Row: { bid_seconds: number; bid_step: number; challenge_id: number | null; created_at: string; ended_at: string | null; ended_reason: string | null; host_id: string; id: number; items_per_player: number; max_players: number; no_duplicates: boolean; rarities: string[]; season_id: number | null; start_gold: number; status: string; title: string | null }
+        Insert: { bid_seconds?: number; bid_step?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; ended_reason?: string | null; host_id?: string; id?: never; items_per_player?: number; max_players?: number; no_duplicates?: boolean; rarities?: string[]; season_id?: number | null; start_gold?: number; status?: string; title?: string | null }
+        Update: { bid_seconds?: number; bid_step?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; ended_reason?: string | null; host_id?: string; id?: never; items_per_player?: number; max_players?: number; no_duplicates?: boolean; rarities?: string[]; season_id?: number | null; start_gold?: number; status?: string; title?: string | null }
+        Relationships: Rel[]
+      }
+      auction_players: {
+        Row: { acted_round: number; auction_id: number; avatar_url: string | null; display_name: string | null; gold: number; item_count: number; joined_at: string; seat: number; user_id: string }
+        Insert: { acted_round?: number; auction_id: number; avatar_url?: string | null; display_name?: string | null; gold: number; item_count?: number; joined_at?: string; seat: number; user_id: string }
+        Update: { acted_round?: number; auction_id?: number; avatar_url?: string | null; display_name?: string | null; gold?: number; item_count?: number; joined_at?: string; seat?: number; user_id?: string }
+        Relationships: Rel[]
+      }
+      auction_rounds: {
+        Row: { auction_id: number; deadline: string | null; id: number; item_description: string | null; item_icon_url: string | null; item_id: number | null; item_name: string; item_rarity: string; item_type: string; opens_at: string; price: number | null; resolved_at: string | null; round_no: number; status: string; tie: boolean; winner_seat: number | null }
+        Insert: { auction_id: number; deadline?: string | null; id?: never; item_description?: string | null; item_icon_url?: string | null; item_id?: number | null; item_name: string; item_rarity: string; item_type: string; opens_at?: string; price?: number | null; resolved_at?: string | null; round_no: number; status?: string; tie?: boolean; winner_seat?: number | null }
+        Update: { auction_id?: number; deadline?: string | null; id?: never; item_description?: string | null; item_icon_url?: string | null; item_id?: number | null; item_name?: string; item_rarity?: string; item_type?: string; opens_at?: string; price?: number | null; resolved_at?: string | null; round_no?: number; status?: string; tie?: boolean; winner_seat?: number | null }
+        Relationships: Rel[]
+      }
+      auction_bids: {
+        Row: { amount: number | null; auction_id: number; created_at: string; round_id: number; seat: number }
+        Insert: { amount?: number | null; auction_id: number; created_at?: string; round_id: number; seat: number }
+        Update: { amount?: number | null; auction_id?: number; created_at?: string; round_id?: number; seat?: number }
+        Relationships: Rel[]
+      }
       bingo_cards: {
         Row: { bingo_at: string | null; created_at: string; game_id: number; task_ids: number[]; user_id: string }
         Insert: { bingo_at?: string | null; created_at?: string; game_id: number; task_ids: number[]; user_id?: string }
@@ -58,9 +82,9 @@ export type Database = {
         Relationships: Rel[]
       }
       loot_items: {
-        Row: { active: boolean; created_at: string; icon_url: string | null; id: number; name: string; rarity: string; season_id: number | null; type: string }
-        Insert: { active?: boolean; created_at?: string; icon_url?: string | null; id?: never; name: string; rarity: string; season_id?: number | null; type: string }
-        Update: { active?: boolean; created_at?: string; icon_url?: string | null; id?: never; name?: string; rarity?: string; season_id?: number | null; type?: string }
+        Row: { active: boolean; created_at: string; description: string | null; icon_url: string | null; id: number; name: string; rarity: string; season_id: number | null; type: string }
+        Insert: { active?: boolean; created_at?: string; description?: string | null; icon_url?: string | null; id?: never; name: string; rarity: string; season_id?: number | null; type: string }
+        Update: { active?: boolean; created_at?: string; description?: string | null; icon_url?: string | null; id?: never; name?: string; rarity?: string; season_id?: number | null; type?: string }
         Relationships: Rel[]
       }
       profiles: {
@@ -117,6 +141,11 @@ export type Database = {
       }
     }
     Functions: {
+      auction_bid: { Args: { p_amount: number | null; p_round: number }; Returns: undefined }
+      auction_join: { Args: { p_auction: number }; Returns: number }
+      auction_leave: { Args: { p_auction: number; p_seat?: number | null }; Returns: undefined }
+      auction_resolve_expired: { Args: { p_round: number }; Returns: undefined }
+      auction_start: { Args: { p_auction: number }; Returns: undefined }
       card_has_bingo: { Args: { p_game_id: number; p_task_ids: number[] }; Returns: boolean }
       current_week: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }

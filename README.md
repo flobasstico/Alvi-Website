@@ -10,6 +10,7 @@ Website für Alvis Fortnite-Challenges: konstruieren, auswürfeln, abstimmen und
 | `/voting` | **Community-Voting**: Zuschauer reichen Challenges ein (max. 3 pro Woche) und voten. Die Top 3 der Woche werden übernommen. Dazu gibt es die „Erledigt/Gescheitert“-Wand |
 | `/versus` | **Versus-Scoreboard**: Live-Punktestand, synchroner Timer und Checkliste für Duelle gegen andere Creator |
 | `/bingo` | **Bingo**: Alvis 5×5-Karte. Zuschauer holen sich eigene Karten, Felder werden live abgehakt, mit Bestenliste |
+| `/auktion` | **Loot-Auktion**: 4 Creator mit je 500 Gold bieten verdeckt am eigenen Gerät auf zufällige Items. Der Höchstbieter gewinnt, bei Gleichstand entscheidet das Los. Haben alle geskippt, wird das Item verworfen. Gespielt wird, bis jeder 5 Items hat. Am Ende gibt es eine Loadout-Übersicht als Bild |
 | `/stats` | **Challenge-Stats**: Erfolgsquote („Alvi hat 23 % geschafft“), Serien, Aufschlüsselung je Tool |
 | `/admin` | Regeln, Loot-Pool, Drop-Spots, Bingo-Aufgaben, Seasons/Map, Ergebnisse eintragen |
 
@@ -53,8 +54,9 @@ Das Repo in Vercel importieren und die Umgebungsvariablen `NEXT_PUBLIC_SUPABASE_
 - **Voting**: Mit „Top 3 übernehmen“ werden die Vorschläge zu Challenges. Auf der Wand markierst du sie als geschafft oder gescheitert. Die Woche wechselt montags um 00:00 Uhr (Europe/Berlin).
 - **Versus**: Duell unter `/versus` anlegen und die Seite `/versus/<id>` teilen. Alle Zuschauer sehen Punkte, Timer und Checkliste live. „Alvi gewinnt“ oder „Alvi verliert“ trägt das Ergebnis in die Stats ein.
 - **Bingo**: Unter `/bingo` eine neue Runde starten (mind. 25 aktive Aufgaben). Zuschauer holen sich ihre Karte. Alvi hakt erledigte Aufgaben ab. „Runde beenden & werten“ zählt die Runde als geschafft, wenn Alvis Karte ein Bingo hat.
+- **Loot-Auktion**: Unter `/auktion` eine Lobby öffnen und dabei Startgold, Items pro Spieler, Bietzeit, Seltenheiten und „Keine Duplikate“ einstellen. Den Einladungslink an die anderen Creator schicken, die sich mit Twitch einloggen und Platz nehmen. Starten kann man ab 2 Spielern. Jeder sieht nur sein eigenes Gebot, bis alle gehandelt haben oder die Bietzeit abläuft (dann wird automatisch geskippt). 0 Gold ist ein gültiges Gebot: Es gewinnt, wenn alle anderen skippen. Damit kommen auch Spieler ohne Gold noch an ihre Items. Mit „Keine Duplikate“ kommen bereits gewonnene Items nicht mehr vor. Reicht der Pool nicht, endet die Auktion vorzeitig. Icons und Kurzbeschreibungen für die Items pflegst du unter `/admin?tab=loot`.
 - **Neue Season**: Unter `/admin?tab=seasons` die Season anlegen. Loot-Pool, Spots und Map werden optional übernommen. Danach lädst du die neue Map hoch und setzt die Spots per Klick auf die Karte.
 
 ## Sicherheit
 
-Schreibrechte erzwingt die Datenbank per Row Level Security. Stammdaten und Live-Tools darf nur `role = 'admin'` ändern. Zuschauer dürfen nur eigene Einreichungen, Votes und Bingo-Karten anlegen. Die Kalenderwoche einer Einreichung setzt der Server. Bingo-Gewinner berechnet ein Datenbank-Trigger, sodass niemand den Status fälschen kann.
+Schreibrechte erzwingt die Datenbank per Row Level Security. Stammdaten und Live-Tools darf nur `role = 'admin'` ändern. Zuschauer dürfen nur eigene Einreichungen, Votes und Bingo-Karten anlegen. Die Kalenderwoche einer Einreichung setzt der Server. Bingo-Gewinner berechnet ein Datenbank-Trigger, sodass niemand den Status fälschen kann. Bei der Loot-Auktion laufen Item-Ziehung, Gebotsprüfung (10er-Schritte, Gold-Limit, ein Gebot pro Runde), Losentscheid und Gold-Abzug komplett in Datenbankfunktionen. Fremde Gebote sind per RLS bis zur Auswertung unsichtbar.
