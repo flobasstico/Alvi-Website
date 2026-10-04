@@ -8,7 +8,7 @@ const display = Luckiest_Guy({ variable: "--font-display", weight: "400", subset
 
 export const metadata: Metadata = {
   title: { default: "Alvi Challenges", template: "%s · Alvi Challenges" },
-  description: "Glücksrad, Loadout-Würfel, Voting, Versus, Bingo und Stats für Alvis Fortnite-Challenges.",
+  description: "Glücksrad, Loadout-Würfel, Drop-Spot, Bingo, Loot-Auktion und Stats für Alvis Fortnite-Challenges.",
 }
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

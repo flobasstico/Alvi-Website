@@ -105,39 +105,11 @@ export type Database = {
         Update: { created_at?: string; id?: never; is_current?: boolean; map_image_url?: string | null; name?: string }
         Relationships: []
       }
-      submissions: {
-        Row: { challenge_id: number | null; created_at: string; description: string | null; id: number; status: string; title: string; user_id: string; week: string }
-        Insert: { challenge_id?: number | null; created_at?: string; description?: string | null; id?: never; status?: string; title: string; user_id?: string; week?: string }
-        Update: { challenge_id?: number | null; created_at?: string; description?: string | null; id?: never; status?: string; title?: string; user_id?: string; week?: string }
-        Relationships: Rel[]
-      }
-      versus_checklist: {
-        Row: { alvi_done: boolean; id: number; match_id: number; opponent_done: boolean; position: number; text: string }
-        Insert: { alvi_done?: boolean; id?: never; match_id: number; opponent_done?: boolean; position?: number; text: string }
-        Update: { alvi_done?: boolean; id?: never; match_id?: number; opponent_done?: boolean; position?: number; text?: string }
-        Relationships: Rel[]
-      }
-      versus_matches: {
-        Row: { challenge_id: number | null; created_at: string; duration_s: number; id: number; opponent_name: string; paused_remaining_s: number | null; score_alvi: number; score_opponent: number; started_at: string | null; status: string; title: string | null }
-        Insert: { challenge_id?: number | null; created_at?: string; duration_s?: number; id?: never; opponent_name: string; paused_remaining_s?: number | null; score_alvi?: number; score_opponent?: number; started_at?: string | null; status?: string; title?: string | null }
-        Update: { challenge_id?: number | null; created_at?: string; duration_s?: number; id?: never; opponent_name?: string; paused_remaining_s?: number | null; score_alvi?: number; score_opponent?: number; started_at?: string | null; status?: string; title?: string | null }
-        Relationships: Rel[]
-      }
-      votes: {
-        Row: { created_at: string; submission_id: number; user_id: string }
-        Insert: { created_at?: string; submission_id: number; user_id?: string }
-        Update: { created_at?: string; submission_id?: number; user_id?: string }
-        Relationships: Rel[]
-      }
     }
     Views: {
       challenge_stats: {
         Row: { finished: number | null; lost: number | null; source: string | null; total: number | null; won: number | null }
         Relationships: []
-      }
-      submission_scores: {
-        Row: { author_name: string | null; challenge_id: number | null; created_at: string | null; description: string | null; id: number | null; status: string | null; title: string | null; user_id: string | null; votes: number | null; week: string | null }
-        Relationships: Rel[]
       }
     }
     Functions: {
@@ -147,7 +119,6 @@ export type Database = {
       auction_resolve_expired: { Args: { p_round: number }; Returns: undefined }
       auction_start: { Args: { p_auction: number }; Returns: undefined }
       card_has_bingo: { Args: { p_game_id: number; p_task_ids: number[] }; Returns: boolean }
-      current_week: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: { [_ in never]: never }

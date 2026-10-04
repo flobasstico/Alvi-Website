@@ -6,11 +6,8 @@ const TOOLS = [
   { href: "/rad", emoji: "🎡", title: "Challenge-Glücksrad", text: "Regeln wie „nur graue Waffen“ oder „kein Bauen“ – live erdreht." },
   { href: "/loadout", emoji: "🎲", title: "Loadout-Würfel", text: "5 zufällige Slots aus dem aktuellen Loot-Pool." },
   { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Zufälliger Landeort plus Zusatzregel." },
-  { href: "/voting", emoji: "🗳️", title: "Community-Voting", text: "Challenges einreichen & voten – die Top 3 der Woche muss Alvi spielen." },
-  { href: "/versus", emoji: "⚔️", title: "Versus-Scoreboard", text: "Duelle gegen andere Creator mit Punktestand, Timer und Checkliste." },
   { href: "/bingo", emoji: "🔢", title: "Bingo", text: "5×5-Karte mit Aufgaben – Zuschauer spielen live mit." },
   { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "4 Creator, je 500 Gold, verdeckte Gebote – bis jeder 5 Items hat." },
-  { href: "/stats", emoji: "📉", title: "Challenge-Stats", text: "Erfolgsquote, Serien und alle bisherigen Challenges." },
 ]
 
 export default async function Home() {
@@ -28,12 +25,12 @@ export default async function Home() {
         <p className="mx-auto mt-3 max-w-xl text-lg text-muted">
           Hier werden Fortnite-Challenges gebaut, ausgewürfelt und gnadenlos getrackt.
         </p>
-        <Link href="/stats" className="mt-6 inline-block">
+        <div className="mt-6">
           <span className="font-display text-3xl">
             Alvi hat <span className={rate >= 50 ? "text-win" : "text-accent"}>{rate} %</span> geschafft
           </span>
           <span className="block text-sm italic text-muted">{rateQuip(rate, total?.finished ?? 0)}</span>
-        </Link>
+        </div>
       </section>
 
       {active && active.length > 0 && (
