@@ -11,15 +11,14 @@ export function ItemIconUpload({
   rarity,
   type,
   name,
-  allRarities = true,
+  size = "sm",
 }: {
   itemId: number
   current: string | null
   rarity: string
   type: string
   name: string
-  /** Icon für alle Seltenheiten mit gleichem Namen übernehmen */
-  allRarities?: boolean
+  size?: "sm" | "md"
 }) {
   const [error, setError] = useState<string | null>(null)
   const [pending, start] = useTransition()
@@ -31,15 +30,15 @@ export function ItemIconUpload({
     const path = `items/${itemId}-${Date.now()}.${ext}`
     const { error } = await supabase.storage.from("media").upload(path, file, { contentType: file.type })
     if (error) return setError(error.message)
-    start(() => setLootIcon(itemId, supabase.storage.from("media").getPublicUrl(path).data.publicUrl, allRarities))
+    start(() => setLootIcon(itemId, supabase.storage.from("media").getPublicUrl(path).data.publicUrl))
   }
 
   return (
     <label
       className="relative cursor-pointer"
-      title={`${current ? "Icon ersetzen" : "Icon hochladen"}${allRarities ? " (gilt für alle Seltenheiten)" : ""}`}
+      title={current ? "Bild ersetzen" : "Bild hochladen"}
     >
-      <LoadoutSlot item={{ name, rarity, type, iconUrl: current }} index={0} size="sm" />
+      <LoadoutSlot item={{ name, rarity, type, iconUrl: current }} index={0} size={size} />
       <span className="absolute -bottom-1 -right-1 rounded-full bg-accent px-1 text-[10px] font-bold text-black">
         {pending ? "…" : "⬆"}
       </span>

@@ -77,24 +77,16 @@ export async function updateLootItem(form: FormData) {
   )
 }
 
-/** Setzt das Icon für ein Item – optional für alle Seltenheiten mit demselben Namen in der Season. */
-export async function setLootIcon(id: number, url: string | null, allRarities = true) {
+/** Setzt das Icon einer einzelnen Variante – jede Seltenheit hat ihr eigenes Bild. */
+export async function setLootIcon(id: number, url: string | null) {
   const supabase = await requireAdmin()
-  const { data: item, error } = await supabase.from("loot_items").select("name, season_id").eq("id", id).single()
-  if (error) throw new Error(error.message)
-  let query = supabase.from("loot_items").update({ icon_url: url })
-  query = allRarities
-    ? item.season_id === null
-      ? query.eq("name", item.name).is("season_id", null)
-      : query.eq("name", item.name).eq("season_id", item.season_id)
-    : query.eq("id", id)
-  done((await query).error)
+  done((await supabase.from("loot_items").update({ icon_url: url }).eq("id", id)).error)
 }
 
 /**
  * Lootpool aus einer eingefügten Liste übernehmen. „ersetzen“ löscht den bisherigen Pool der
- * aktuellen Season (laufende/alte Auktionen behalten ihre Item-Kopien). Vorhandene Icons und
- * Beschreibungen werden per Name übernommen.
+ * aktuellen Season (laufende/alte Auktionen behalten ihre Item-Kopien). Vorhandene Icons werden
+ * pro Name + Seltenheit, Beschreibungen pro Name übernommen.
  */
 export async function importLoot(_: unknown, form: FormData): Promise<{ ok: boolean; message: string }> {
   const supabase = await requireAdmin()
@@ -110,10 +102,11 @@ export async function importLoot(_: unknown, form: FormData): Promise<{ ok: bool
     .from("loot_items")
     .select("id, name, rarity, icon_url, description")
     .eq("season_id", season.id)
-  const iconByName = new Map<string, string>()
+  // Bilder gehören zur Variante (Name + Seltenheit), Beschreibungen zum Item-Namen
+  const iconByVariant = new Map<string, string>()
   const descByName = new Map<string, string>()
   for (const e of existing ?? []) {
-    if (e.icon_url) iconByName.set(e.name.toLowerCase(), e.icon_url)
+    if (e.icon_url) iconByVariant.set(`${e.name.toLowerCase()}|${e.rarity}`, e.icon_url)
     if (e.description) descByName.set(e.name.toLowerCase(), e.description)
   }
 
@@ -130,7 +123,7 @@ export async function importLoot(_: unknown, form: FormData): Promise<{ ok: bool
       rarity,
       type: p.type,
       season_id: season.id,
-      icon_url: iconByName.get(p.name.toLowerCase()) ?? null,
+      icon_url: iconByVariant.get(key) ?? null,
       description: descByName.get(p.name.toLowerCase()) ?? null,
     })
   }

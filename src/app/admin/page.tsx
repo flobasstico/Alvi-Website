@@ -209,7 +209,7 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
     : { data: [] }
   const items = data ?? []
   const rarityOrder = (r: string) => RARITIES.indexOf(r as Rarity)
-  // Gruppiert nach Typ und Name: ein Icon gilt für alle Seltenheiten einer Waffe
+  // Gruppiert nach Typ und Name, jede Seltenheit mit eigenem Bild
   const groups = ITEM_TYPES.map((type) => {
     const ofType = items.filter((i) => i.type === type)
     const names = [...new Set(ofType.map((i) => i.name))]
@@ -218,7 +218,7 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
       entries: names.map((name) => ofType.filter((i) => i.name === name).sort((a, b) => rarityOrder(a.rarity) - rarityOrder(b.rarity))),
     }
   })
-  const missingIcons = new Set(items.filter((i) => !i.icon_url).map((i) => i.name)).size
+  const missingIcons = items.filter((i) => !i.icon_url).length
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
@@ -226,7 +226,7 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
         <h2 className="mb-1 font-display text-2xl">Lootpool der aktuellen Season</h2>
         <p className="mb-4 text-sm text-muted">
           {items.length} Items ({items.filter((i) => i.active).length} aktiv)
-          {missingIcons > 0 && ` · ${missingIcons} Items ohne Bild – auf das Feld klicken zum Hochladen (gilt für alle Seltenheiten)`}
+          {missingIcons > 0 && ` · ${missingIcons} Varianten ohne Bild – jede Seltenheit hat ihr eigenes Bild, zum Hochladen auf das Feld klicken`}
         </p>
         {groups.map(
           (g) =>
@@ -237,27 +237,21 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
                   {g.entries.map((variants) => {
                     const first = variants[0]
                     return (
-                      <li key={first.name} className="flex flex-wrap items-start gap-3 py-3">
-                        <ItemIconUpload
-                          itemId={first.id}
-                          current={first.icon_url}
-                          rarity={variants.at(-1)!.rarity}
-                          type={first.type}
-                          name={first.name}
-                        />
-                        <div className="min-w-0 flex-1">
-                          <div className="font-semibold">{first.name}</div>
-                          {first.description && <div className="text-xs text-muted">{first.description}</div>}
-                          <div className="mt-1.5 flex flex-wrap gap-1.5">
-                            {variants.map((v) => (
-                              <details key={v.id} className="group relative">
+                      <li key={first.name} className="py-3">
+                        <div className="mb-2 flex flex-wrap items-baseline gap-2">
+                          <span className="font-semibold">{first.name}</span>
+                          {first.description && <span className="text-xs text-muted">{first.description}</span>}
+                        </div>
+                        <div className="flex flex-wrap gap-3">
+                          {variants.map((v) => (
+                            <div key={v.id} className={clsx("flex w-24 flex-col items-center gap-1", !v.active && "opacity-40")}>
+                              <ItemIconUpload itemId={v.id} current={v.icon_url} rarity={v.rarity} type={v.type} name={v.name} size="md" />
+                              <details className="relative">
                                 <summary
-                                  className={clsx(
-                                    "chip cursor-pointer list-none select-none",
-                                    v.active ? "border-white/40" : "line-through opacity-40",
-                                  )}
+                                  className={clsx("cursor-pointer list-none select-none whitespace-nowrap text-center text-xs font-semibold", !v.active && "line-through")}
+                                  title="Variante bearbeiten"
                                 >
-                                  {RARITY_LABEL[v.rarity as Rarity]}
+                                  {RARITY_LABEL[v.rarity as Rarity]} ✎
                                 </summary>
                                 <div className="absolute left-0 top-full z-20 mt-1 flex w-72 flex-col gap-2 rounded-xl border border-line bg-panel p-3 shadow-xl">
                                   <form action={updateLootItem} className="flex flex-col gap-2">
@@ -290,8 +284,8 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
                                   </div>
                                 </div>
                               </details>
-                            ))}
-                          </div>
+                            </div>
+                          ))}
                         </div>
                       </li>
                     )
