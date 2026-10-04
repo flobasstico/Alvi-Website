@@ -7,8 +7,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { ItemIcon } from "@/components/item-icon"
 import { LoadoutBar, type SlotItem } from "@/components/loadout-bar"
 import {
-  isActive,
+  canBid,
   loadoutFor,
+  needsItems,
   phaseOf,
   quickBids,
   secondsLeft,
@@ -29,7 +30,14 @@ type State = { auction: Auction; players: Player[]; rounds: Round[]; bids: Bid[]
 const SEAT_COLORS = ["text-accent", "text-accent-2", "text-fuchsia-400", "text-emerald-400"]
 
 const toSlot = (r: Round | null): SlotItem | null =>
-  r && { name: r.item_name, rarity: r.item_rarity, type: r.item_type, iconUrl: r.item_icon_url, price: r.price }
+  r && {
+    name: r.item_name,
+    rarity: r.item_rarity,
+    type: r.item_type,
+    iconUrl: r.item_icon_url,
+    price: r.price,
+    lottery: r.status === "zugelost",
+  }
 
 export function AuctionRoom({
   initial,
@@ -326,12 +334,12 @@ function BiddingStage({
   now: number
   onBid: (amount: number | null) => Promise<boolean>
 }) {
-  const [amount, setAmount] = useState<number>(Math.min(auction.bid_step, me?.gold ?? 0))
+  const [amount, setAmount] = useState<number>(auction.bid_step)
   const [sending, setSending] = useState(false)
   const left = secondsLeft(round.deadline, now)
-  const active = players.filter((p) => isActive(p, auction))
+  const active = players.filter((p) => canBid(p, auction))
   const acted = active.filter((p) => p.acted_round >= round.round_no).length
-  const canBid = !!me && isActive(me, auction) && !myBid
+  const myTurn = !!me && canBid(me, auction) && !myBid
   const invalid = me ? validateBid(amount, me.gold, auction.bid_step) : null
 
   async function submit(value: number | null) {
@@ -353,8 +361,17 @@ function BiddingStage({
 
       <div className="panel flex flex-col gap-4">
         {!me && <p className="text-muted">Du schaust zu. Gebote werden aufgedeckt, sobald alle gehandelt haben.</p>}
-        {me && !isActive(me, auction) && (
+        {me && !needsItems(me, auction) && (
           <p className="text-lg font-bold text-win">Dein Loadout ist komplett ✓ – du schaust jetzt zu.</p>
+        )}
+        {me && needsItems(me, auction) && !canBid(me, auction) && (
+          <div className="text-center">
+            <div className="text-5xl">🎲</div>
+            <p className="mt-2 text-lg font-bold">Kein Gold mehr</p>
+            <p className="text-sm text-muted">
+              Deine {auction.items_per_player - me.item_count} offenen Slots werden am Ende der Auktion zufällig zugelost.
+            </p>
+          </div>
         )}
         {me && myBid && (
           <div className="text-center">
@@ -363,17 +380,17 @@ function BiddingStage({
             <p className="mt-2 text-sm text-muted">Warte auf die anderen…</p>
           </div>
         )}
-        {canBid && (
+        {myTurn && (
           <>
             <div className="flex items-baseline justify-between">
               <h2 className="font-display text-2xl">Dein Gebot</h2>
               <span className="font-bold text-accent">🪙 {me.gold} verfügbar</span>
             </div>
             <div className="flex items-center gap-2">
-              <button className="btn-secondary w-12 text-xl" onClick={() => setAmount((a) => Math.max(0, a - auction.bid_step))}>−</button>
+              <button className="btn-secondary w-12 text-xl" onClick={() => setAmount((a) => Math.max(auction.bid_step, (a || 0) - auction.bid_step))}>−</button>
               <input
                 type="number"
-                min={0}
+                min={auction.bid_step}
                 max={me.gold}
                 step={auction.bid_step}
                 value={Number.isNaN(amount) ? "" : amount}
@@ -400,7 +417,8 @@ function BiddingStage({
               </button>
             </div>
             <p className="text-xs text-muted">
-              Gebote in {auction.bid_step}er-Schritten, 0 ist erlaubt (gewinnt, wenn alle anderen skippen). Bei Gleichstand entscheidet das Los.
+              Mindestgebot {auction.bid_step} Gold, in {auction.bid_step}er-Schritten. Bei Gleichstand entscheidet das Los. Wer kein Gold mehr hat,
+              bekommt seine offenen Slots am Ende zugelost.
             </p>
           </>
         )}
@@ -475,10 +493,13 @@ function PlayerGrid({
   return (
     <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {players.map((p) => {
-        const done = !isActive(p, auction)
+        const done = !needsItems(p, auction)
+        const broke = !done && !canBid(p, auction)
         const acted = currentRound && p.acted_round >= currentRound.round_no
         const status = done ? (
           <span className="chip border-win text-win">Fertig</span>
+        ) : broke ? (
+          <span className="chip border-accent-2 text-accent-2" title="Offene Slots werden am Ende zugelost">🎲 Pleite</span>
         ) : currentRound ? (
           acted ? <span className="chip border-win text-win">✓ gehandelt</span> : <span className="chip animate-pulse">überlegt…</span>
         ) : null
@@ -499,9 +520,12 @@ function PlayerGrid({
 
 function History({ rounds, bids, seatName }: { rounds: Round[]; bids: Bid[]; seatName: (s: number) => string }) {
   const done = rounds.filter((r) => r.status !== "bietet").sort((a, b) => b.round_no - a.round_no)
+  const auctioned = done.filter((r) => r.status !== "zugelost").length
   return (
     <details className="panel">
-      <summary className="cursor-pointer font-display text-xl">Verlauf ({done.length} Items)</summary>
+      <summary className="cursor-pointer font-display text-xl">
+        Verlauf ({auctioned} Items{done.length > auctioned && ` + ${done.length - auctioned} zugelost`})
+      </summary>
       <ul className="mt-3 divide-y divide-line text-sm">
         {done.map((r) => (
           <li key={r.id} className="flex flex-wrap items-center gap-2 py-2">
@@ -511,6 +535,10 @@ function History({ rounds, bids, seatName }: { rounds: Round[]; bids: Bid[]; sea
             <span className="ml-auto">
               {r.status === "verworfen" ? (
                 <span className="text-muted">verworfen</span>
+              ) : r.status === "zugelost" ? (
+                <>
+                  🎲 <b className={SEAT_COLORS[r.winner_seat! - 1]}>{seatName(r.winner_seat!)}</b> zugelost
+                </>
               ) : (
                 <>
                   <b className={SEAT_COLORS[r.winner_seat! - 1]}>{seatName(r.winner_seat!)}</b> für {r.price} Gold{r.tie && " (Los)"}
@@ -538,6 +566,7 @@ function Finale({ auction, players, rounds, isAdmin }: { auction: Auction; playe
   const [challengeId, setChallengeId] = useState(auction.challenge_id)
   const [saving, setSaving] = useState(false)
   const [saveError, setSaveError] = useState<string | null>(null)
+  const lotteryCount = rounds.filter((r) => r.status === "zugelost").length
   const ranking = useMemo(
     () => [...players].sort((a, b) => b.gold - a.gold).map((p) => p.seat),
     [players],
@@ -552,6 +581,7 @@ function Finale({ auction, players, rounds, isAdmin }: { auction: Auction; playe
           <div className="font-display text-4xl text-accent sm:text-5xl">{auction.title ?? "Loot-Auktion"}</div>
           <div className="text-sm text-muted">
             Die fertigen Loadouts
+            {lotteryCount > 0 && ` · 🎲 ${lotteryCount} Items zugelost`}
             {auction.ended_reason === "pool_leer" && " · Lootpool war leer, Auktion vorzeitig beendet"}
           </div>
         </div>
@@ -569,7 +599,7 @@ function Finale({ auction, players, rounds, isAdmin }: { auction: Auction; playe
                   {items.map((r, i) => (
                     <li key={i} className="flex justify-between border-b border-line/50 py-0.5">
                       <span>{r?.item_name ?? "—"}</span>
-                      <span className="text-muted">{r ? `${r.price} 🪙` : ""}</span>
+                      <span className="text-muted">{r ? (r.status === "zugelost" ? "🎲 zugelost" : `${r.price} 🪙`) : ""}</span>
                     </li>
                   ))}
                 </ul>

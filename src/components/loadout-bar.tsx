@@ -2,7 +2,15 @@ import clsx from "clsx"
 import { RARITY_LABEL, type Rarity } from "@/lib/constants"
 import { ItemIcon } from "./item-icon"
 
-export type SlotItem = { name: string; rarity: string; type: string; iconUrl?: string | null; price?: number | null }
+export type SlotItem = {
+  name: string
+  rarity: string
+  type: string
+  iconUrl?: string | null
+  price?: number | null
+  /** Am Ende zugelost statt ersteigert */
+  lottery?: boolean
+}
 
 // Fortnite-Hotbar: Raritäts-Hintergrund mit Lichtkegel, Icon mittig, farbige Leiste unten
 const SLOT_BG: Record<Rarity, string> = {
@@ -34,7 +42,7 @@ export function LoadoutSlot({ item, index, size = "md" }: { item: SlotItem | nul
         dims,
         item ? "border-white/70 shadow-lg" : "border-white/15 bg-black/40",
       )}
-      title={item ? `${item.name} (${RARITY_LABEL[rarity!] ?? item.rarity})${item.price != null ? ` – ${item.price} Gold` : ""}` : `Slot ${index + 1}`}
+      title={item ? `${item.name} (${RARITY_LABEL[rarity!] ?? item.rarity})${item.lottery ? " – zugelost" : item.price != null ? ` – ${item.price} Gold` : ""}` : `Slot ${index + 1}`}
     >
       {item && (
         <>
@@ -42,8 +50,10 @@ export function LoadoutSlot({ item, index, size = "md" }: { item: SlotItem | nul
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_25%,rgba(255,255,255,.45),transparent_60%)]" />
           <ItemIcon url={item.iconUrl} type={item.type} name={item.name} className="absolute inset-[8%] h-[84%] w-[84%] text-2xl sm:text-3xl" />
           <div className={clsx("absolute inset-x-0 bottom-0 h-1.5", SLOT_BAR[rarity!] ?? SLOT_BAR.grau)} />
-          {item.price != null && size !== "sm" && (
-            <div className="absolute right-0.5 top-0.5 rounded bg-black/60 px-1 text-[10px] font-bold text-accent">{item.price}</div>
+          {(item.lottery || item.price != null) && size !== "sm" && (
+            <div className="absolute right-0.5 top-0.5 rounded bg-black/60 px-1 text-[10px] font-bold text-accent">
+              {item.lottery ? "🎲" : item.price}
+            </div>
           )}
         </>
       )}

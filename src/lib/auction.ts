@@ -8,7 +8,7 @@ export type Bid = Tables<"auction_bids">
 /** Prüft ein Gebot wie die Datenbank (auction_bid) – für sofortiges Feedback im UI. */
 export function validateBid(amount: number, gold: number, step: number): string | null {
   if (!Number.isInteger(amount)) return "Nur ganze Zahlen"
-  if (amount < 0) return "Gebot darf nicht negativ sein"
+  if (amount < step) return `Mindestgebot ist ${step} Gold`
   if (amount % step !== 0) return `Nur in ${step}er-Schritten`
   if (amount > gold) return "Nicht genug Gold"
   return null
@@ -21,16 +21,22 @@ export function quickBids(gold: number, step: number): number[] {
   return [...new Set(opts.filter((v) => v > 0 && v <= gold))].sort((a, b) => a - b)
 }
 
-/** Gewonnene Items eines Sitzes in Gewinn-Reihenfolge, aufgefüllt mit null bis zur Slot-Anzahl. */
+/** Ersteigerte und zugeloste Items eines Sitzes in Reihenfolge, aufgefüllt mit null bis zur Slot-Anzahl. */
 export function loadoutFor(seat: number, rounds: readonly Round[], slots: number): (Round | null)[] {
   const won = rounds
-    .filter((r) => r.status === "entschieden" && r.winner_seat === seat)
+    .filter((r) => (r.status === "entschieden" || r.status === "zugelost") && r.winner_seat === seat)
     .sort((a, b) => a.round_no - b.round_no)
   return Array.from({ length: slots }, (_, i) => won[i] ?? null)
 }
 
-export function isActive(p: Player, a: Auction): boolean {
+/** Hat noch freie Slots. */
+export function needsItems(p: Player, a: Auction): boolean {
   return p.item_count < a.items_per_player
+}
+
+/** Bietet noch mit: freie Slots und genug Gold für das Mindestgebot. Sonst wird am Ende zugelost. */
+export function canBid(p: Player, a: Auction): boolean {
+  return needsItems(p, a) && p.gold >= a.bid_step
 }
 
 export type Phase =
@@ -44,7 +50,8 @@ export function phaseOf(a: Auction, rounds: readonly Round[], now: number): Phas
   if (a.status === "lobby") return { kind: "lobby" }
   const sorted = [...rounds].sort((x, y) => x.round_no - y.round_no)
   const open = sorted.find((r) => r.status === "bietet") ?? null
-  const lastResolved = [...sorted].reverse().find((r) => r.status !== "bietet") ?? null
+  // Zugeloste Items haben keine Auflösung – nur echte Bieterunden zeigen
+  const lastResolved = [...sorted].reverse().find((r) => r.status === "entschieden" || r.status === "verworfen") ?? null
   if (a.status === "beendet") {
     // Letztes Ergebnis noch kurz zeigen, bevor der Abschluss-Screen kommt
     if (lastResolved?.resolved_at && now - Date.parse(lastResolved.resolved_at) < 5000) {
