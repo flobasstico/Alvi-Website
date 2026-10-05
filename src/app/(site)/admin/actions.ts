@@ -219,6 +219,12 @@ export async function setSeasonMap(seasonId: number, url: string | null) {
   done((await supabase.from("seasons").update({ map_image_url: url }).eq("id", seasonId)).error)
 }
 
+/** Alle Drop-Spots einer Season löschen, z. B. nach einer neuen Karte */
+export async function deleteAllSpots(seasonId: number) {
+  const supabase = await requireAdmin()
+  done((await supabase.from("drop_spots").delete().eq("season_id", seasonId)).error)
+}
+
 export async function addManualChallenge(form: FormData) {
   const supabase = await requireAdmin()
   const title = str(form, "title")

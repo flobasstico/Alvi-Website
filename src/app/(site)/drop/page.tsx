@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
 import { getCurrentSeason } from "@/lib/season"
 import { getViewer } from "@/lib/supabase/server"
@@ -18,6 +19,11 @@ export default async function DropPage() {
   return (
     <>
       <PageTitle title="Drop-Spot-Roulette" subtitle="Zufälliger Landeort auf der aktuellen Map – plus eine Zusatzregel." />
+      {isAdmin && (
+        <Link href="/admin?tab=spots" className="btn-secondary mb-4 inline-flex px-3 py-1 text-sm">
+          🗺️ Karte &amp; Spots bearbeiten
+        </Link>
+      )}
       <DropRoulette spots={spots ?? []} rules={(rules ?? []).map((r) => ({ ...r, weight: 1 }))} mapUrl={season?.map_image_url} isAdmin={isAdmin} />
     </>
   )

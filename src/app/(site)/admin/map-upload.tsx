@@ -4,7 +4,7 @@ import { useState, useTransition } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { setSeasonMap } from "./actions"
 
-export function MapUpload({ seasonId, current }: { seasonId: number; current: string | null }) {
+export function MapUpload({ seasonId, current, large }: { seasonId: number; current: string | null; large?: boolean }) {
   const [error, setError] = useState<string | null>(null)
   const [pending, start] = useTransition()
 
@@ -23,12 +23,12 @@ export function MapUpload({ seasonId, current }: { seasonId: number; current: st
     <div className="flex flex-wrap items-center gap-3 text-sm">
       {current ? (
         // eslint-disable-next-line @next/next/no-img-element
-        <img src={current} alt="Map" className="h-16 w-16 rounded-lg border border-line object-cover" />
+        <img src={current} alt="Map" className={large ? "h-28 w-28 rounded-lg border border-line object-cover" : "h-16 w-16 rounded-lg border border-line object-cover"} />
       ) : (
         <span className="text-muted">Keine Map (Platzhalter wird genutzt)</span>
       )}
-      <label className="btn-secondary cursor-pointer px-3 py-1 text-xs">
-        {pending ? "Speichere…" : "Map hochladen"}
+      <label className={large ? "btn-primary cursor-pointer" : "btn-secondary cursor-pointer px-3 py-1 text-xs"}>
+        {pending ? "Speichere…" : current ? "Neue Karte hochladen" : "Karte hochladen"}
         <input
           type="file"
           accept="image/png,image/jpeg,image/webp"

@@ -31,6 +31,7 @@ import {
 } from "./actions"
 import { ItemIconUpload } from "./item-icon-upload"
 import { LootImport } from "./loot-import"
+import { DeleteAllSpots } from "./delete-all-spots"
 import { MapUpload } from "./map-upload"
 import { SpotEditor } from "./spot-editor"
 
@@ -315,20 +316,36 @@ async function SpotsTab({ seasonId, mapUrl }: { seasonId: number | null; mapUrl:
   const { supabase } = await getViewer()
   const { data } = seasonId ? await supabase.from("drop_spots").select("*").eq("season_id", seasonId).order("name") : { data: [] }
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
-      <SpotEditor spots={data ?? []} mapUrl={mapUrl} disabled={!seasonId} />
-      <section className="panel h-fit">
-        <h2 className="mb-2 font-display text-2xl">Spots</h2>
-        <ul className="divide-y divide-line">
-          {data?.map((s) => (
-            <Row key={s.id} inactive={!s.active}>
-              <span className="flex-1 font-semibold">{s.name}</span>
-              <ToggleButton table="drop_spots" id={s.id} active={s.active} />
-              <DeleteButton table="drop_spots" id={s.id} />
-            </Row>
-          ))}
-        </ul>
-      </section>
+    <div className="flex flex-col gap-6">
+      {seasonId && (
+        <section className="panel flex flex-col gap-3">
+          <h2 className="font-display text-2xl">Karte der aktuellen Season</h2>
+          <p className="text-sm text-muted">
+            Quadratisches Bild (PNG, JPG oder WebP), z. B. ein Screenshot der Fortnite-Map. Die Karte erscheint sofort beim
+            Drop-Spot-Roulette. Spots sind in Prozent der Karte gespeichert – passt die neue Karte nicht mehr zu den alten
+            Spots, lösch sie und setz sie unten per Klick neu.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <MapUpload seasonId={seasonId} current={mapUrl} large />
+            {!!data?.length && <DeleteAllSpots seasonId={seasonId} count={data.length} />}
+          </div>
+        </section>
+      )}
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <SpotEditor spots={data ?? []} mapUrl={mapUrl} disabled={!seasonId} />
+        <section className="panel h-fit">
+          <h2 className="mb-2 font-display text-2xl">Spots</h2>
+          <ul className="divide-y divide-line">
+            {data?.map((s) => (
+              <Row key={s.id} inactive={!s.active}>
+                <span className="flex-1 font-semibold">{s.name}</span>
+                <ToggleButton table="drop_spots" id={s.id} active={s.active} />
+                <DeleteButton table="drop_spots" id={s.id} />
+              </Row>
+            ))}
+          </ul>
+        </section>
+      </div>
     </div>
   )
 }
