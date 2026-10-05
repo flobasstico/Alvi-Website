@@ -140,7 +140,9 @@ export function EscalationRoom({
             isHost={isHost}
             isPlayer={isPlayer}
             busy={busy}
-            onJoin={() => call(() => supabase.rpc("escalation_join", { p_session: session.id }))}
+            codeKind="eskalation"
+            roundId={session.id}
+            onJoin={(code) => call(() => supabase.rpc("escalation_join", { p_session: session.id, p_code: code }))}
             onLeave={(user) => call(() => supabase.rpc("escalation_leave", { p_session: session.id, p_user: user }))}
           />
 

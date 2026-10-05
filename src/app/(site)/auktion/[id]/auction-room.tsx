@@ -22,7 +22,7 @@ import {
 import { celebrate } from "@/lib/confetti"
 import { ITEM_TYPE_LABEL, RARITY_CLASS, RARITY_LABEL, type Rarity } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
-import { WinnerPicker } from "@/components/session/players"
+import { JoinCodeBox, JoinCodeForm, useJoinCode, WinnerPicker } from "@/components/session/players"
 import { ExportButtons } from "./export-buttons"
 
 type State = { auction: Auction; players: Player[]; rounds: Round[]; bids: Bid[] }
@@ -146,7 +146,7 @@ export function AuctionRoom({
           me={me}
           isHost={isHost}
           loggedIn={!!userId}
-          onJoin={() => rpc(supabase.rpc("auction_join", { p_auction: auction.id }))}
+          onJoin={(code) => rpc(supabase.rpc("auction_join", { p_auction: auction.id, p_code: code }))}
           onLeave={(seat) => rpc(supabase.rpc("auction_leave", { p_auction: auction.id, p_seat: seat ?? null }))}
           onStart={() => rpc(supabase.rpc("auction_start", { p_auction: auction.id }))}
         />
@@ -216,11 +216,12 @@ function Lobby({
   me: Player | null
   isHost: boolean
   loggedIn: boolean
-  onJoin: () => void
+  onJoin: (code: string | null) => void
   onLeave: (seat?: number) => void
   onStart: () => void
 }) {
-  const [copied, setCopied] = useState(false)
+  // Host und Admins sehen den Join-Code und brauchen selbst keinen
+  const code = useJoinCode("auktion", auction.id, loggedIn)
   const seats = Array.from({ length: auction.max_players }, (_, i) => players.find((p) => p.seat === i + 1) ?? null)
   const free = seats.some((s) => !s)
 
@@ -229,19 +230,13 @@ function Lobby({
       <div className="panel flex flex-wrap items-center gap-3">
         <div className="flex-1">
           <div className="font-display text-2xl">Lobby</div>
-          <p className="text-sm text-muted">Link an die anderen Creator schicken – sie loggen sich mit Twitch ein und nehmen Platz.</p>
+          <p className="text-sm text-muted">
+            {code
+              ? "Einladungslink an die anderen Creator schicken – sie loggen sich mit Twitch ein und nehmen Platz."
+              : "Zum Mitspielen brauchst du den Join-Code vom Host."}
+          </p>
         </div>
-        <button
-          className="btn-secondary"
-          onClick={async () => {
-            await navigator.clipboard.writeText(location.href)
-            setCopied(true)
-            setTimeout(() => setCopied(false), 2000)
-          }}
-        >
-          {copied ? "Link kopiert ✓" : "Einladungslink kopieren"}
-        </button>
-        {!me && loggedIn && free && <button className="btn-primary" onClick={onJoin}>Platz nehmen</button>}
+        {!me && loggedIn && free && (code ? <button className="btn-primary" onClick={() => onJoin(null)}>Platz nehmen</button> : <JoinCodeForm busy={false} onJoin={onJoin} label="Platz nehmen" />)}
         {!loggedIn && <span className="text-sm text-muted">Zum Mitspielen mit Twitch einloggen.</span>}
         {me && <button className="btn-secondary" onClick={() => onLeave()}>Platz verlassen</button>}
         {isHost && (
@@ -249,6 +244,7 @@ function Lobby({
             Auktion starten ({players.length}/{auction.max_players})
           </button>
         )}
+        {code && <JoinCodeBox code={code} />}
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">

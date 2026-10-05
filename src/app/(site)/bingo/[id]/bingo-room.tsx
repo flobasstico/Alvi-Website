@@ -155,7 +155,9 @@ export function BingoRoom({ initial, userId, isAdmin }: { initial: BingoState; u
             isPlayer={!!me}
             busy={busy}
             canJoin={round.status === "lobby"}
-            onJoin={() => call(() => supabase.rpc("bingo_join", { p_round: round.id }))}
+            codeKind="bingo"
+            roundId={round.id}
+            onJoin={(code) => call(() => supabase.rpc("bingo_join", { p_round: round.id, p_code: code }))}
             onLeave={(user) => call(() => supabase.rpc("bingo_leave", { p_round: round.id, p_user: user }))}
           />
         </div>

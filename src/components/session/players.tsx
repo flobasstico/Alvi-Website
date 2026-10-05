@@ -1,9 +1,85 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { createClient } from "@/lib/supabase/client"
 
 /** Mitspieler einer Mehrspieler-Runde (Regel-Eskalation, Loadout-Würfel) */
 export type SessionPlayer = { user_id: string; display_name: string | null; avatar_url: string | null }
+
+/** Runden mit Join-Code */
+export type JoinKind = "auktion" | "eskalation" | "loadout" | "bingo" | "olympiade"
+
+/** Join-Code der Runde – nur Host und Admins bekommen ihn (sonst null) */
+export function useJoinCode(kind: JoinKind, roundId: number, enabled: boolean) {
+  const [code, setCode] = useState<string | null>(null)
+  useEffect(() => {
+    if (!enabled) return
+    let alive = true
+    createClient()
+      .rpc("join_code", { p_kind: kind, p_id: roundId })
+      .then(({ data }) => alive && setCode(data ?? null))
+    return () => {
+      alive = false
+    }
+  }, [kind, roundId, enabled])
+  return code
+}
+
+/** Code aus dem Einladungslink (?code=…) */
+function codeFromUrl() {
+  if (typeof window === "undefined") return ""
+  return new URLSearchParams(location.search).get("code")?.toUpperCase() ?? ""
+}
+
+/** Für Host/Admins: Code verdeckt anzeigen (Stream!), kopieren, Einladungslink mit Code */
+export function JoinCodeBox({ code }: { code: string }) {
+  const [show, setShow] = useState(false)
+  const link = typeof window === "undefined" ? "" : `${location.origin}${location.pathname}?code=${code}`
+  return (
+    <div className="flex w-full flex-wrap items-center gap-2 rounded-xl border border-accent/40 bg-accent/5 px-3 py-2 text-sm">
+      <span className="font-bold">🔑 Join-Code:</span>
+      <span className="font-mono text-lg tracking-[0.3em]">{show ? code : "••••••"}</span>
+      <button className="text-xs text-muted underline hover:text-white" onClick={() => setShow((v) => !v)}>
+        {show ? "verbergen" : "anzeigen"}
+      </button>
+      <span className="ml-auto flex flex-wrap gap-1">
+        <CopyButton text={code} label="Code kopieren" />
+        <CopyButton text={link} label="Einladungslink kopieren" />
+      </span>
+      <p className="w-full text-xs text-muted">
+        Nur an deine Mitspieler schicken (z. B. per Discord) – ohne Code kann niemand beitreten, auch wenn er die Seite im Stream sieht. Der Link
+        enthält den Code schon.
+      </p>
+    </div>
+  )
+}
+
+/** Für alle anderen: Code eingeben (aus dem Einladungslink vorausgefüllt) und beitreten */
+export function JoinCodeForm({ busy, onJoin, label = "Mitspielen" }: { busy: boolean; onJoin: (code: string) => void; label?: string }) {
+  const [value, setValue] = useState("")
+  useEffect(() => setValue(codeFromUrl()), [])
+  return (
+    <form
+      className="flex items-center gap-2"
+      onSubmit={(e) => {
+        e.preventDefault()
+        onJoin(value.trim())
+      }}
+    >
+      <input
+        value={value}
+        onChange={(e) => setValue(e.target.value.toUpperCase())}
+        maxLength={8}
+        placeholder="Join-Code"
+        aria-label="Join-Code"
+        className="input w-32 py-1 text-center font-mono uppercase tracking-widest"
+      />
+      <button className="btn-primary px-3 py-1 text-sm" disabled={busy || !value.trim()}>
+        {label}
+      </button>
+    </form>
+  )
+}
 
 export function PlayersPanel({
   players,
@@ -17,6 +93,8 @@ export function PlayersPanel({
   onLeave,
   canJoin = true,
   maxPlayers,
+  codeKind,
+  roundId,
 }: {
   players: SessionPlayer[]
   hostId: string
@@ -25,14 +103,19 @@ export function PlayersPanel({
   isHost: boolean
   isPlayer: boolean
   busy: boolean
-  onJoin: () => void
+  /** code: Join-Code (null für Host/Admins, die keinen brauchen) */
+  onJoin: (code: string | null) => void
   onLeave: (user: string | null) => void
   /** Beitreten nur bis zu diesem Zeitpunkt möglich (z. B. vor dem Start) */
   canJoin?: boolean
   maxPlayers?: number
+  /** Spielart und Runde für den Join-Code */
+  codeKind: JoinKind
+  roundId: number
 }) {
-  const pageUrl = typeof window === "undefined" ? "" : location.href
   const full = !!maxPlayers && players.length >= maxPlayers
+  // Host und Admins sehen den Code und brauchen selbst keinen
+  const code = useJoinCode(codeKind, roundId, !!userId && !ended)
   return (
     <div className="panel flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
@@ -41,7 +124,13 @@ export function PlayersPanel({
           {maxPlayers ? `/${maxPlayers}` : ""})
         </h2>
         {!ended && canJoin && userId && !isPlayer && !full && (
-          <button className="btn-primary ml-auto px-3 py-1 text-sm" disabled={busy} onClick={onJoin}>Mitspielen</button>
+          <div className="ml-auto">
+            {code ? (
+              <button className="btn-primary px-3 py-1 text-sm" disabled={busy} onClick={() => onJoin(null)}>Mitspielen</button>
+            ) : (
+              <JoinCodeForm busy={busy} onJoin={onJoin} />
+            )}
+          </div>
         )}
         {!ended && isPlayer && !isHost && (
           <button className="btn-secondary ml-auto px-3 py-1 text-sm" disabled={busy} onClick={() => onLeave(null)}>Austreten</button>
@@ -64,10 +153,10 @@ export function PlayersPanel({
           </li>
         ))}
       </ul>
-      {!ended && (
+      {!ended && code && canJoin && <JoinCodeBox code={code} />}
+      {!ended && !code && canJoin && !isPlayer && (
         <p className="text-xs text-muted">
-          {userId ? "" : "Zum Mitspielen mit Twitch einloggen. "}Diesen Seitenlink an die Mitspieler schicken – nur Mitspieler können als Sieger gewählt werden.
-          <span className="ml-1 inline-block align-middle"><CopyButton text={pageUrl} label="Einladungslink kopieren" /></span>
+          {userId ? "Zum Mitspielen brauchst du den Join-Code vom Host." : "Zum Mitspielen mit Twitch einloggen – den Join-Code bekommst du vom Host."}
         </p>
       )}
     </div>

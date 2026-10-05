@@ -279,7 +279,9 @@ export function OlympicRoom({ initial, userId, isAdmin }: { initial: OlympicStat
             busy={busy}
             canJoin={olympic.status === "lobby"}
             maxPlayers={olympic.max_players}
-            onJoin={() => call(() => supabase.rpc("olympic_join", { p_id: olympic.id }))}
+            codeKind="olympiade"
+            roundId={olympic.id}
+            onJoin={(code) => call(() => supabase.rpc("olympic_join", { p_id: olympic.id, p_code: code }))}
             onLeave={(u) => call(() => supabase.rpc("olympic_leave", { p_id: olympic.id, p_user: u }))}
           />
           {canControl && running && (
