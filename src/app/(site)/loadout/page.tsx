@@ -22,8 +22,8 @@ export default async function LoadoutPage({ searchParams }: { searchParams: Prom
         title="Loadout-Würfel"
         subtitle={
           multi
-            ? "Jeder Mitspieler würfelt sein eigenes Loadout. Mit Start sind alle Loadouts fest, am Ende wählt der Host den Sieger."
-            : `5 Slots aus dem Loot-Pool${season ? ` von „${season.name}“` : ""}. Slots sperren, einzeln neu würfeln, fertig.`
+            ? "Jeder Mitspieler würfelt sein eigenes Loadout (höchstens 3 Würfe). Mit Start sind alle Loadouts fest, am Ende wählt der Host den Sieger."
+            : `5 Slots aus dem Loot-Pool${season ? ` von „${season.name}“` : ""}. Slots sperren, einzeln neu würfeln – höchstens 3 Würfe, dann ist das Loadout fest.`
         }
       />
       <nav className="mb-6 flex gap-2">

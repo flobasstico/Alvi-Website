@@ -9,7 +9,7 @@ import { SLOT_BAR, SLOT_BG } from "@/components/loadout-bar"
 import { SaveChallenge } from "@/components/save-challenge"
 import { celebrate } from "@/lib/confetti"
 import { ITEM_TYPE_LABEL, RARITIES, RARITY_CLASS, RARITY_LABEL, type Rarity } from "@/lib/constants"
-import { filterPool, LOADOUT_SLOTS, rollLoadout, type LootItem } from "@/lib/loadout"
+import { filterPool, LOADOUT_SLOTS, MAX_ROLLS, rollLoadout, type LootItem } from "@/lib/loadout"
 import { pushOverlay } from "@/lib/live-overlay"
 import { pick } from "@/lib/random"
 import { createClient } from "@/lib/supabase/client"
@@ -23,6 +23,7 @@ export function LoadoutDice({
   initialSlots,
   onRolled,
   overlayLogin = null,
+  initialRolls = 0,
 }: {
   items: LootItem[]
   isAdmin: boolean
@@ -33,6 +34,8 @@ export function LoadoutDice({
   onRolled?: (slots: (LootItem | null)[]) => void
   /** Twitch-Name für den eigenen OBS-Link; mit Login wird jeder Wurf fürs Overlay gespeichert */
   overlayLogin?: string | null
+  /** Bereits verbrauchte Würfe (Mehrspieler: aus der Datenbank) */
+  initialRolls?: number
 }) {
   const [slots, setSlots] = useState<(LootItem | null)[]>(initialSlots ?? empty)
   const [locked, setLocked] = useState<boolean[]>(Array(LOADOUT_SLOTS).fill(false))
@@ -42,13 +45,17 @@ export function LoadoutDice({
   const mustHeal = fixedOptions?.mustHeal ?? ownMustHeal
   const [rolling, setRolling] = useState(false)
   const [rollKey, setRollKey] = useState(0)
+  const [rolls, setRolls] = useState(initialRolls)
+  const left = Math.max(0, MAX_ROLLS - rolls)
+  const fixed = left === 0
 
   const opts = { rarities, mustHeal }
   const pool = filterPool(items, opts)
 
   async function roll(onlySlot?: number) {
-    if (rolling) return
+    if (rolling || fixed) return
     setRolling(true)
+    setRolls((r) => r + 1)
     const lockMask = onlySlot === undefined ? locked : locked.map((_, i) => i !== onlySlot)
     // Kurzes "Durchrattern" für die Spannung
     for (let t = 0; t < 12; t++) {
@@ -116,11 +123,11 @@ export function LoadoutDice({
               <button
                 className={clsx("btn flex-1 px-2 py-1 text-xs", locked[i] ? "bg-accent text-black" : "btn-secondary")}
                 onClick={() => setLocked((l) => l.map((v, j) => (j === i ? !v : v)))}
-                disabled={!item}
+                disabled={!item || fixed}
               >
                 {locked[i] ? "Gesperrt" : "Sperren"}
               </button>
-              <button className="btn-secondary px-2 py-1 text-xs" onClick={() => roll(i)} disabled={rolling || locked[i]} title="Nur diesen Slot würfeln">
+              <button className="btn-secondary px-2 py-1 text-xs" onClick={() => roll(i)} disabled={rolling || locked[i] || fixed} title="Nur diesen Slot würfeln (zählt als Wurf)">
                 🎲
               </button>
             </div>
@@ -129,9 +136,12 @@ export function LoadoutDice({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button className="btn-primary px-8 py-3 font-display text-2xl" onClick={() => roll()} disabled={rolling || pool.length === 0}>
-          {rolling ? "Würfelt…" : "WÜRFELN!"}
+        <button className="btn-primary px-8 py-3 font-display text-2xl" onClick={() => roll()} disabled={rolling || fixed || pool.length === 0}>
+          {rolling ? "Würfelt…" : fixed ? "🔒 LOADOUT FEST" : "WÜRFELN!"}
         </button>
+        <span className={clsx("chip", fixed ? "border-accent text-accent" : "")}>
+          {fixed ? "Alle 3 Würfe verbraucht – das Loadout steht" : `Noch ${left} von ${MAX_ROLLS} Würfen`}
+        </span>
         {isAdmin && !fixedOptions && filled.length > 0 && !rolling && (
           <SaveChallenge source="loadout" title={title} config={{ items: filled.map(({ name, rarity, type, icon_url }) => ({ name, rarity, type, icon_url })) }} />
         )}

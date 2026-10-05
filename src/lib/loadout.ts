@@ -2,6 +2,9 @@ import { pick, shuffle } from "./random"
 
 export const LOADOUT_SLOTS = 5
 
+/** Höchstens so oft darf gewürfelt werden (ganzes Loadout oder einzelner Slot), danach ist das Loadout fest */
+export const MAX_ROLLS = 3
+
 export type LootItem = { id: number; name: string; rarity: string; type: string; icon_url?: string | null }
 
 export type LoadoutOptions = {

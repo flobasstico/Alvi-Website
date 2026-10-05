@@ -52,9 +52,9 @@ export type Database = {
         Relationships: Rel[]
       }
       loadout_players: {
-        Row: { avatar_url: string | null; display_name: string | null; item_ids: (number | null)[]; joined_at: string; rolled_at: string | null; session_id: number; user_id: string }
-        Insert: { avatar_url?: string | null; display_name?: string | null; item_ids?: (number | null)[]; joined_at?: string; rolled_at?: string | null; session_id: number; user_id: string }
-        Update: { avatar_url?: string | null; display_name?: string | null; item_ids?: (number | null)[]; joined_at?: string; rolled_at?: string | null; session_id?: number; user_id?: string }
+        Row: { rolls: number; avatar_url: string | null; display_name: string | null; item_ids: (number | null)[]; joined_at: string; rolled_at: string | null; session_id: number; user_id: string }
+        Insert: { rolls?: number; avatar_url?: string | null; display_name?: string | null; item_ids?: (number | null)[]; joined_at?: string; rolled_at?: string | null; session_id: number; user_id: string }
+        Update: { rolls?: number; avatar_url?: string | null; display_name?: string | null; item_ids?: (number | null)[]; joined_at?: string; rolled_at?: string | null; session_id?: number; user_id?: string }
         Relationships: Rel[]
       }
       win_challenges: {

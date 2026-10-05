@@ -98,6 +98,7 @@ export function LoadoutRoom({ initial, items, userId, login }: { initial: State;
             isAdmin={false}
             fixedOptions={{ rarities: session.rarities, mustHeal: session.must_heal }}
             initialSlots={me.rolled_at ? toItems(me).slice(0, LOADOUT_SLOTS) : undefined}
+            initialRolls={me.rolls}
             onRolled={saveRoll}
             overlayLogin={login}
           />
