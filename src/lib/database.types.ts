@@ -69,6 +69,24 @@ export type Database = {
         Update: { challenge_id?: number; id?: never; name?: string; position?: number; target?: number; wins?: number }
         Relationships: Rel[]
       }
+      bingo_card_templates: {
+        Row: { author_id: string; author_name: string | null; created_at: string; id: number; tasks: string[]; title: string }
+        Insert: { author_id?: string; author_name?: string | null; created_at?: string; id?: never; tasks: string[]; title: string }
+        Update: { author_id?: string; author_name?: string | null; created_at?: string; id?: never; tasks?: string[]; title?: string }
+        Relationships: Rel[]
+      }
+      bingo_rounds: {
+        Row: { challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; max_players: number; official: boolean; result: string | null; started_at: string | null; status: string; tasks: string[]; template_id: number | null; title: string | null }
+        Insert: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; max_players?: number; official?: boolean; result?: string | null; started_at?: string | null; status?: string; tasks: string[]; template_id?: number | null; title?: string | null }
+        Update: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; max_players?: number; official?: boolean; result?: string | null; started_at?: string | null; status?: string; tasks?: string[]; template_id?: number | null; title?: string | null }
+        Relationships: Rel[]
+      }
+      bingo_round_players: {
+        Row: { avatar_url: string | null; display_name: string | null; joined_at: string; marks: boolean[]; points: number | null; round_id: number; user_id: string; won: boolean }
+        Insert: { avatar_url?: string | null; display_name?: string | null; joined_at?: string; marks?: boolean[]; points?: number | null; round_id: number; user_id: string; won?: boolean }
+        Update: { avatar_url?: string | null; display_name?: string | null; joined_at?: string; marks?: boolean[]; points?: number | null; round_id?: number; user_id?: string; won?: boolean }
+        Relationships: Rel[]
+      }
       escalation_players: {
         Row: { avatar_url: string | null; display_name: string | null; joined_at: string; session_id: number; user_id: string }
         Insert: { avatar_url?: string | null; display_name?: string | null; joined_at?: string; session_id: number; user_id: string }
@@ -217,6 +235,13 @@ export type Database = {
       win_timer: { Args: { p_action: string; p_id: number }; Returns: undefined }
       escalation_replay: { Args: { p_source: number }; Returns: number }
       win_replay: { Args: { p_source: number }; Returns: number }
+      bingo_card_create: { Args: { p_tasks: string[]; p_title: string }; Returns: number }
+      bingo_finish: { Args: { p_round: number }; Returns: string }
+      bingo_join: { Args: { p_round: number }; Returns: undefined }
+      bingo_leave: { Args: { p_round: number; p_user?: string | null }; Returns: undefined }
+      bingo_mark: { Args: { p_index: number; p_on: boolean; p_round: number }; Returns: undefined }
+      bingo_round_create: { Args: { p_max_players: number; p_template: number; p_title: string }; Returns: number }
+      bingo_start: { Args: { p_round: number }; Returns: undefined }
       card_has_bingo: { Args: { p_game_id: number; p_task_ids: number[] }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
     }

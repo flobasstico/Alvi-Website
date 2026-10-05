@@ -3,29 +3,27 @@
 import { useMemo } from "react"
 import { BingoGrid } from "@/components/bingo/bingo-grid"
 import { RankingList } from "@/components/bingo/ranking-list"
-import { useBingo } from "@/components/bingo/use-bingo"
-import { ranking, streamerCard, type BingoState } from "@/lib/bingo-live"
+import { useBingoRound } from "@/components/bingo/use-bingo"
+import { featuredPlayer, ranking, type BingoState } from "@/lib/bingo-live"
 
-// OBS-Overlays: häufiger nachladen, falls Realtime in der Browserquelle hängt
-const POLL_MS = 3000
+// OBS-Overlays folgen der neuesten offiziellen Runde und laden häufiger nach
+const OPTS = { follow: true, pollMs: 3000 }
 
-export function CardOverlay({ initial }: { initial: BingoState }) {
-  const { state } = useBingo(initial, POLL_MS)
-  const marks = useMemo(() => new Set(state.marks), [state.marks])
-  const taskText = useMemo(() => new Map(state.tasks.map((t) => [Number(t.id), t.text])), [state.tasks])
-  if (!state.game) return <Waiting />
+export function CardOverlay({ initial }: { initial: BingoState | null }) {
+  const { state } = useBingoRound(initial, OPTS)
+  const player = state ? featuredPlayer(state) : null
+  if (!state || !player) return <Waiting />
   return (
     <div className="p-2">
-      <BingoGrid title="BINGO" ids={streamerCard(state.game)} marks={marks} taskText={taskText} overlay />
+      <BingoGrid title={`BINGO · ${player.display_name ?? ""}`} tasks={state.round.tasks} marks={player.marks} overlay />
     </div>
   )
 }
 
-export function RankingOverlay({ initial }: { initial: BingoState }) {
-  const { state } = useBingo(initial, POLL_MS)
-  const marks = useMemo(() => new Set(state.marks), [state.marks])
-  const ranked = useMemo(() => ranking(state, marks), [state, marks])
-  if (!state.game) return <Waiting />
+export function RankingOverlay({ initial }: { initial: BingoState | null }) {
+  const { state } = useBingoRound(initial, OPTS)
+  const ranked = useMemo(() => (state ? ranking(state) : []), [state])
+  if (!state) return <Waiting />
   return (
     <div className="flex flex-col gap-2 p-2">
       <div className="rounded-2xl bg-black/70 px-3 py-2 font-display text-3xl text-accent">BINGO-PUNKTE</div>

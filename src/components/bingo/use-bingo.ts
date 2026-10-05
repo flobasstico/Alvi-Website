@@ -1,21 +1,29 @@
 "use client"
 
 import { useCallback, useEffect, useState } from "react"
-import { fetchBingo, type BingoState } from "@/lib/bingo-live"
+import { fetchRound, type BingoState } from "@/lib/bingo-live"
 import { createClient } from "@/lib/supabase/client"
 
-/** Live-Stand der neuesten Bingo-Runde: Realtime + Fallback-Polling. */
-export function useBingo(initial: BingoState, pollMs = 5000) {
+/**
+ * Live-Stand einer Bingo-Runde (Realtime + Polling).
+ * follow = true: immer die neueste offizielle Runde (feste OBS-Links). gone = Runde wurde gelöscht.
+ */
+export function useBingoRound(initial: BingoState | null, { follow = false, pollMs = 4000 } = {}) {
   const [supabase] = useState(createClient)
   const [state, setState] = useState(initial)
+  const [gone, setGone] = useState(false)
+  const id = follow ? null : (initial?.round.id ?? null)
 
   const refetch = useCallback(async () => {
     try {
-      setState(await fetchBingo(supabase))
+      const next = await fetchRound(supabase, id)
+      if (next) setState(next)
+      else if (id) setGone(true)
+      else setState(null)
     } catch {
       // nächster Versuch beim nächsten Event/Poll
     }
-  }, [supabase])
+  }, [supabase, id])
 
   useEffect(() => {
     let timer: ReturnType<typeof setTimeout> | undefined
@@ -24,10 +32,9 @@ export function useBingo(initial: BingoState, pollMs = 5000) {
       timer = setTimeout(refetch, 100)
     }
     const channel = supabase
-      .channel("bingo-live")
-      .on("postgres_changes", { event: "*", schema: "public", table: "bingo_games" }, schedule)
-      .on("postgres_changes", { event: "*", schema: "public", table: "bingo_marks" }, schedule)
-      .on("postgres_changes", { event: "*", schema: "public", table: "bingo_cards" }, schedule)
+      .channel(`bingo-${id ?? "neueste"}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bingo_rounds" }, schedule)
+      .on("postgres_changes", { event: "*", schema: "public", table: "bingo_round_players" }, schedule)
       .subscribe()
     const poll = setInterval(refetch, pollMs)
     return () => {
@@ -35,7 +42,7 @@ export function useBingo(initial: BingoState, pollMs = 5000) {
       clearInterval(poll)
       supabase.removeChannel(channel)
     }
-  }, [supabase, refetch, pollMs])
+  }, [supabase, id, refetch, pollMs])
 
-  return { state, setState, refetch, supabase }
+  return { state, setState, refetch, supabase, gone }
 }

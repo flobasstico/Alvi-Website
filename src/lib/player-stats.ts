@@ -1,5 +1,3 @@
-import { bingoScore, markedCells } from "./bingo"
-
 /** Spiele mit Teilnehmern (Login), die in die Spieler-Statistik eingehen */
 export const PLAYER_GAMES = ["eskalation", "loadout", "auktion", "bingo"] as const
 export type PlayerGame = (typeof PLAYER_GAMES)[number]
@@ -83,22 +81,4 @@ export function sortPlayers(rows: PlayerRow[], key: SortKey = "siege"): PlayerRo
       b.rounds - a.rounds ||
       a.name.localeCompare(b.name, "de"),
   )
-}
-
-/**
- * Bingo-Teilnahmen einer beendeten Runde: Alvis Karte (erste 9 Aufgaben) und alle Zuschauer-Karten.
- * Sieg = höchste Punktzahl der Runde (bei Gleichstand alle Punktgleichen, mindestens 1 Punkt).
- */
-export function bingoParticipations(
-  game: { id: number; task_ids: number[] },
-  cards: readonly { user_id: string; task_ids: number[] }[],
-  marks: ReadonlySet<number>,
-  streamerId: string | null,
-): Participation[] {
-  const entries = [
-    ...(streamerId ? [{ userId: streamerId, ids: game.task_ids.slice(0, 9) }] : []),
-    ...cards.filter((c) => c.user_id !== streamerId).map((c) => ({ userId: c.user_id, ids: c.task_ids })),
-  ].map((e) => ({ userId: e.userId, points: bingoScore(markedCells(e.ids, marks)).points }))
-  const best = Math.max(0, ...entries.map((e) => e.points))
-  return entries.map((e) => ({ userId: e.userId, game: "bingo", round: `bingo-${game.id}`, won: best > 0 && e.points === best, points: e.points }))
 }

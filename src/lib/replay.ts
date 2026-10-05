@@ -4,7 +4,7 @@ type ChallengeLike = { id: number; source: string; status: string; config: Json 
 
 const obj = (c: Json): Record<string, Json> => (c && typeof c === "object" && !Array.isArray(c) ? (c as Record<string, Json>) : {})
 
-/** Link zum Nachspielen einer abgeschlossenen Challenge (Auktion/Loadout/Bingo: keine Nachspiel-Option) */
+/** Link zum Nachspielen einer abgeschlossenen Challenge (Auktion/Loadout: keine Nachspiel-Option) */
 export function replayHref(c: ChallengeLike): string | null {
   if (c.status !== "geschafft" && c.status !== "gescheitert") return null
   const cfg = obj(c.config)
@@ -15,6 +15,8 @@ export function replayHref(c: ChallengeLike): string | null {
       return Array.isArray(cfg.circles) && cfg.circles.length ? `/drop?nachspielen=${c.id}` : null
     case "eskalation":
       return typeof cfg.session_id === "number" ? `/eskalation/${cfg.session_id}` : null
+    case "bingo":
+      return typeof cfg.round_id === "number" ? `/bingo/${cfg.round_id}` : null
     case "winchallenge":
       return typeof cfg.win_challenge_id === "number" ? `/winchallenge/${cfg.win_challenge_id}` : null
     default:

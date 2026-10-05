@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { aggregatePlayers, bingoParticipations, sortPlayers, type Participation } from "./player-stats"
+import { aggregatePlayers, sortPlayers, type Participation } from "./player-stats"
 
 const prof = new Map([
   ["alvi", { name: "Alvi", avatar: null }],
@@ -43,24 +43,5 @@ describe("Spieler-Statistik", () => {
     expect(sortPlayers(aggregatePlayers(parts, prof)).map((r) => r.name)).toEqual(["Kevin", "Alvi", "Flo"])
     expect(sortPlayers(aggregatePlayers(parts, prof), "punkte").map((r) => r.name)).toEqual(["Alvi", "Flo", "Kevin"])
     expect(sortPlayers(aggregatePlayers(parts, prof), "schnitt")[0].name).toBe("Alvi")
-  })
-
-  it("Bingo: Sieger ist die höchste Punktzahl, Alvi spielt mit seiner Karte mit", () => {
-    const game = { id: 1, task_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12] }
-    const cards = [
-      { user_id: "kev", task_ids: [1, 2, 3, 10, 11, 12, 4, 5, 6] }, // obere Reihe 1,2,3 → 3 + 3 = 6
-      { user_id: "flo", task_ids: [10, 11, 12, 4, 5, 6, 7, 8, 9] }, // nichts
-    ]
-    const res = bingoParticipations(game, cards, new Set([1, 2, 3]), "alvi")
-    expect(res).toEqual([
-      { userId: "alvi", game: "bingo", round: "bingo-1", won: true, points: 6 },
-      { userId: "kev", game: "bingo", round: "bingo-1", won: true, points: 6 },
-      { userId: "flo", game: "bingo", round: "bingo-1", won: false, points: 0 },
-    ])
-  })
-
-  it("Bingo ohne erledigte Aufgaben: kein Sieger", () => {
-    const res = bingoParticipations({ id: 2, task_ids: [1, 2, 3, 4, 5, 6, 7, 8, 9] }, [], new Set(), "alvi")
-    expect(res).toEqual([{ userId: "alvi", game: "bingo", round: "bingo-2", won: false, points: 0 }])
   })
 })

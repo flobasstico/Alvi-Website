@@ -1,26 +1,20 @@
 import type { createClient } from "@/lib/supabase/server"
-import { bingoParticipations, type Participation } from "./player-stats"
+import type { Participation } from "./player-stats"
 
 type Client = Awaited<ReturnType<typeof createClient>>
 
 /** Alle Teilnahmen an abgeschlossenen Mehrspieler-Runden + Namen der Personen */
 export async function loadPlayerStats(supabase: Client) {
-  const [esc, escPlayers, lo, loPlayers, auc, aucPlayers, bingo, cards, marks, setting] = await Promise.all([
+  const [esc, escPlayers, lo, loPlayers, auc, aucPlayers, bingo, cards] = await Promise.all([
     supabase.from("escalation_sessions").select("id, winner_id").eq("status", "beendet"),
     supabase.from("escalation_players").select("session_id, user_id"),
     supabase.from("loadout_sessions").select("id, winner_id").eq("status", "beendet"),
     supabase.from("loadout_players").select("session_id, user_id"),
     supabase.from("auctions").select("id, winner_id").not("decided_at", "is", null),
     supabase.from("auction_players").select("auction_id, user_id"),
-    supabase.from("bingo_games").select("id, task_ids").eq("status", "beendet"),
-    supabase.from("bingo_cards").select("game_id, user_id, task_ids"),
-    supabase.from("bingo_marks").select("game_id, task_id"),
-    supabase.from("site_settings").select("value").eq("key", "main_creator_login").maybeSingle(),
+    supabase.from("bingo_rounds").select("id").eq("status", "beendet").eq("official", true),
+    supabase.from("bingo_round_players").select("round_id, user_id, points, won"),
   ])
-  const { data: streamer } = setting.data?.value
-    ? await supabase.from("profiles").select("id").ilike("twitch_login", setting.data.value).limit(1).maybeSingle()
-    : { data: null }
-
   const parts: Participation[] = []
   const winners = new Map((esc.data ?? []).map((s) => [s.id, s.winner_id]))
   for (const p of escPlayers.data ?? [])
@@ -38,11 +32,10 @@ export async function loadPlayerStats(supabase: Client) {
     if (aucWinners.has(p.auction_id))
       parts.push({ userId: p.user_id, game: "auktion", round: `auk-${p.auction_id}`, won: aucWinners.get(p.auction_id) === p.user_id, points: null })
 
-  for (const g of bingo.data ?? []) {
-    const gameMarks = new Set((marks.data ?? []).filter((m) => m.game_id === g.id).map((m) => Number(m.task_id)))
-    const gameCards = (cards.data ?? []).filter((c) => c.game_id === g.id).map((c) => ({ user_id: c.user_id, task_ids: c.task_ids.map(Number) }))
-    parts.push(...bingoParticipations({ id: g.id, task_ids: g.task_ids.map(Number) }, gameCards, gameMarks, streamer?.id ?? null))
-  }
+  // Bingo: Punkte und Sieg stehen nach dem Beenden fest
+  const bingoDone = new Set((bingo.data ?? []).map((r) => r.id))
+  for (const p of cards.data ?? [])
+    if (bingoDone.has(p.round_id)) parts.push({ userId: p.user_id, game: "bingo", round: `bingo-${p.round_id}`, won: p.won, points: p.points ?? 0 })
 
   const ids = [...new Set(parts.map((p) => p.userId))]
   const { data: profiles } = ids.length
