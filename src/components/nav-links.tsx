@@ -2,25 +2,40 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import clsx from "clsx"
 
 export function NavLinks({ items }: { items: readonly { href: string; label: string }[] }) {
   const pathname = usePathname()
   const [open, setOpen] = useState(false)
-  const links = items.map((item) => (
-    <Link
-      key={item.href}
-      href={item.href}
-      onClick={() => setOpen(false)}
-      className={clsx(
-        "rounded-lg px-3 py-1.5 text-sm font-semibold transition",
-        pathname.startsWith(item.href) ? "bg-accent text-black" : "text-muted hover:bg-panel-2 hover:text-white",
-      )}
-    >
-      {item.label}
-    </Link>
-  ))
+  // Angeklickter Menüpunkt, bis die neue Seite da ist → sofortige Rückmeldung beim Klick
+  const [pending, setPending] = useState<string | null>(null)
+
+  useEffect(() => setPending(null), [pathname])
+
+  const isActive = (href: string) => pathname.startsWith(href)
+  const links = items.map((item) => {
+    const loading = pending === item.href
+    const active = loading || (!pending && isActive(item.href))
+    return (
+      <Link
+        key={item.href}
+        href={item.href}
+        onClick={() => {
+          setOpen(false)
+          if (pathname !== item.href) setPending(item.href)
+        }}
+        aria-current={isActive(item.href) ? "page" : undefined}
+        className={clsx(
+          "relative rounded-lg px-3 py-1.5 text-sm font-semibold transition active:scale-95",
+          active ? "bg-accent text-black shadow-[0_0_12px_rgba(255,214,10,.45)]" : "text-muted hover:bg-panel-2 hover:text-white",
+          loading && "animate-pulse",
+        )}
+      >
+        {item.label}
+      </Link>
+    )
+  })
   return (
     <>
       <nav className="hidden flex-wrap gap-1 lg:flex">{links}</nav>
