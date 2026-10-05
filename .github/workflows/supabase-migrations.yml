@@ -1,0 +1,43 @@
+# Spielt neue Datenbank-Änderungen (supabase/migrations/*.sql) automatisch in Supabase ein,
+# sobald sie auf den Live-Branch gepusht werden. Bereits eingespielte Migrationen werden übersprungen.
+# Benötigt das Repository-Secret SUPABASE_DB_URL (Session-Pooler-Verbindung aus dem Supabase-Dashboard).
+name: Supabase-Migrationen
+
+on:
+  push:
+    branches: [claude/alvi-challenge-website]
+    paths: ["supabase/migrations/**"]
+  workflow_dispatch:
+
+concurrency:
+  group: supabase-migrations
+  cancel-in-progress: false
+
+jobs:
+  push:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Secret prüfen
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: |
+          if [ -z "$SUPABASE_DB_URL" ]; then
+            echo "::error::Secret SUPABASE_DB_URL fehlt (GitHub → Settings → Secrets and variables → Actions)."
+            exit 1
+          fi
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 2.119.0
+
+      - name: Ausstehende Migrationen anzeigen
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --dry-run
+
+      - name: Migrationen einspielen
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+        run: supabase db push --db-url "$SUPABASE_DB_URL" --yes

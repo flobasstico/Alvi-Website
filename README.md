@@ -30,6 +30,8 @@ Checks: `npm run lint`, `npm run typecheck`, `npm test` (Vitest), `npm run build
 ### 1. Supabase
 Das Projekt **Alvi** (`bvkpbqsmwmaczqfxvvgn`, eu-central-1) ist schon angelegt. Migrationen und Startdaten sind eingespielt. Für ein neues Projekt spielst du `supabase/migrations/*.sql` in dieser Reihenfolge ein und danach `supabase/seed.sql`.
 
+**Datenbank-Änderungen gehen automatisch live:** Die GitHub Action `.github/workflows/supabase-migrations.yml` spielt bei jedem Push auf `claude/alvi-challenge-website`, der `supabase/migrations/` ändert, die neuen Migrationen per `supabase db push` ein. Schon eingespielte werden übersprungen (Tabelle `supabase_migrations.schema_migrations`). Manuell starten: GitHub → Actions → „Supabase-Migrationen“ → Run workflow. Dafür muss das Repository-Secret `SUPABASE_DB_URL` gesetzt sein: Supabase-Dashboard → **Connect** → **Session pooler** → Verbindungs-URI kopieren und `[YOUR-PASSWORD]` durch das Datenbank-Passwort ersetzen (Sonderzeichen im Passwort URL-kodieren).
+
 ### 2. Twitch-Login
 1. Unter <https://dev.twitch.tv/console/apps> eine Anwendung registrieren.
    - OAuth-Redirect-URL: `https://bvkpbqsmwmaczqfxvvgn.supabase.co/auth/v1/callback`
