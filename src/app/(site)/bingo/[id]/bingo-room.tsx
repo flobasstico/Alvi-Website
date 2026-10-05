@@ -9,7 +9,7 @@ import { CardPreview } from "@/components/bingo/card-editor"
 import { RankingList } from "@/components/bingo/ranking-list"
 import { useBingoRound } from "@/components/bingo/use-bingo"
 import { GoneNote, UnofficialNote } from "@/components/replay-button"
-import { CopyButton, PlayersPanel } from "@/components/session/players"
+import { CopyButton, joinResult, PlayersPanel } from "@/components/session/players"
 import { ranking, type BingoState } from "@/lib/bingo-live"
 import { createClient } from "@/lib/supabase/client"
 
@@ -157,7 +157,7 @@ export function BingoRoom({ initial, userId, isAdmin }: { initial: BingoState; u
             canJoin={round.status === "lobby"}
             codeKind="bingo"
             roundId={round.id}
-            onJoin={(code) => call(() => supabase.rpc("bingo_join", { p_round: round.id, p_code: code }))}
+            onJoin={(code) => call(() => joinResult(supabase.rpc("bingo_join", { p_round: round.id, p_code: code })))}
             onLeave={(user) => call(() => supabase.rpc("bingo_leave", { p_round: round.id, p_user: user }))}
           />
         </div>

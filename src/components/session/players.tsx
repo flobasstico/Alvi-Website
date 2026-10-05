@@ -25,6 +25,12 @@ export function useJoinCode(kind: JoinKind, roundId: number, enabled: boolean) {
   return code
 }
 
+/** Join-Funktionen melden einen falschen Code als Text (null = beigetreten) – hier als normaler Fehler */
+export async function joinResult(call: PromiseLike<{ data: unknown; error: { message: string } | null }>) {
+  const { data, error } = await call
+  return { error: error ?? (typeof data === "string" && data ? { message: data } : null) }
+}
+
 /** Code aus dem Einladungslink (?code=…) */
 function codeFromUrl() {
   if (typeof window === "undefined") return ""
@@ -38,7 +44,7 @@ export function JoinCodeBox({ code }: { code: string }) {
   return (
     <div className="flex w-full flex-wrap items-center gap-2 rounded-xl border border-accent/40 bg-accent/5 px-3 py-2 text-sm">
       <span className="font-bold">🔑 Join-Code:</span>
-      <span className="font-mono text-lg tracking-[0.3em]">{show ? code : "••••••"}</span>
+      <span className="font-mono text-lg tracking-[0.3em]">{show ? code : "••••"}</span>
       <button className="text-xs text-muted underline hover:text-white" onClick={() => setShow((v) => !v)}>
         {show ? "verbergen" : "anzeigen"}
       </button>
@@ -69,10 +75,10 @@ export function JoinCodeForm({ busy, onJoin, label = "Mitspielen" }: { busy: boo
       <input
         value={value}
         onChange={(e) => setValue(e.target.value.toUpperCase())}
-        maxLength={8}
-        placeholder="Join-Code"
+        maxLength={4}
+        placeholder="Code"
         aria-label="Join-Code"
-        className="input w-32 py-1 text-center font-mono uppercase tracking-widest"
+        className="input w-24 py-1 text-center font-mono uppercase tracking-widest"
       />
       <button className="btn-primary px-3 py-1 text-sm" disabled={busy || !value.trim()}>
         {label}

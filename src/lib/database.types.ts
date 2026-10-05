@@ -216,7 +216,7 @@ export type Database = {
     }
     Functions: {
       auction_bid: { Args: { p_amount: number | null; p_round: number }; Returns: undefined }
-      auction_join: { Args: { p_auction: number; p_code?: string | null }; Returns: number }
+      auction_join: { Args: { p_auction: number; p_code?: string | null }; Returns: string | null }
       auction_leave: { Args: { p_auction: number; p_seat?: number | null }; Returns: undefined }
       auction_resolve_expired: { Args: { p_round: number }; Returns: undefined }
       auction_start: { Args: { p_auction: number }; Returns: undefined }
@@ -227,12 +227,12 @@ export type Database = {
       escalation_draw_base: { Args: { p_session: number }; Returns: number }
       escalation_start: { Args: { p_session: number }; Returns: undefined }
       escalation_finish: { Args: { p_session: number; p_winner: string | null }; Returns: undefined }
-      escalation_join: { Args: { p_session: number; p_code?: string | null }; Returns: undefined }
+      escalation_join: { Args: { p_session: number; p_code?: string | null }; Returns: string | null }
       escalation_leave: { Args: { p_session: number; p_user?: string | null }; Returns: undefined }
       escalation_tick: { Args: { p_session: number }; Returns: number }
       loadout_create: { Args: { p_max_players: number; p_must_heal: boolean; p_rarities: string[]; p_title: string }; Returns: number }
       loadout_finish: { Args: { p_session: number; p_winner: string | null }; Returns: undefined }
-      loadout_join: { Args: { p_session: number; p_code?: string | null }; Returns: undefined }
+      loadout_join: { Args: { p_session: number; p_code?: string | null }; Returns: string | null }
       loadout_leave: { Args: { p_session: number; p_user?: string | null }; Returns: undefined }
       loadout_set_items: { Args: { p_items: (number | null)[]; p_session: number }; Returns: undefined }
       loadout_start: { Args: { p_session: number }; Returns: undefined }
@@ -246,7 +246,7 @@ export type Database = {
       join_code: { Args: { p_kind: string; p_id: number }; Returns: string | null }
       admin_delete_round: { Args: { p_kind: string; p_id: number }; Returns: undefined }
       olympic_create: { Args: { p_title: string | null; p_games: string[]; p_max_players: number }; Returns: number }
-      olympic_join: { Args: { p_id: number; p_code?: string | null }; Returns: undefined }
+      olympic_join: { Args: { p_id: number; p_code?: string | null }; Returns: string | null }
       olympic_leave: { Args: { p_id: number; p_user?: string | null }; Returns: undefined }
       olympic_add_game: { Args: { p_id: number; p_name: string }; Returns: undefined }
       olympic_remove_game: { Args: { p_game: number }; Returns: undefined }
@@ -256,7 +256,7 @@ export type Database = {
       olympic_finish: { Args: { p_id: number }; Returns: string }
       bingo_card_create: { Args: { p_tasks: string[]; p_title: string }; Returns: number }
       bingo_finish: { Args: { p_round: number }; Returns: string }
-      bingo_join: { Args: { p_round: number; p_code?: string | null }; Returns: undefined }
+      bingo_join: { Args: { p_round: number; p_code?: string | null }; Returns: string | null }
       bingo_leave: { Args: { p_round: number; p_user?: string | null }; Returns: undefined }
       bingo_mark: { Args: { p_index: number; p_on: boolean; p_round: number }; Returns: undefined }
       bingo_round_create: { Args: { p_max_players: number; p_template: number; p_title: string }; Returns: number }

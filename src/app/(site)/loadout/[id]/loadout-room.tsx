@@ -4,7 +4,7 @@ import clsx from "clsx"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { LoadoutBar, type SlotItem } from "@/components/loadout-bar"
-import { PlayersPanel, WinnerPicker } from "@/components/session/players"
+import { joinResult, PlayersPanel, WinnerPicker } from "@/components/session/players"
 import type { Tables } from "@/lib/database.types"
 import { LOADOUT_SLOTS, type LootItem } from "@/lib/loadout"
 import { createClient } from "@/lib/supabase/client"
@@ -165,7 +165,7 @@ export function LoadoutRoom({ initial, items, userId, login }: { initial: State;
         maxPlayers={session.max_players}
         codeKind="loadout"
         roundId={id}
-        onJoin={(code) => call(() => supabase.rpc("loadout_join", { p_session: id, p_code: code }))}
+        onJoin={(code) => call(() => joinResult(supabase.rpc("loadout_join", { p_session: id, p_code: code })))}
         onLeave={(user) => call(() => supabase.rpc("loadout_leave", { p_session: id, p_user: user }))}
       />
     </div>

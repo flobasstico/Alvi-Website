@@ -11,7 +11,7 @@ import { useEscalation, type EscState } from "@/components/escalation/use-escala
 import { buildSlices, spinTo, WheelSvg } from "@/components/wheel-svg"
 import { audioReady, playAlarm, unlockAudio } from "@/lib/alarm"
 import type { EscPlayer } from "@/lib/escalation"
-import { CopyButton, PlayersPanel, WinnerPicker } from "@/components/session/players"
+import { CopyButton, joinResult, PlayersPanel, WinnerPicker } from "@/components/session/players"
 import { celebrate } from "@/lib/confetti"
 
 type PoolRule = { id: number; text: string }
@@ -142,7 +142,7 @@ export function EscalationRoom({
             busy={busy}
             codeKind="eskalation"
             roundId={session.id}
-            onJoin={(code) => call(() => supabase.rpc("escalation_join", { p_session: session.id, p_code: code }))}
+            onJoin={(code) => call(() => joinResult(supabase.rpc("escalation_join", { p_session: session.id, p_code: code })))}
             onLeave={(user) => call(() => supabase.rpc("escalation_leave", { p_session: session.id, p_user: user }))}
           />
 

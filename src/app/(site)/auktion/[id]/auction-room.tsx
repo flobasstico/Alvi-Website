@@ -22,7 +22,7 @@ import {
 import { celebrate } from "@/lib/confetti"
 import { ITEM_TYPE_LABEL, RARITY_CLASS, RARITY_LABEL, type Rarity } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
-import { JoinCodeBox, JoinCodeForm, useJoinCode, WinnerPicker } from "@/components/session/players"
+import { JoinCodeBox, JoinCodeForm, joinResult, useJoinCode, WinnerPicker } from "@/components/session/players"
 import { ExportButtons } from "./export-buttons"
 
 type State = { auction: Auction; players: Player[]; rounds: Round[]; bids: Bid[] }
@@ -146,7 +146,7 @@ export function AuctionRoom({
           me={me}
           isHost={isHost}
           loggedIn={!!userId}
-          onJoin={(code) => rpc(supabase.rpc("auction_join", { p_auction: auction.id, p_code: code }))}
+          onJoin={(code) => rpc(joinResult(supabase.rpc("auction_join", { p_auction: auction.id, p_code: code })))}
           onLeave={(seat) => rpc(supabase.rpc("auction_leave", { p_auction: auction.id, p_seat: seat ?? null }))}
           onStart={() => rpc(supabase.rpc("auction_start", { p_auction: auction.id }))}
         />

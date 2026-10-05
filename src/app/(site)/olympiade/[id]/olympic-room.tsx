@@ -8,7 +8,7 @@ import { useEffect, useRef, useState } from "react"
 import { ScoreBoard } from "@/components/olympiade/score-board"
 import { useOlympic } from "@/components/olympiade/use-olympic"
 import { UnofficialNote } from "@/components/replay-button"
-import { CopyButton, PlayersPanel } from "@/components/session/players"
+import { CopyButton, joinResult, PlayersPanel } from "@/components/session/players"
 import { buildSlices, spinTo, WheelSvg } from "@/components/wheel-svg"
 import { celebrate } from "@/lib/confetti"
 import { drawnGames, OLYMPIC_STATUS, openGame, wheelGames, type OlympicGame, type OlympicState } from "@/lib/olympiade"
@@ -281,7 +281,7 @@ export function OlympicRoom({ initial, userId, isAdmin }: { initial: OlympicStat
             maxPlayers={olympic.max_players}
             codeKind="olympiade"
             roundId={olympic.id}
-            onJoin={(code) => call(() => supabase.rpc("olympic_join", { p_id: olympic.id, p_code: code }))}
+            onJoin={(code) => call(() => joinResult(supabase.rpc("olympic_join", { p_id: olympic.id, p_code: code })))}
             onLeave={(u) => call(() => supabase.rpc("olympic_leave", { p_id: olympic.id, p_user: u }))}
           />
           {canControl && running && (
