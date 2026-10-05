@@ -10,6 +10,7 @@ Website für Alvis Fortnite-Challenges: konstruieren, auswürfeln, abstimmen und
 | `/bingo` | **Bingo**: Alvis 3×3-Karte mit Punktesystem (1 pro Feld, +3 pro Bingo), Live-Rangliste und zwei OBS-Overlays (Karte, Rangliste). Zuschauer holen sich eigene Karten, Felder werden live abgehakt, mit Bestenliste |
 | `/auktion` | **Loot-Auktion**: 4 Creator mit je 500 Gold bieten verdeckt am eigenen Gerät auf zufällige Items. Der Höchstbieter gewinnt, bei Gleichstand entscheidet das Los. Haben alle geskippt, wird das Item verworfen. Gespielt wird, bis jeder 5 Items hat. Am Ende gibt es eine Loadout-Übersicht als Bild |
 | `/eskalation` | **Regel-Eskalation**: Grundregel per Glücksrad, danach kommt alle 4 Minuten (einstellbar) eine neue Zufallsregel dazu, mit Alarm-Ton. Die Regelkachel gibt es als OBS-Overlay |
+| `/winchallenge` | **Winchallenge**: Spiele mit je einer Zahl benötigter Siege, gemeinsamer Countdown (oder ohne Zeitlimit). Siege per +1/−1 zählen, Timer starten/pausieren, Spiele unterwegs ergänzen. Schlichtes OBS-Overlay unter `/overlay/winchallenge` (immer die neueste Winchallenge). Geschafft = alle Ziele erreicht |
 | `/stats` | **Challenge-Stats** (über das Menü) mit zwei Tabs: **👥 Spieler** – Tabelle mit allen, die bei Mehrspieler-Challenges dabei waren (Teilnahmen, Siege, Siegquote, bei Bingo Punkte gesamt und Ø; Filter je Spiel, Spalten sortierbar) – und **🎮 Alvi** – Erfolgsquote, Serien, Aufschlüsselung je Tool, Liste aller Challenges |
 | `/admin` | Regeln, Loot-Pool, Drop-Spots, Bingo-Aufgaben, Seasons/Map, Ergebnisse eintragen |
 

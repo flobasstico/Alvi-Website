@@ -10,6 +10,7 @@ const TOOLS = [
   { href: "/bingo", emoji: "🔢", title: "Bingo", text: "3×3-Karte mit Aufgaben – Zuschauer spielen live mit." },
   { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "2–8 Creator bieten verdeckt mit Gold auf Items – bis jeder sein Loadout hat." },
   { href: "/eskalation", emoji: "🚨", title: "Regel-Eskalation", text: "Grundregel per Glücksrad, alle 4 Minuten eine neue Regel – mit Alarm und OBS-Overlay." },
+  { href: "/winchallenge", emoji: "🏆", title: "Winchallenge", text: "Mehrere Spiele, je eine Zahl an Siegen, ein Timer – alles schaffen, bevor die Zeit abläuft. Mit OBS-Overlay." },
 ]
 
 export default async function Home() {

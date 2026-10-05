@@ -57,6 +57,18 @@ export type Database = {
         Update: { avatar_url?: string | null; display_name?: string | null; item_ids?: (number | null)[]; joined_at?: string; rolled_at?: string | null; session_id?: number; user_id?: string }
         Relationships: Rel[]
       }
+      win_challenges: {
+        Row: { challenge_id: number | null; created_at: string; duration_s: number; elapsed_s: number; ended_at: string | null; host_id: string; id: number; result: string | null; started_at: string | null; status: string; title: string | null }
+        Insert: { challenge_id?: number | null; created_at?: string; duration_s?: number; elapsed_s?: number; ended_at?: string | null; host_id?: string; id?: never; result?: string | null; started_at?: string | null; status?: string; title?: string | null }
+        Update: { challenge_id?: number | null; created_at?: string; duration_s?: number; elapsed_s?: number; ended_at?: string | null; host_id?: string; id?: never; result?: string | null; started_at?: string | null; status?: string; title?: string | null }
+        Relationships: Rel[]
+      }
+      win_challenge_games: {
+        Row: { challenge_id: number; id: number; name: string; position: number; target: number; wins: number }
+        Insert: { challenge_id: number; id?: never; name: string; position?: number; target?: number; wins?: number }
+        Update: { challenge_id?: number; id?: never; name?: string; position?: number; target?: number; wins?: number }
+        Relationships: Rel[]
+      }
       escalation_players: {
         Row: { avatar_url: string | null; display_name: string | null; joined_at: string; session_id: number; user_id: string }
         Insert: { avatar_url?: string | null; display_name?: string | null; joined_at?: string; session_id: number; user_id: string }
@@ -200,6 +212,9 @@ export type Database = {
       loadout_leave: { Args: { p_session: number; p_user?: string | null }; Returns: undefined }
       loadout_set_items: { Args: { p_items: (number | null)[]; p_session: number }; Returns: undefined }
       loadout_start: { Args: { p_session: number }; Returns: undefined }
+      win_add: { Args: { p_delta: number; p_game: number }; Returns: number }
+      win_finish: { Args: { p_id: number }; Returns: string }
+      win_timer: { Args: { p_action: string; p_id: number }; Returns: undefined }
       card_has_bingo: { Args: { p_game_id: number; p_task_ids: number[] }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
     }
