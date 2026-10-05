@@ -1,23 +1,23 @@
 import Link from "next/link"
-import { rateQuip, successRate } from "@/lib/stats"
 import { createClient } from "@/lib/supabase/server"
 
 const TOOLS = [
   { href: "/rad", emoji: "🎡", title: "Challenge-Glücksrad", text: "Regeln wie „nur graue Waffen“ oder „kein Bauen“ – live erdreht." },
   { href: "/loadout", emoji: "🎲", title: "Loadout-Würfel", text: "5 zufällige Slots aus dem aktuellen Loot-Pool – solo oder mit mehreren Spielern." },
-  { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Zufälliger Landeort plus Zusatzregel." },
+  { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Zufälliger Landebereich als Kreis – solo oder für mehrere Spieler, plus Zusatzregel." },
   { href: "/bingo", emoji: "🔢", title: "Bingo", text: "3×3-Karte mit Aufgaben – Zuschauer spielen live mit." },
-  { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "4 Creator, je 500 Gold, verdeckte Gebote – bis jeder 5 Items hat." },
+  { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "2–8 Creator bieten verdeckt mit Gold auf Items – bis jeder sein Loadout hat." },
   { href: "/eskalation", emoji: "🚨", title: "Regel-Eskalation", text: "Grundregel per Glücksrad, alle 4 Minuten eine neue Regel – mit Alarm und OBS-Overlay." },
 ]
 
 export default async function Home() {
   const supabase = await createClient()
-  const [{ data: total }, { data: active }] = await Promise.all([
-    supabase.from("challenge_stats").select("*").is("source", null).maybeSingle(),
-    supabase.from("challenges").select("id, title").eq("status", "aktiv").order("played_at", { ascending: false }).limit(3),
-  ])
-  const rate = successRate(total?.won ?? 0, total?.finished ?? 0)
+  const { data: active } = await supabase
+    .from("challenges")
+    .select("id, title")
+    .eq("status", "aktiv")
+    .order("played_at", { ascending: false })
+    .limit(3)
 
   return (
     <div className="flex flex-col gap-8">
@@ -26,12 +26,6 @@ export default async function Home() {
         <p className="mx-auto mt-3 max-w-xl text-lg text-muted">
           Hier werden Fortnite-Challenges gebaut, ausgewürfelt und gnadenlos getrackt.
         </p>
-        <div className="mt-6">
-          <span className="font-display text-3xl">
-            Alvi hat <span className={rate >= 50 ? "text-win" : "text-accent"}>{rate} %</span> geschafft
-          </span>
-          <span className="block text-sm italic text-muted">{rateQuip(rate, total?.finished ?? 0)}</span>
-        </div>
       </section>
 
       {active && active.length > 0 && (
