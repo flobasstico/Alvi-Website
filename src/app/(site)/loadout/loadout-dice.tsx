@@ -13,11 +13,27 @@ import { pick } from "@/lib/random"
 
 const empty = () => Array<LootItem | null>(LOADOUT_SLOTS).fill(null)
 
-export function LoadoutDice({ items, isAdmin }: { items: LootItem[]; isAdmin: boolean }) {
-  const [slots, setSlots] = useState<(LootItem | null)[]>(empty)
+export function LoadoutDice({
+  items,
+  isAdmin,
+  fixedOptions,
+  initialSlots,
+  onRolled,
+}: {
+  items: LootItem[]
+  isAdmin: boolean
+  /** Mehrspieler: Optionen legt die Runde fest, der Wurf wird nicht als Einzel-Challenge gespeichert */
+  fixedOptions?: { rarities: string[]; mustHeal: boolean }
+  initialSlots?: (LootItem | null)[]
+  /** Wird nach jedem abgeschlossenen Wurf mit dem Ergebnis aufgerufen */
+  onRolled?: (slots: (LootItem | null)[]) => void
+}) {
+  const [slots, setSlots] = useState<(LootItem | null)[]>(initialSlots ?? empty)
   const [locked, setLocked] = useState<boolean[]>(Array(LOADOUT_SLOTS).fill(false))
-  const [rarities, setRarities] = useState<string[]>([...RARITIES])
-  const [mustHeal, setMustHeal] = useState(true)
+  const [ownRarities, setRarities] = useState<string[]>([...RARITIES])
+  const [ownMustHeal, setMustHeal] = useState(true)
+  const rarities = fixedOptions?.rarities ?? ownRarities
+  const mustHeal = fixedOptions?.mustHeal ?? ownMustHeal
   const [rolling, setRolling] = useState(false)
   const [rollKey, setRollKey] = useState(0)
 
@@ -33,7 +49,10 @@ export function LoadoutDice({ items, isAdmin }: { items: LootItem[]; isAdmin: bo
       setSlots((s) => s.map((item, i) => (lockMask[i] ? item : pool.length ? pick(pool) : null)))
       await new Promise((r) => setTimeout(r, 60 + t * 12))
     }
-    setSlots((s) => rollLoadout(items, s, lockMask, opts))
+    // Ergebnis auf Basis der Slots vor dem Durchrattern (gesperrte Slots sind unverändert)
+    const result = rollLoadout(items, slots, lockMask, opts)
+    setSlots(result)
+    onRolled?.(result)
     setRollKey((k) => k + 1)
     setRolling(false)
     if (onlySlot === undefined) celebrate()
@@ -105,36 +124,43 @@ export function LoadoutDice({ items, isAdmin }: { items: LootItem[]; isAdmin: bo
         <button className="btn-primary px-8 py-3 font-display text-2xl" onClick={() => roll()} disabled={rolling || pool.length === 0}>
           {rolling ? "Würfelt…" : "WÜRFELN!"}
         </button>
-        {isAdmin && filled.length > 0 && !rolling && (
+        {isAdmin && !fixedOptions && filled.length > 0 && !rolling && (
           <SaveChallenge source="loadout" title={title} config={{ items: filled.map(({ name, rarity, type, icon_url }) => ({ name, rarity, type, icon_url })) }} />
         )}
       </div>
 
-      <div className="panel flex flex-col gap-4">
-        <h2 className="font-display text-xl">Optionen</h2>
-        <div className="flex flex-wrap gap-2">
-          {RARITIES.map((r) => (
-            <button
-              key={r}
-              onClick={() => setRarities((cur) => (cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r]))}
-              className={clsx(
-                "rounded-lg border-2 bg-gradient-to-b px-3 py-1 text-sm font-bold transition",
-                RARITY_CLASS[r],
-                !rarities.includes(r) && "opacity-30 grayscale",
-              )}
-            >
-              {RARITY_LABEL[r]}
-            </button>
-          ))}
-        </div>
-        <label className="flex items-center gap-2 text-sm">
-          <input type="checkbox" checked={mustHeal} onChange={(e) => setMustHeal(e.target.checked)} />
-          Mindestens eine Heilung garantieren
-        </label>
+      {fixedOptions ? (
         <p className="text-sm text-muted">
-          {pool.length} Items im Pool{pool.length < LOADOUT_SLOTS && " – zu wenige für 5 Slots, Filter lockern oder Loot-Pool im Admin erweitern."}
+          Seltenheiten: {RARITIES.filter((r) => rarities.includes(r)).map((r) => RARITY_LABEL[r]).join(", ")}
+          {mustHeal && " · mindestens eine Heilung"} · {pool.length} Items im Pool
         </p>
-      </div>
+      ) : (
+        <div className="panel flex flex-col gap-4">
+          <h2 className="font-display text-xl">Optionen</h2>
+          <div className="flex flex-wrap gap-2">
+            {RARITIES.map((r) => (
+              <button
+                key={r}
+                onClick={() => setRarities((cur) => (cur.includes(r) ? cur.filter((x) => x !== r) : [...cur, r]))}
+                className={clsx(
+                  "rounded-lg border-2 bg-gradient-to-b px-3 py-1 text-sm font-bold transition",
+                  RARITY_CLASS[r],
+                  !rarities.includes(r) && "opacity-30 grayscale",
+                )}
+              >
+                {RARITY_LABEL[r]}
+              </button>
+            ))}
+          </div>
+          <label className="flex items-center gap-2 text-sm">
+            <input type="checkbox" checked={mustHeal} onChange={(e) => setMustHeal(e.target.checked)} />
+            Mindestens eine Heilung garantieren
+          </label>
+          <p className="text-sm text-muted">
+            {pool.length} Items im Pool{pool.length < LOADOUT_SLOTS && " – zu wenige für 5 Slots, Filter lockern oder Loot-Pool im Admin erweitern."}
+          </p>
+        </div>
+      )}
     </div>
   )
 }

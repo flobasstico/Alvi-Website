@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { rollLoadout, type LootItem } from "./loadout"
+import { hasDuplicateNames, rollLoadout, type LootItem } from "./loadout"
 
 const pool: LootItem[] = [
   ...Array.from({ length: 10 }, (_, i) => ({ id: i, name: `Waffe ${i}`, rarity: i < 5 ? "grau" : "gold", type: "waffe" })),
@@ -44,5 +44,29 @@ describe("rollLoadout", () => {
   it("lässt Slots leer, wenn der Pool zu klein ist", () => {
     const r = rollLoadout(pool, empty, unlocked, { rarities: ["gruen"], mustHeal: false })
     expect(r.filter(Boolean)).toHaveLength(1)
+  })
+
+  it("nimmt jedes Item nur einmal, auch in anderer Seltenheit", () => {
+    const variants: LootItem[] = [
+      ...["grau", "gruen", "blau", "lila", "gold"].map((rarity, i) => ({ id: 200 + i, name: "Assault Rifle", rarity, type: "waffe" })),
+      ...["grau", "gold"].map((rarity, i) => ({ id: 300 + i, name: "Medikit", rarity, type: "heilung" })),
+      { id: 400, name: "Pump", rarity: "gold", type: "waffe" },
+    ]
+    for (let n = 0; n < 100; n++) {
+      const r = rollLoadout(variants, empty, unlocked, { rarities: ["grau", "gruen", "blau", "lila", "gold"], mustHeal: true })
+      expect(hasDuplicateNames(r)).toBe(false)
+      expect(r.filter(Boolean)).toHaveLength(3)
+      expect(r.some((i) => i?.type === "heilung")).toBe(true)
+    }
+  })
+
+  it("würfelt neben gesperrten Slots keine Variante desselben Items", () => {
+    const variants: LootItem[] = [
+      { id: 1, name: "Pump", rarity: "grau", type: "waffe" },
+      { id: 2, name: "Pump", rarity: "gold", type: "waffe" },
+      { id: 3, name: "Medikit", rarity: "grau", type: "heilung" },
+    ]
+    const r = rollLoadout(variants, [variants[0], null, null, null, null], [true, false, false, false, false], all)
+    expect(r.filter(Boolean).map((i) => i!.id)).toEqual([1, 3])
   })
 })

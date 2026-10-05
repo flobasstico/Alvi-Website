@@ -17,10 +17,11 @@ const STATUS_CLASS: Record<Status, string> = {
 export default async function StatsPage({ searchParams }: { searchParams: Promise<{ quelle?: string; status?: string }> }) {
   const { quelle, status } = await searchParams
   const supabase = await createClient()
-  const [{ data: stats }, { data: all }, { data: leaderboard }] = await Promise.all([
+  const [{ data: stats }, { data: all }, { data: escalationBoard }, { data: loadoutBoard }] = await Promise.all([
     supabase.from("challenge_stats").select("*"),
     supabase.from("challenges").select("*").order("created_at", { ascending: false }),
     supabase.from("escalation_leaderboard").select("*").order("wins", { ascending: false }).order("last_win", { ascending: true }),
+    supabase.from("loadout_leaderboard").select("*").order("wins", { ascending: false }).order("last_win", { ascending: true }),
   ])
 
   const total = stats?.find((s) => s.source === null)
@@ -83,27 +84,8 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
         </div>
       </section>
 
-      {leaderboard && leaderboard.length > 0 && (
-        <section className="panel mb-6">
-          <h2 className="mb-3 font-display text-2xl">Regel-Eskalation – Siege</h2>
-          <ol className="flex flex-col gap-2">
-            {leaderboard.map((row, i) => (
-              <li
-                key={row.winner_id ?? i}
-                className={clsx(
-                  "flex items-center gap-3 rounded-xl border px-3 py-2",
-                  i === 0 ? "border-accent bg-accent/10" : "border-line bg-bg/40",
-                )}
-              >
-                <span className="w-8 text-center font-display text-2xl">{["🥇", "🥈", "🥉"][i] ?? `${i + 1}.`}</span>
-                <span className="flex-1 font-bold">{row.name}</span>
-                <span className="font-display text-2xl text-accent tabular-nums">{row.wins}</span>
-                <span className="text-sm text-muted">{row.wins === 1 ? "Sieg" : "Siege"}</span>
-              </li>
-            ))}
-          </ol>
-        </section>
-      )}
+      <Leaderboard title="Regel-Eskalation – Siege" rows={escalationBoard ?? []} />
+      <Leaderboard title="Loadout-Würfel (Mehrspieler) – Siege" rows={loadoutBoard ?? []} />
 
       <section className="panel">
         <h2 className="mb-3 font-display text-2xl">Alle Challenges</h2>
@@ -156,5 +138,30 @@ function FilterChip({ href, active, children }: { href: string; active: boolean;
     <Link href={href} className={clsx("rounded-lg px-2.5 py-1", active ? "bg-accent text-black" : "bg-panel-2 text-muted hover:text-white")}>
       {children}
     </Link>
+  )
+}
+
+function Leaderboard({ title, rows }: { title: string; rows: { winner_id: string | null; name: string | null; wins: number | null }[] }) {
+  if (rows.length === 0) return null
+  return (
+    <section className="panel mb-6">
+      <h2 className="mb-3 font-display text-2xl">{title}</h2>
+      <ol className="flex flex-col gap-2">
+        {rows.map((row, i) => (
+          <li
+            key={row.winner_id ?? i}
+            className={clsx(
+              "flex items-center gap-3 rounded-xl border px-3 py-2",
+              i === 0 ? "border-accent bg-accent/10" : "border-line bg-bg/40",
+            )}
+          >
+            <span className="w-8 text-center font-display text-2xl">{["🥇", "🥈", "🥉"][i] ?? `${i + 1}.`}</span>
+            <span className="flex-1 font-bold">{row.name}</span>
+            <span className="font-display text-2xl text-accent tabular-nums">{row.wins}</span>
+            <span className="text-sm text-muted">{row.wins === 1 ? "Sieg" : "Siege"}</span>
+          </li>
+        ))}
+      </ol>
+    </section>
   )
 }

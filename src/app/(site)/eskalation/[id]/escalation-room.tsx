@@ -9,6 +9,7 @@ import { useEscalation, type EscState } from "@/components/escalation/use-escala
 import { buildSlices, spinTo, WheelSvg } from "@/components/wheel-svg"
 import { audioReady, playAlarm, unlockAudio } from "@/lib/alarm"
 import type { EscPlayer } from "@/lib/escalation"
+import { CopyButton, PlayersPanel, WinnerPicker } from "@/components/session/players"
 import { celebrate } from "@/lib/confetti"
 
 type PoolRule = { id: number; text: string }
@@ -188,32 +189,7 @@ function HostPanel({
     )
   }
   if (choosing) {
-    return (
-      <div className="panel flex flex-col gap-3">
-        <h2 className="font-display text-2xl">Wer hat gewonnen?</h2>
-        <div className="grid gap-2 sm:grid-cols-2">
-          {players.map((p) => (
-            <button
-              key={p.user_id}
-              className="btn-secondary justify-start py-3 text-left text-lg"
-              disabled={busy}
-              onClick={() => confirm(`${p.display_name} als Sieger eintragen und Runde beenden?`) && onFinish(p.user_id)}
-            >
-              🏆 {p.display_name}
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button className="btn-secondary" disabled={busy} onClick={() => confirm("Runde ohne Sieger beenden?") && onFinish(null)}>
-            Ohne Wertung beenden
-          </button>
-          <button className="btn-secondary" disabled={busy} onClick={() => setChoosing(false)}>
-            Zurück
-          </button>
-        </div>
-        <p className="text-xs text-muted">Der Sieg zählt für die Bestenliste in den Stats.</p>
-      </div>
-    )
+    return <WinnerPicker players={players} busy={busy} onFinish={onFinish} onBack={() => setChoosing(false)} />
   }
   return (
     <div className="panel flex flex-col items-center gap-3 text-center">
@@ -230,81 +206,5 @@ function HostPanel({
         ⏹ ENDE
       </button>
     </div>
-  )
-}
-
-function PlayersPanel({
-  players,
-  hostId,
-  ended,
-  userId,
-  isHost,
-  isPlayer,
-  busy,
-  onJoin,
-  onLeave,
-}: {
-  players: EscPlayer[]
-  hostId: string
-  ended: boolean
-  userId: string | null
-  isHost: boolean
-  isPlayer: boolean
-  busy: boolean
-  onJoin: () => void
-  onLeave: (user: string | null) => void
-}) {
-  const pageUrl = typeof window === "undefined" ? "" : location.href
-  return (
-    <div className="panel flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-display text-xl">Mitspieler ({players.length})</h2>
-        {!ended && userId && !isPlayer && (
-          <button className="btn-primary ml-auto px-3 py-1 text-sm" disabled={busy} onClick={onJoin}>Mitspielen</button>
-        )}
-        {!ended && isPlayer && !isHost && (
-          <button className="btn-secondary ml-auto px-3 py-1 text-sm" disabled={busy} onClick={() => onLeave(null)}>Austreten</button>
-        )}
-      </div>
-      <ul className="flex flex-wrap gap-2">
-        {players.map((p) => (
-          <li key={p.user_id} className="flex items-center gap-2 rounded-full border border-line bg-panel-2 py-1 pl-1 pr-3 text-sm font-semibold">
-            {p.avatar_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={p.avatar_url} alt="" className="h-6 w-6 rounded-full" />
-            ) : (
-              <span className="flex h-6 w-6 items-center justify-center rounded-full bg-line text-xs">👤</span>
-            )}
-            {p.display_name}
-            {p.user_id === hostId && <span className="text-xs text-accent">Host</span>}
-            {isHost && !ended && p.user_id !== hostId && (
-              <button className="text-muted hover:text-fail" title="Entfernen" disabled={busy} onClick={() => onLeave(p.user_id)}>✕</button>
-            )}
-          </li>
-        ))}
-      </ul>
-      {!ended && (
-        <p className="text-xs text-muted">
-          {userId ? "" : "Zum Mitspielen mit Twitch einloggen. "}Diesen Seitenlink an die Mitspieler schicken – nur Mitspieler können als Sieger gewählt werden.
-          <span className="ml-1 inline-block align-middle"><CopyButton text={pageUrl} label="Einladungslink kopieren" /></span>
-        </p>
-      )}
-    </div>
-  )
-}
-
-function CopyButton({ text, label = "Kopieren" }: { text: string; label?: string }) {
-  const [done, setDone] = useState(false)
-  return (
-    <button
-      className="btn-secondary shrink-0"
-      onClick={async () => {
-        await navigator.clipboard.writeText(text)
-        setDone(true)
-        setTimeout(() => setDone(false), 2000)
-      }}
-    >
-      {done ? "Kopiert ✓" : label}
-    </button>
   )
 }
