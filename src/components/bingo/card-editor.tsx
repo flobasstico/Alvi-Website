@@ -7,7 +7,6 @@ import { createClient } from "@/lib/supabase/client"
 
 /** Eigene 3×3-Bingo-Karte zusammenstellen; gespeichert wird sie mit dem Twitch-Namen */
 export function CardEditor({ pool, onCreated }: { pool: string[]; onCreated: (id: number) => void }) {
-  const [title, setTitle] = useState("")
   const [tasks, setTasks] = useState<string[]>(Array(BINGO_CELLS).fill(""))
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -22,20 +21,16 @@ export function CardEditor({ pool, onCreated }: { pool: string[]; onCreated: (id
   async function save() {
     setBusy(true)
     setError(null)
-    const { data, error } = await createClient().rpc("bingo_card_create", { p_title: title, p_tasks: tasks })
+    const { data, error } = await createClient().rpc("bingo_card_create", { p_title: "", p_tasks: tasks })
     setBusy(false)
     if (error) return setError(error.message)
-    setTitle("")
     setTasks(Array(BINGO_CELLS).fill(""))
     onCreated(data)
   }
 
   return (
     <div className="flex flex-col gap-3">
-      <div>
-        <label className="label" htmlFor="card-title">Name der Karte</label>
-        <input id="card-title" value={title} onChange={(e) => setTitle(e.target.value)} maxLength={60} className="input" placeholder="z. B. Chaos-Karte" />
-      </div>
+      <p className="text-xs text-muted">Die Karte bekommt automatisch deinen Twitch-Namen (bei mehreren Karten durchnummeriert).</p>
       <div className="grid grid-cols-3 gap-2">
         {tasks.map((t, i) => (
           <textarea

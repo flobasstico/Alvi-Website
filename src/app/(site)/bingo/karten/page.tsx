@@ -12,7 +12,7 @@ export default async function CardsPage() {
   ])
   return (
     <>
-      <PageTitle title="Bingo-Karten" subtitle="Eigene 3×3-Karte mit eigenen Aufgaben erstellen – sie wird mit deinem Twitch-Namen gespeichert und kann für Runden gewählt werden." />
+      <PageTitle title="Bingo-Karten" subtitle="Eigene 3×3-Karte mit eigenen Aufgaben erstellen – sie trägt automatisch deinen Twitch-Namen und kann für Runden gewählt werden." />
       <CardGallery cards={cards ?? []} pool={(pool ?? []).map((p) => p.text)} userId={user?.id ?? null} isAdmin={isAdmin} />
     </>
   )

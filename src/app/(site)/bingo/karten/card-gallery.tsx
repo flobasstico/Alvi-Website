@@ -29,7 +29,6 @@ export function CardGallery({ cards, pool, userId, isAdmin }: { cards: Card[]; p
             <li key={c.id} className="flex flex-col gap-2 rounded-xl border border-line bg-bg/40 p-3">
               <div>
                 <div className="truncate font-bold">{c.title}</div>
-                <div className="text-xs text-muted">von {c.author_name ?? "?"}</div>
                 {!c.approved && <div className="mt-1 text-xs font-bold text-accent">🕓 Wartet auf Freigabe – nur für {c.author_id === userId ? "dich" : "Ersteller"} und Admins sichtbar</div>}
               </div>
               <CardPreview tasks={c.tasks} />

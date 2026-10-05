@@ -74,10 +74,7 @@ export function NewRound({ cards, pool, preselect, userId }: { cards: Card[]; po
                 )}
               >
                 <span className="truncate font-bold">{c.title}</span>
-                <span className="text-xs text-muted">
-                  von {c.author_name ?? "?"}
-                  {!c.approved && " · 🕓 noch nicht freigegeben"}
-                </span>
+                {!c.approved && <span className="text-xs text-muted">🕓 noch nicht freigegeben</span>}
                 <CardPreview tasks={c.tasks} />
               </button>
             </li>
@@ -91,7 +88,7 @@ export function NewRound({ cards, pool, preselect, userId }: { cards: Card[]; po
         {card ? (
           <>
             <p className="text-sm">
-              Karte: <b>{card.title}</b> <span className="text-muted">von {card.author_name}</span>
+              Karte: <b>{card.title}</b>
             </p>
             <CardPreview tasks={card.tasks} />
           </>
