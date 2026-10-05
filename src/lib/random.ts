@@ -40,3 +40,10 @@ export function shuffle<T>(items: readonly T[]): T[] {
 export function sample<T>(items: readonly T[], n: number): T[] {
   return shuffle(items).slice(0, n)
 }
+
+/** Gleichverteilte Zahl in [0, 1) */
+export function randomFloat(): number {
+  const buf = new Uint32Array(1)
+  crypto.getRandomValues(buf)
+  return buf[0] / 0x1_0000_0000
+}

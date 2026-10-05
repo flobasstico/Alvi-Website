@@ -18,7 +18,7 @@ export default async function DropPage() {
 
   return (
     <>
-      <PageTitle title="Drop-Spot-Roulette" subtitle="Zufälliger Landeort auf der aktuellen Map – plus eine Zusatzregel." />
+      <PageTitle title="Drop-Spot-Roulette" subtitle="Zufälliger Landebereich auf der aktuellen Map – solo oder für mehrere Spieler, jeder bekommt seinen eigenen Kreis." />
       {isAdmin && (
         <Link href="/admin?tab=spots" className="btn-secondary mb-4 inline-flex px-3 py-1 text-sm">
           🗺️ Karte &amp; Spots bearbeiten

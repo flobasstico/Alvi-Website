@@ -6,7 +6,7 @@ Website für Alvis Fortnite-Challenges: konstruieren, auswürfeln, abstimmen und
 |---|---|
 | `/rad` | **Challenge-Glücksrad**: alle Regeln gleich wahrscheinlich, mehrfach drehen stapelt die Regeln |
 | `/loadout` | **Loadout-Würfel**: 5 Slots aus dem Loot-Pool der aktuellen Season, mit Item-Bildern. Slots sperren oder einzeln neu würfeln, Raritäts-Filter, Heilung garantiert, jedes Item nur einmal. Solo oder **Mehrspieler** (jeder würfelt sein eigenes Loadout) |
-| `/drop` | **Drop-Spot-Roulette**: zufälliger Landeort auf der Map plus Zusatzregel |
+| `/drop` | **Drop-Spot-Roulette**: zufälliger Landebereich (Kreis um einen der gesetzten Spots, Größe per Regler) plus Zusatzregel. Mit mehreren Spielern (Namen eintippen) bekommt jeder seinen eigenen, farbigen Kreis, ohne Überschneidung |
 | `/bingo` | **Bingo**: Alvis 5×5-Karte. Zuschauer holen sich eigene Karten, Felder werden live abgehakt, mit Bestenliste |
 | `/auktion` | **Loot-Auktion**: 4 Creator mit je 500 Gold bieten verdeckt am eigenen Gerät auf zufällige Items. Der Höchstbieter gewinnt, bei Gleichstand entscheidet das Los. Haben alle geskippt, wird das Item verworfen. Gespielt wird, bis jeder 5 Items hat. Am Ende gibt es eine Loadout-Übersicht als Bild |
 | `/eskalation` | **Regel-Eskalation**: Grundregel per Glücksrad, danach kommt alle 4 Minuten (einstellbar) eine neue Zufallsregel dazu, mit Alarm-Ton. Die Regelkachel gibt es als OBS-Overlay |

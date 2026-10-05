@@ -1,15 +1,18 @@
 "use client"
 
-import clsx from "clsx"
-import { motion } from "framer-motion"
-import { useState } from "react"
+import { AnimatePresence, motion } from "framer-motion"
+import { useEffect, useState } from "react"
 import { IslandMap } from "@/components/island-map"
 import { SaveChallenge } from "@/components/save-challenge"
 import { celebrate } from "@/lib/confetti"
-import { pick, randomInt, weightedIndex } from "@/lib/random"
+import { MAX_DIAMETER, MAX_PLAYERS, MIN_DIAMETER, PLAYER_COLORS, rollCircles, type DropCircle, type DropSpot } from "@/lib/drop"
+import { pick, randomInt } from "@/lib/random"
 
-type Spot = { id: number; name: string; x: number; y: number }
 type Rule = { id: number; text: string; weight: number }
+type Result = { circles: DropCircle[]; names: string[]; rule: Rule | null }
+
+const STORAGE_KEY = "drop-spieler"
+const sizeLabel = (d: number) => (d < 12 ? "klein" : d < 20 ? "mittel" : "groß")
 
 export function DropRoulette({
   spots,
@@ -17,93 +20,193 @@ export function DropRoulette({
   mapUrl,
   isAdmin,
 }: {
-  spots: Spot[]
+  spots: DropSpot[]
   rules: Rule[]
   mapUrl?: string | null
   isAdmin: boolean
 }) {
-  const [highlight, setHighlight] = useState<Spot | null>(null)
-  const [result, setResult] = useState<{ spot: Spot; rule: Rule | null } | null>(null)
+  const [names, setNames] = useState<string[]>(["Spieler 1"])
+  const [diameter, setDiameter] = useState(16)
   const [withRule, setWithRule] = useState(true)
   const [rolling, setRolling] = useState(false)
+  const [preview, setPreview] = useState<DropCircle[]>([])
+  const [result, setResult] = useState<Result | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  // Spielernamen und Kreisgröße pro Browser merken
+  useEffect(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? "null")
+      if (Array.isArray(saved?.names) && saved.names.length) setNames(saved.names.slice(0, MAX_PLAYERS).map(String))
+      if (typeof saved?.diameter === "number") setDiameter(Math.min(MAX_DIAMETER, Math.max(MIN_DIAMETER, saved.diameter)))
+    } catch {}
+  }, [])
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({ names, diameter }))
+    } catch {}
+  }, [names, diameter])
+
+  const count = names.length
+  const label = (i: number) => names[i]?.trim() || `Spieler ${i + 1}`
+
+  function setCount(n: number) {
+    const next = Math.min(MAX_PLAYERS, Math.max(1, n))
+    setNames((cur) => (next > cur.length ? [...cur, ...Array.from({ length: next - cur.length }, (_, i) => `Spieler ${cur.length + i + 1}`)] : cur.slice(0, next)))
+  }
 
   async function roll() {
-    if (rolling || spots.length === 0) return
+    if (rolling) return
+    setError(null)
+    const final = rollCircles(spots, count, diameter)
+    if (!final) {
+      setError(
+        spots.length < count
+          ? `Nur ${spots.length} Spots für ${count} Spieler – im Admin mehr Spots setzen.`
+          : "Kein Platz für getrennte Kreise – kleinere Kreise wählen oder Spots weiter auseinander setzen.",
+      )
+      return
+    }
     setRolling(true)
     setResult(null)
-    const steps = 18 + randomInt(6)
+    const names = Array.from({ length: count }, (_, i) => label(i))
+    // „Bus fliegt“: Kreise springen über die Karte, dann stehen sie
+    const steps = 14 + randomInt(5)
     for (let t = 0; t < steps; t++) {
-      setHighlight(pick(spots))
-      await new Promise((r) => setTimeout(r, 50 + t * t * 0.9))
+      setPreview(rollCircles(spots, count, diameter, 20) ?? final)
+      await new Promise((r) => setTimeout(r, 60 + t * t * 1.1))
     }
-    const spot = pick(spots)
-    setHighlight(spot)
-    const rule = withRule && rules.length ? rules[weightedIndex(rules.map((r) => r.weight))] : null
-    setResult({ spot, rule })
+    setPreview(final)
+    setResult({ circles: final, names, rule: withRule && rules.length ? pick(rules) : null })
     setRolling(false)
     celebrate()
   }
 
+  const shown = result?.circles ?? preview
+  const title = result
+    ? `Drop: ${result.circles.map((c, i) => (count > 1 ? `${result.names[i]} bei ${c.spotName}` : `Kreis bei ${c.spotName}`)).join(", ")}${result.rule ? ` – ${result.rule.text}` : ""}`
+    : ""
+
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_340px]">
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <div className="panel p-2">
         <div className="relative aspect-square w-full overflow-hidden rounded-xl">
           <IslandMap imageUrl={mapUrl} />
-          {spots.map((s) => {
-            const active = highlight?.id === s.id
-            return (
+          <svg viewBox="0 0 100 100" className="pointer-events-none absolute inset-0 h-full w-full">
+            <AnimatePresence>
+              {shown.map((c, i) => (
+                <motion.g key={`${i}-${rolling ? "roll" : "fix"}`} initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                  <circle
+                    cx={c.cx}
+                    cy={c.cy}
+                    r={c.r}
+                    fill={PLAYER_COLORS[i]}
+                    fillOpacity={rolling ? 0.15 : 0.25}
+                    stroke={PLAYER_COLORS[i]}
+                    strokeWidth={0.6}
+                    strokeDasharray={rolling ? "1.5 1" : undefined}
+                  />
+                </motion.g>
+              ))}
+            </AnimatePresence>
+          </svg>
+          {!rolling &&
+            result?.circles.map((c, i) => (
               <div
-                key={s.id}
-                className="absolute -translate-x-1/2 -translate-y-1/2"
-                style={{ left: `${s.x}%`, top: `${s.y}%` }}
+                key={i}
+                className="absolute -translate-x-1/2 -translate-y-1/2 whitespace-nowrap rounded px-2 py-0.5 text-sm font-black text-black shadow"
+                style={{ left: `${c.cx}%`, top: `${c.cy}%`, background: PLAYER_COLORS[i] }}
               >
-                <motion.div
-                  animate={{ scale: active ? 1.6 : 1 }}
-                  className={clsx(
-                    "h-4 w-4 rounded-full border-2 border-white shadow",
-                    active ? "bg-accent" : "bg-fail/80",
-                  )}
-                />
-                <div
-                  className={clsx(
-                    "absolute left-1/2 top-5 -translate-x-1/2 whitespace-nowrap rounded px-1.5 text-xs font-bold",
-                    active ? "bg-accent text-black" : "bg-black/60 text-white",
-                  )}
-                >
-                  {s.name}
-                </div>
+                {count > 1 ? result.names[i] : "Hier landen!"}
               </div>
-            )
-          })}
+            ))}
         </div>
       </div>
 
       <aside className="panel flex flex-col gap-4">
-        <button className="btn-primary py-4 font-display text-2xl" onClick={roll} disabled={rolling || spots.length === 0}>
-          {rolling ? "Bus fliegt…" : "ABSPRINGEN!"}
-        </button>
+        <div>
+          <label className="label" htmlFor="players">Spieler</label>
+          <input
+            id="players"
+            type="number"
+            min={1}
+            max={MAX_PLAYERS}
+            value={count}
+            onChange={(e) => setCount(Number(e.target.value) || 1)}
+            className="input w-24"
+            disabled={rolling}
+          />
+        </div>
+        {count > 1 && (
+          <div className="flex flex-col gap-2">
+            {names.map((n, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: PLAYER_COLORS[i] }} />
+                <input
+                  value={n}
+                  maxLength={30}
+                  onChange={(e) => setNames((cur) => cur.map((x, j) => (j === i ? e.target.value : x)))}
+                  className="input py-1 text-sm"
+                  disabled={rolling}
+                  aria-label={`Name Spieler ${i + 1}`}
+                />
+              </div>
+            ))}
+          </div>
+        )}
+        <div>
+          <label className="label" htmlFor="diameter">
+            Kreisgröße: {sizeLabel(diameter)} ({diameter} % der Karte)
+          </label>
+          <input
+            id="diameter"
+            type="range"
+            min={MIN_DIAMETER}
+            max={MAX_DIAMETER}
+            value={diameter}
+            onChange={(e) => setDiameter(Number(e.target.value))}
+            className="w-full accent-[var(--color-accent)]"
+            disabled={rolling}
+          />
+        </div>
         <label className="flex items-center gap-2 text-sm text-muted">
           <input type="checkbox" checked={withRule} onChange={(e) => setWithRule(e.target.checked)} />
           Mit Zusatzregel
         </label>
+        <button className="btn-primary py-4 font-display text-2xl" onClick={roll} disabled={rolling || spots.length === 0}>
+          {rolling ? "Bus fliegt…" : "ABSPRINGEN!"}
+        </button>
         {spots.length === 0 && <p className="text-muted">Noch keine Drop-Spots – im Admin-Bereich anlegen.</p>}
-        {result && (
+        {error && <p className="text-sm text-fail">{error}</p>}
+        {result && !rolling && (
           <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="flex flex-col gap-3">
-            <div>
-              <div className="text-sm text-muted">Landeort</div>
-              <div className="font-display text-4xl text-accent">{result.spot.name}</div>
+            <div className="flex flex-col gap-1">
+              <div className="text-sm text-muted">Landebereich</div>
+              {result.circles.map((c, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <span className="h-4 w-4 shrink-0 rounded-full" style={{ background: PLAYER_COLORS[i] }} />
+                  <span className="font-display text-2xl" style={{ color: PLAYER_COLORS[i] }}>
+                    {count > 1 ? result.names[i] : "Im Kreis"}
+                  </span>
+                  <span className="text-sm text-muted">bei {c.spotName}</span>
+                </div>
+              ))}
             </div>
             {result.rule && (
               <div className="rounded-xl border border-accent-2/50 bg-accent-2/10 p-3">
-                <div className="text-sm text-muted">Zusatzregel</div>
+                <div className="text-sm text-muted">Zusatzregel{count > 1 ? " für alle" : ""}</div>
                 <div className="text-lg font-bold">{result.rule.text}</div>
               </div>
             )}
             {isAdmin && (
               <SaveChallenge
                 source="drop"
-                title={`Drop: ${result.spot.name}${result.rule ? ` – ${result.rule.text}` : ""}`}
-                config={{ spot: result.spot.name, rule: result.rule?.text ?? null }}
+                title={title}
+                config={{
+                  rule: result.rule?.text ?? null,
+                  diameter,
+                  circles: result.circles.map((c, i) => ({ player: result.names[i], spot: c.spotName, cx: c.cx, cy: c.cy, r: c.r })),
+                }}
               />
             )}
           </motion.div>
