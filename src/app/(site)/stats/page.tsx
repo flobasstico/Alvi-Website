@@ -96,7 +96,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
             <h2 className="mb-1 font-display text-2xl">Spieler</h2>
             <p className="mb-3 text-sm text-muted">
               Alle, die bei Challenges mitgespielt haben (abgeschlossene Runden). Alvis Solo-Challenges zählen mit – geschafft = Sieg. Punkte gibt es bei
-              Bingo.
+              Bingo und Olympiade.
             </p>
             <div className="mb-3 flex flex-wrap gap-1 text-sm">
               <FilterChip href={filterLink("spiel")} active={!spiel}>Alle Spiele</FilterChip>

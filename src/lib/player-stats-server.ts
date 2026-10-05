@@ -7,7 +7,7 @@ const ALVI_FALLBACK = "main-creator"
 
 /** Alle Teilnahmen an abgeschlossenen Mehrspieler-Runden und Alvis Solo-Challenges + Namen der Personen */
 export async function loadPlayerStats(supabase: Client) {
-  const [esc, escPlayers, lo, loPlayers, auc, aucPlayers, bingo, cards, challenges, linked, setting] = await Promise.all([
+  const [esc, escPlayers, lo, loPlayers, auc, aucPlayers, bingo, cards, oly, olyPlayers, challenges, linked, setting] = await Promise.all([
     supabase.from("escalation_sessions").select("id, winner_id").eq("status", "beendet"),
     supabase.from("escalation_players").select("session_id, user_id"),
     supabase.from("loadout_sessions").select("id, winner_id").eq("status", "beendet"),
@@ -16,6 +16,8 @@ export async function loadPlayerStats(supabase: Client) {
     supabase.from("auction_players").select("auction_id, user_id"),
     supabase.from("bingo_rounds").select("id").eq("status", "beendet").eq("official", true),
     supabase.from("bingo_round_players").select("round_id, user_id, points, won"),
+    supabase.from("olympics").select("id").eq("status", "beendet").eq("official", true),
+    supabase.from("olympic_players").select("olympic_id, user_id, points, won"),
     supabase.from("challenges").select("id, source, status").in("status", ["geschafft", "gescheitert"]),
     // Statistik-Einträge, die aus Mehrspieler-Runden stammen (dort schon gezählt)
     Promise.all([
@@ -23,6 +25,7 @@ export async function loadPlayerStats(supabase: Client) {
       supabase.from("loadout_sessions").select("challenge_id").not("challenge_id", "is", null),
       supabase.from("auctions").select("challenge_id").not("challenge_id", "is", null),
       supabase.from("bingo_rounds").select("challenge_id").not("challenge_id", "is", null),
+      supabase.from("olympics").select("challenge_id").not("challenge_id", "is", null),
     ]),
     supabase.from("site_settings").select("value").eq("key", "main_creator_login").maybeSingle(),
   ])
@@ -47,6 +50,11 @@ export async function loadPlayerStats(supabase: Client) {
   const bingoDone = new Set((bingo.data ?? []).map((r) => r.id))
   for (const p of cards.data ?? [])
     if (bingoDone.has(p.round_id)) parts.push({ userId: p.user_id, game: "bingo", round: `bingo-${p.round_id}`, won: p.won, points: p.points ?? 0 })
+
+  // Olympiade: Punkte (Spiel n = n Punkte) und Sieg stehen nach dem Beenden fest
+  const olyDone = new Set((oly.data ?? []).map((o) => o.id))
+  for (const p of olyPlayers.data ?? [])
+    if (olyDone.has(p.olympic_id)) parts.push({ userId: p.user_id, game: "olympiade", round: `oly-${p.olympic_id}`, won: p.won, points: p.points })
 
   // Alvis Solo-Challenges: Alvi ist der main creator (auch ohne eigenen Login auf der Seite)
   const alviLogin = setting.data?.value?.trim().toLowerCase() || "alvivb"

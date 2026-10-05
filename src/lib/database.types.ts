@@ -129,6 +129,24 @@ export type Database = {
         Update: { amount?: number | null; auction_id?: number; created_at?: string; round_id?: number; seat?: number }
         Relationships: Rel[]
       }
+      olympics: {
+        Row: { challenge_id: number | null; created_at: string; current_game_id: number | null; ended_at: string | null; host_id: string; id: number; max_players: number; official: boolean; result: string | null; spun_at: string | null; started_at: string | null; status: string; title: string | null }
+        Insert: { challenge_id?: number | null; created_at?: string; current_game_id?: number | null; ended_at?: string | null; host_id?: string; id?: never; max_players?: number; official?: boolean; result?: string | null; spun_at?: string | null; started_at?: string | null; status?: string; title?: string | null }
+        Update: { challenge_id?: number | null; created_at?: string; current_game_id?: number | null; ended_at?: string | null; host_id?: string; id?: never; max_players?: number; official?: boolean; result?: string | null; spun_at?: string | null; started_at?: string | null; status?: string; title?: string | null }
+        Relationships: Rel[]
+      }
+      olympic_games: {
+        Row: { created_at: string; id: number; name: string; olympic_id: number; position: number | null; winner_id: string | null }
+        Insert: { created_at?: string; id?: never; name: string; olympic_id: number; position?: number | null; winner_id?: string | null }
+        Update: { created_at?: string; id?: never; name?: string; olympic_id?: number; position?: number | null; winner_id?: string | null }
+        Relationships: Rel[]
+      }
+      olympic_players: {
+        Row: { avatar_url: string | null; display_name: string | null; joined_at: string; olympic_id: number; points: number; user_id: string; won: boolean }
+        Insert: { avatar_url?: string | null; display_name?: string | null; joined_at?: string; olympic_id: number; points?: number; user_id: string; won?: boolean }
+        Update: { avatar_url?: string | null; display_name?: string | null; joined_at?: string; olympic_id?: number; points?: number; user_id?: string; won?: boolean }
+        Relationships: Rel[]
+      }
       bingo_tasks: {
         Row: { active: boolean; created_at: string; id: number; text: string }
         Insert: { active?: boolean; created_at?: string; id?: never; text: string }
@@ -218,6 +236,15 @@ export type Database = {
       escalation_replay: { Args: { p_source: number }; Returns: number }
       win_replay: { Args: { p_source: number }; Returns: number }
       admin_delete_round: { Args: { p_kind: string; p_id: number }; Returns: undefined }
+      olympic_create: { Args: { p_title: string | null; p_games: string[]; p_max_players: number }; Returns: number }
+      olympic_join: { Args: { p_id: number }; Returns: undefined }
+      olympic_leave: { Args: { p_id: number; p_user?: string | null }; Returns: undefined }
+      olympic_add_game: { Args: { p_id: number; p_name: string }; Returns: undefined }
+      olympic_remove_game: { Args: { p_game: number }; Returns: undefined }
+      olympic_start: { Args: { p_id: number }; Returns: undefined }
+      olympic_spin: { Args: { p_id: number }; Returns: number }
+      olympic_decide: { Args: { p_game: number; p_winner: string }; Returns: undefined }
+      olympic_finish: { Args: { p_id: number }; Returns: string }
       bingo_card_create: { Args: { p_tasks: string[]; p_title: string }; Returns: number }
       bingo_finish: { Args: { p_round: number }; Returns: string }
       bingo_join: { Args: { p_round: number }; Returns: undefined }

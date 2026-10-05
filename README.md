@@ -11,6 +11,7 @@ Website für Alvis Fortnite-Challenges: konstruieren, auswürfeln, abstimmen und
 | `/auktion` | **Loot-Auktion**: 4 Creator mit je 500 Gold bieten verdeckt am eigenen Gerät auf zufällige Items. Der Höchstbieter gewinnt, bei Gleichstand entscheidet das Los. Haben alle geskippt, wird das Item verworfen. Gespielt wird, bis jeder 5 Items hat. Am Ende gibt es eine Loadout-Übersicht als Bild |
 | `/eskalation` | **Regel-Eskalation**: Grundregel per Glücksrad, danach kommt alle 4 Minuten (einstellbar) eine neue Zufallsregel dazu, mit Alarm-Ton. Die Regelkachel gibt es als OBS-Overlay |
 | `/winchallenge` | **Winchallenge**: Spiele mit je einer Zahl benötigter Siege, gemeinsamer Countdown (oder ohne Zeitlimit). Siege per +1/−1 zählen, Timer starten/pausieren, Spiele unterwegs ergänzen. Schlichtes OBS-Overlay unter `/overlay/winchallenge` (immer die neueste Winchallenge). Geschafft = alle Ziele erreicht |
+| `/olympiade` | **Olympiade**: Spiele per Textfeld eintragen, sie landen auf einem Glücksrad (gleiche Chancen, jedes Spiel nur einmal). Lobby mit Twitch-Login (mind. 2 Spieler), der Host dreht, gespielt wird extern, dann markiert der Host genau einen Sieger. Punkte steigen: 1. Spiel 1 Punkt, 2. Spiel 2 Punkte usw. Kleine Punkteanzeige als OBS-Overlay (`/overlay/olympiade`) |
 | `/stats` | **Challenge-Stats** (über das Menü) mit zwei Tabs: **👥 Spieler** – oben Alvis Kurzbilanz, darunter die Tabelle mit allen, die bei Challenges dabei waren (Teilnahmen, Siege, Siegquote, bei Bingo Punkte gesamt und Ø; Alvis Solo-Challenges zählen mit, geschafft = Sieg; Filter je Spiel, Spalten sortierbar) – und **🎮 Alvi** – Erfolgsquote, Serien, Aufschlüsselung je Tool, Liste aller Challenges |
 | `/admin` | Regeln, Loot-Pool, Drop-Spots, Bingo-Aufgaben, Seasons/Map, Ergebnisse eintragen |
 
@@ -71,6 +72,6 @@ Das Repo in Vercel importieren und die Umgebungsvariablen `NEXT_PUBLIC_SUPABASE_
 
 ## Sicherheit
 
-**Löschen:** Admins sehen auf jeder Runden-Seite (Eskalation, Loadout, Auktion, Bingo, Winchallenge) „🗑 Runde löschen“ und in den Stats (Tab Alvi) neben jeder Challenge 🗑 – gelöscht werden Runde und Stats-Eintrag zusammen.
+**Löschen:** Admins sehen auf jeder Runden-Seite (Eskalation, Loadout, Auktion, Bingo, Winchallenge, Olympiade) „🗑 Runde löschen“ und in den Stats (Tab Alvi) neben jeder Challenge 🗑 – gelöscht werden Runde und Stats-Eintrag zusammen.
 
 Schreibrechte erzwingt die Datenbank per Row Level Security. Stammdaten und Live-Tools darf nur `role = 'admin'` ändern. Zuschauer dürfen eigene Bingo-Karten anlegen und Runden mitspielen; abhaken kann jeder nur auf seiner eigenen Karte, Punkte und Sieger berechnet die Datenbank beim Beenden. Bei der Loot-Auktion laufen Item-Ziehung, Gebotsprüfung (Mindestgebot, 10er-Schritte, Gold-Limit, ein Gebot pro Runde), Losentscheid, Gold-Abzug und die Auslosung am Ende komplett in Datenbankfunktionen. Fremde Gebote sind per RLS bis zur Auswertung unsichtbar.

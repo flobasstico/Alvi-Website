@@ -27,7 +27,7 @@ export function NavLinks({ items }: { items: readonly { href: string; label: str
         }}
         aria-current={isActive(item.href) ? "page" : undefined}
         className={clsx(
-          "relative rounded-lg px-3 py-1.5 text-sm font-semibold transition active:scale-95",
+          "relative rounded-lg px-2.5 py-1.5 text-sm font-semibold transition active:scale-95",
           active ? "bg-accent text-black shadow-[0_0_12px_rgba(255,214,10,.45)]" : "text-muted hover:bg-panel-2 hover:text-white",
           loading && "animate-pulse",
         )}
@@ -38,12 +38,12 @@ export function NavLinks({ items }: { items: readonly { href: string; label: str
   })
   return (
     <>
-      <nav className="hidden flex-wrap gap-1 lg:flex">{links}</nav>
-      <button className="btn-secondary px-3 lg:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menü">
+      <nav className="hidden gap-0.5 xl:flex">{links}</nav>
+      <button className="btn-secondary px-3 xl:hidden" onClick={() => setOpen((o) => !o)} aria-label="Menü">
         ☰
       </button>
       {open && (
-        <nav className="absolute inset-x-0 top-full flex flex-col gap-1 border-b border-line bg-bg p-3 lg:hidden">
+        <nav className="absolute inset-x-0 top-full flex flex-col gap-1 border-b border-line bg-bg p-3 xl:hidden">
           {links}
         </nav>
       )}

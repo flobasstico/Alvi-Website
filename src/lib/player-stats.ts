@@ -1,18 +1,19 @@
 /** Spiele, die in die Spieler-Statistik eingehen: Mehrspieler-Runden (Login) und Alvis Solo-Challenges */
-export const PLAYER_GAMES = ["eskalation", "loadout", "auktion", "bingo", "rad", "drop", "winchallenge", "manuell"] as const
+export const PLAYER_GAMES = ["eskalation", "loadout", "auktion", "bingo", "olympiade", "rad", "drop", "winchallenge", "manuell"] as const
 export type PlayerGame = (typeof PLAYER_GAMES)[number]
 export const PLAYER_GAME_LABEL: Record<PlayerGame, string> = {
   eskalation: "Regel-Eskalation",
   loadout: "Loadout-Würfel",
   auktion: "Loot-Auktion",
   bingo: "Bingo",
+  olympiade: "Olympiade",
   rad: "Glücksrad",
   drop: "Drop-Spot",
   winchallenge: "Winchallenge",
   manuell: "Manuell",
 }
 /** Spiele mit Punkten */
-export const POINT_GAMES: readonly PlayerGame[] = ["bingo"]
+export const POINT_GAMES: readonly PlayerGame[] = ["bingo", "olympiade"]
 
 /** Eine Teilnahme einer Person an einer abgeschlossenen Runde */
 export type Participation = { userId: string; game: PlayerGame; round: string; won: boolean; points: number | null }

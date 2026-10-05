@@ -4,8 +4,8 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { requireAdmin } from "@/lib/supabase/server"
 
-export type RoundKind = "eskalation" | "loadout" | "auktion" | "bingo" | "winchallenge" | "challenge"
-const KINDS: RoundKind[] = ["eskalation", "loadout", "auktion", "bingo", "winchallenge", "challenge"]
+export type RoundKind = "eskalation" | "loadout" | "auktion" | "bingo" | "winchallenge" | "olympiade" | "challenge"
+const KINDS: RoundKind[] = ["eskalation", "loadout", "auktion", "bingo", "winchallenge", "olympiade", "challenge"]
 
 /** Runde samt Eintrag in Alvis Statistik löschen (nur Admins) und optional zur Übersicht zurück */
 export async function deleteRound(kind: RoundKind, id: number, back?: string) {
