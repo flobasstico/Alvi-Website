@@ -1,5 +1,7 @@
 import Link from "next/link"
 import { ChannelLinks } from "@/components/channel-links"
+import { BingoIcon, GoldBarsIcon, MapIcon, WheelIcon } from "@/components/tile-icons"
+import { getCurrentSeason } from "@/lib/season"
 import { channelsFromSettings, loadSiteSettings } from "@/lib/site"
 import { createClient } from "@/lib/supabase/server"
 
@@ -16,10 +18,18 @@ const TOOLS = [
 
 export default async function Home() {
   const supabase = await createClient()
-  const [{ data: active }, settings] = await Promise.all([
+  const [{ data: active }, settings, season] = await Promise.all([
     supabase.from("challenges").select("id, title").eq("status", "aktiv").order("played_at", { ascending: false }).limit(3),
     loadSiteSettings(supabase),
+    getCurrentSeason(supabase),
   ])
+  // Bild-Icons statt Emojis; Drop-Spot zeigt die hochgeladene Karte der aktuellen Season
+  const icons: Record<string, React.ReactNode> = {
+    "/rad": <WheelIcon />,
+    "/drop": <MapIcon url={season?.map_image_url} />,
+    "/bingo": <BingoIcon />,
+    "/auktion": <GoldBarsIcon />,
+  }
   const channels = channelsFromSettings(settings)
 
   return (
@@ -50,7 +60,7 @@ export default async function Home() {
       <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {TOOLS.map((t) => (
           <Link key={t.href} href={t.href} className="panel group transition hover:-translate-y-1 hover:border-accent">
-            <div className="text-4xl">{t.emoji}</div>
+            <div className="flex h-12 items-center text-4xl">{icons[t.href] ?? t.emoji}</div>
             <h2 className="mt-2 font-display text-2xl group-hover:text-accent">{t.title}</h2>
             <p className="text-sm text-muted">{t.text}</p>
           </Link>
