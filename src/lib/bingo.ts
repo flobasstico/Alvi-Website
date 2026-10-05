@@ -24,3 +24,24 @@ export function completedLines(marked: readonly boolean[]): number[] {
 export function hasBingo(marked: readonly boolean[]): boolean {
   return completedLines(marked).length > 0
 }
+
+export const POINTS_PER_FIELD = 1
+export const POINTS_PER_BINGO = 3
+/** Höchstpunktzahl: alle Felder + alle Linien */
+export const MAX_POINTS = BINGO_CELLS * POINTS_PER_FIELD + BINGO_LINES.length * POINTS_PER_BINGO
+
+export type BingoScore = { fields: number; bingos: number; points: number; full: boolean }
+
+/** 1 Punkt pro erledigtem Feld, +3 pro voller Linie (Reihe, Spalte, Diagonale) */
+export function bingoScore(marked: readonly boolean[]): BingoScore {
+  const fields = marked.filter(Boolean).length
+  const bingos = completedLines(marked).length
+  return { fields, bingos, points: fields * POINTS_PER_FIELD + bingos * POINTS_PER_BINGO, full: marked.length > 0 && fields === marked.length }
+}
+
+export type RankEntry = { key: string; name: string; avatar: string | null; streamer: boolean; score: BingoScore; joinedAt: string }
+
+/** Rangliste nach Punkten; bei Gleichstand zählt, wer seine Karte früher geholt hat */
+export function rankEntries(entries: RankEntry[]): RankEntry[] {
+  return [...entries].sort((a, b) => b.score.points - a.score.points || a.joinedAt.localeCompare(b.joinedAt))
+}

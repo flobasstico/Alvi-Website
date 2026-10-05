@@ -1,0 +1,17 @@
+import { fetchBingo } from "@/lib/bingo-live"
+import { createClient } from "@/lib/supabase/server"
+import { CardOverlay } from "../overlays"
+
+export const metadata = { title: "Bingo – Karte (Overlay)" }
+export const dynamic = "force-dynamic"
+
+export default async function Page() {
+  const initial = await fetchBingo(await createClient())
+  return (
+    <>
+      {/* Transparenter Hintergrund für OBS */}
+      <style>{`html, body { background: transparent !important; min-height: 0; }`}</style>
+      <CardOverlay initial={initial} />
+    </>
+  )
+}

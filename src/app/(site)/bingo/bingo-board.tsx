@@ -1,84 +1,48 @@
 "use client"
 
 import clsx from "clsx"
-import { useRouter } from "next/navigation"
-import { useEffect, useMemo, useRef, useState, useTransition } from "react"
-import { BINGO_CELLS, BINGO_LINES, completedLines, hasBingo, markedCells } from "@/lib/bingo"
-import type { Tables } from "@/lib/database.types"
+import { useMemo, useState, useTransition } from "react"
+import { BingoGrid } from "@/components/bingo/bingo-grid"
+import { RankingList } from "@/components/bingo/ranking-list"
+import { useBingo } from "@/components/bingo/use-bingo"
+import { CopyButton } from "@/components/session/players"
+import { BINGO_CELLS } from "@/lib/bingo"
+import { ranking, streamerCard, type BingoState } from "@/lib/bingo-live"
 import { celebrate } from "@/lib/confetti"
 import { sample } from "@/lib/random"
-import { createClient } from "@/lib/supabase/client"
 import { endBingo } from "./actions"
 
-type Task = { id: number; text: string }
-
-export function BingoBoard({
-  game,
-  tasks,
-  initialMarks,
-  myCard,
-  winners,
-  loggedIn,
-  isAdmin,
-}: {
-  game: Tables<"bingo_games">
-  tasks: Task[]
-  initialMarks: number[]
-  myCard: number[] | null
-  winners: { name: string; at: string }[]
-  loggedIn: boolean
-  isAdmin: boolean
-}) {
-  const router = useRouter()
-  const [supabase] = useState(createClient)
-  const [marks, setMarks] = useState(() => new Set(initialMarks))
+export function BingoBoard({ initial, userId, isAdmin }: { initial: BingoState; userId: string | null; isAdmin: boolean }) {
+  const { state, setState, refetch, supabase } = useBingo(initial)
   const [error, setError] = useState<string | null>(null)
   const [pending, start] = useTransition()
-  const taskText = useMemo(() => new Map(tasks.map((t) => [t.id, t.text])), [tasks])
+  const game = state.game!
+  const marks = useMemo(() => new Set(state.marks), [state.marks])
+  const taskText = useMemo(() => new Map(state.tasks.map((t) => [Number(t.id), t.text])), [state.tasks])
+  const myCard = state.cards.find((c) => c.user_id === userId) ?? null
+  const ranked = useMemo(() => ranking(state, marks), [state, marks])
   const running = game.status === "laeuft"
-
-  useEffect(() => setMarks(new Set(initialMarks)), [initialMarks])
-
-  useEffect(() => {
-    const channel = supabase
-      .channel(`bingo-${game.id}`)
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "bingo_marks", filter: `game_id=eq.${game.id}` }, (p) =>
-        setMarks((m) => new Set(m).add((p.new as { task_id: number }).task_id)),
-      )
-      .on("postgres_changes", { event: "DELETE", schema: "public", table: "bingo_marks" }, () => router.refresh())
-      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "bingo_cards", filter: `game_id=eq.${game.id}` }, () =>
-        router.refresh(),
-      )
-      .on("postgres_changes", { event: "*", schema: "public", table: "bingo_games" }, () => router.refresh())
-      .subscribe()
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [supabase, router, game.id])
 
   async function toggleMark(taskId: number) {
     setError(null)
     const has = marks.has(taskId)
-    setMarks((m) => {
-      const n = new Set(m)
-      if (has) n.delete(taskId)
-      else n.add(taskId)
-      return n
-    })
+    // Sofort anzeigen, Realtime/Polling bestätigt
+    setState((s) => ({ ...s, marks: has ? s.marks.filter((m) => m !== taskId) : [...s.marks, taskId] }))
     const { error } = has
       ? await supabase.from("bingo_marks").delete().eq("game_id", game.id).eq("task_id", taskId)
       : await supabase.from("bingo_marks").insert({ game_id: game.id, task_id: taskId })
     if (error) setError(error.message)
+    await refetch()
   }
 
   async function joinGame() {
     setError(null)
     const { error } = await supabase.from("bingo_cards").insert({ game_id: game.id, task_ids: sample(game.task_ids, BINGO_CELLS) })
     if (error) setError(error.message)
-    router.refresh()
+    await refetch()
   }
 
-  const alviCard = game.task_ids.slice(0, BINGO_CELLS)
+  const origin = typeof window === "undefined" ? "" : location.origin
 
   return (
     <div className="flex flex-col gap-6">
@@ -91,8 +55,10 @@ export function BingoBoard({
             className="btn-secondary ml-auto"
             disabled={pending}
             onClick={() =>
+              confirm("Runde beenden und werten? Geschafft ist sie nur mit voller Karte.") &&
               start(async () => {
                 if (await endBingo(game.id)) celebrate()
+                await refetch()
               })
             }
           >
@@ -103,17 +69,17 @@ export function BingoBoard({
       {error && <p className="text-sm text-fail">{error}</p>}
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <Card title="Alvis Karte" ids={alviCard} marks={marks} taskText={taskText} highlight />
+        <BingoGrid title={`${state.streamerName}s Karte`} ids={streamerCard(game)} marks={marks} taskText={taskText} highlight />
         {myCard ? (
-          <Card title="Deine Karte" ids={myCard} marks={marks} taskText={taskText} />
+          <BingoGrid title="Deine Karte" ids={myCard.task_ids} marks={marks} taskText={taskText} />
         ) : (
           <div className="panel flex flex-col items-center justify-center gap-3 text-center">
             <div className="text-5xl">🎟️</div>
             {!running ? (
               <p className="text-muted">Diese Runde ist vorbei.</p>
-            ) : loggedIn ? (
+            ) : userId ? (
               <>
-                <p className="text-muted">Hol dir eine zufällige Karte und spiel mit – wer zuerst Bingo hat, landet auf der Bestenliste.</p>
+                <p className="text-muted">Hol dir eine zufällige Karte und sammle Punkte, wenn Alvi deine Aufgaben schafft.</p>
                 <button className="btn-primary" onClick={joinGame}>Karte holen</button>
               </>
             ) : (
@@ -123,12 +89,12 @@ export function BingoBoard({
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
+      <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         {isAdmin && running ? (
           <section className="panel">
             <h2 className="mb-3 font-display text-2xl">Aufgaben abhaken</h2>
             <div className="grid gap-2 sm:grid-cols-2">
-              {game.task_ids.map((id) => (
+              {game.task_ids.map(Number).map((id) => (
                 <button
                   key={id}
                   onClick={() => toggleMark(id)}
@@ -146,65 +112,35 @@ export function BingoBoard({
         ) : (
           <div />
         )}
-        <section className="panel h-fit">
-          <h2 className="mb-3 font-display text-2xl">Bingo-Bestenliste</h2>
-          <ol className="flex flex-col gap-1">
-            {winners.map((w, i) => (
-              <li key={i} className="flex justify-between">
-                <span>{i === 0 ? "🏆" : `${i + 1}.`} {w.name}</span>
-                <span className="text-sm text-muted">{new Date(w.at).toLocaleTimeString("de-DE", { timeZone: "Europe/Berlin" })}</span>
-              </li>
-            ))}
-            {winners.length === 0 && <li className="text-muted">Noch niemand hat Bingo.</li>}
-          </ol>
-        </section>
+        <div className="flex flex-col gap-6">
+          <section className="panel h-fit">
+            <h2 className="mb-3 font-display text-2xl">Punkte-Rangliste</h2>
+            <RankingList entries={ranked} me={userId} />
+          </section>
+          {isAdmin && (
+            <section className="panel flex flex-col gap-3">
+              <h2 className="font-display text-xl">OBS-Overlays</h2>
+              <p className="text-sm text-muted">
+                Als <b>Browserquelle</b> einfügen, Hintergrund ist transparent. Die Links bleiben gleich und zeigen immer die neueste Runde.
+              </p>
+              <OverlayLink label="Karte (z. B. 600 × 680)" url={`${origin}/overlay/bingo/karte`} />
+              <OverlayLink label="Rangliste (z. B. 460 × 700)" url={`${origin}/overlay/bingo/rangliste`} />
+            </section>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-function Card({
-  title,
-  ids,
-  marks,
-  taskText,
-  highlight,
-}: {
-  title: string
-  ids: number[]
-  marks: Set<number>
-  taskText: Map<number, string>
-  highlight?: boolean
-}) {
-  const cells = markedCells(ids, marks)
-  const lines = new Set(completedLines(cells).flatMap((i) => BINGO_LINES[i]))
-  const bingo = hasBingo(cells)
-  const wasBingo = useRef(bingo)
-
-  useEffect(() => {
-    if (bingo && !wasBingo.current) celebrate()
-    wasBingo.current = bingo
-  }, [bingo])
-
+function OverlayLink({ label, url }: { label: string; url: string }) {
   return (
-    <section className={clsx("panel", highlight && "border-accent/60")}>
-      <div className="mb-3 flex items-center justify-between">
-        <h3 className="font-display text-2xl">{title}</h3>
-        {bingo && <span className="animate-bounce font-display text-3xl text-accent">BINGO!</span>}
+    <div>
+      <div className="label">{label}</div>
+      <div className="flex gap-2">
+        <input readOnly value={url} className="input font-mono text-xs" onFocus={(e) => e.target.select()} />
+        <CopyButton text={url} />
       </div>
-      <div className="grid grid-cols-3 gap-2">
-        {ids.map((id, i) => (
-          <div
-            key={i}
-            className={clsx(
-              "flex aspect-square items-center justify-center rounded-xl border-2 p-2 text-center text-sm font-bold leading-tight transition sm:text-base",
-              lines.has(i) ? "border-accent bg-accent text-black" : cells[i] ? "border-win bg-win/30" : "border-line bg-bg/50",
-            )}
-          >
-            {taskText.get(id)}
-          </div>
-        ))}
-      </div>
-    </section>
+    </div>
   )
 }
