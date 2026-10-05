@@ -18,7 +18,7 @@ export default async function Home() {
     supabase.from("challenges").select("id, title").eq("status", "aktiv").order("played_at", { ascending: false }).limit(3),
     loadSiteSettings(supabase),
   ])
-  const HERO_PLATFORMS = ["link_youtube", "link_twitch", "link_instagram", "link_tiktok"]
+  const HERO_PLATFORMS = ["link_youtube", "link_twitch", "link_instagram", "link_tiktok", "link_merch"]
   const channels = channelsFromSettings(settings).filter((c) => HERO_PLATFORMS.includes(c.key))
 
   return (

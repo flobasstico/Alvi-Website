@@ -42,6 +42,14 @@ export function PlatformIcon({ platform, className }: { platform: string; classN
           <path d="M13.2 5.5h2.4c.3 1.7 1.4 2.8 3 3v2.4a6 6 0 0 1-3-.9v4.8a4.3 4.3 0 1 1-4.3-4.3h.4v2.5a1.9 1.9 0 1 0 1.5 1.8z" fill="#fff" />
         </svg>
       )
+    case "link_merch":
+      return (
+        <svg viewBox="0 0 24 24" className={className} aria-hidden>
+          <rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="#ffd60a" />
+          <path d="M7 9h10l-.8 9.2a1 1 0 0 1-1 .8H8.8a1 1 0 0 1-1-.8z" fill="#111" />
+          <path d="M9.5 10.5V8a2.5 2.5 0 0 1 5 0v2.5" fill="none" stroke="#111" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      )
     default:
       return null
   }

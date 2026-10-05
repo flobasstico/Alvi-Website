@@ -8,6 +8,7 @@ export const CHANNELS = [
   { key: "link_twitch", label: "Twitch", color: "bg-[#9146ff] text-white" },
   { key: "link_instagram", label: "Instagram", color: "bg-gradient-to-r from-[#f58529] via-[#dd2a7b] to-[#8134af] text-white" },
   { key: "link_tiktok", label: "TikTok", color: "bg-black text-white border border-white/30" },
+  { key: "link_merch", label: "Merch", color: "bg-accent text-black" },
   { key: "link_x", label: "X", color: "bg-black text-white border border-white/30" },
   { key: "link_discord", label: "Discord", color: "bg-[#5865f2] text-white" },
 ] as const

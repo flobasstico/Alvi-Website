@@ -21,7 +21,7 @@ describe("Kanal-Links", () => {
     expect(safeUrl("youtube.com/@x")).toBeNull()
   })
 
-  it("Plattformen ohne Kanal werden ausgeblendet, Reihenfolge YouTube, Twitch, Instagram, TikTok", () => {
+  it("Plattformen ohne Kanal werden ausgeblendet, Reihenfolge YouTube, Twitch, Instagram, TikTok, Merch", () => {
     const s = new Map([
       ["link_tiktok", "https://tiktok.com/@alvi"],
       ["link_youtube", "A | https://youtube.com/@a\nB | https://youtube.com/@b"],
