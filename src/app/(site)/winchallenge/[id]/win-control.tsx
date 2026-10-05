@@ -8,6 +8,7 @@ import { useWin } from "@/components/winchallenge/use-win"
 import { WinBoard } from "@/components/winchallenge/win-board"
 import { celebrate } from "@/lib/confetti"
 import { progress, remainingSeconds, type WinState } from "@/lib/winchallenge"
+import { deleteWinChallenge } from "../actions"
 
 export function WinControl({ initial, isAdmin, serverNow }: { initial: WinState; isAdmin: boolean; serverNow: number }) {
   const { state, setState, now, refetch, supabase } = useWin(initial, serverNow)
@@ -176,6 +177,20 @@ export function WinControl({ initial, isAdmin, serverNow }: { initial: WinState;
                 </div>
               </details>
             </section>
+          )}
+
+          {isAdmin && (
+            <button
+              className="self-start text-sm text-muted underline hover:text-fail"
+              disabled={busy}
+              onClick={async () => {
+                if (!confirm(`Winchallenge „${c.title ?? `#${c.id}`}“ endgültig löschen?`)) return
+                setBusy(true)
+                await deleteWinChallenge(c.id)
+              }}
+            >
+              Winchallenge löschen
+            </button>
           )}
         </div>
 

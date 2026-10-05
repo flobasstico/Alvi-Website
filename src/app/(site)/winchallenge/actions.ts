@@ -21,3 +21,11 @@ export async function createWinChallenge(_: unknown, form: FormData): Promise<{ 
   if (e2) return { error: e2.message }
   redirect(`/winchallenge/${data.id}`)
 }
+
+/** Winchallenge samt Spielen löschen (ein evtl. Stats-Eintrag bleibt, der lässt sich unter Admin → Challenges löschen) */
+export async function deleteWinChallenge(id: number) {
+  const supabase = await requireAdmin()
+  const { error } = await supabase.from("win_challenges").delete().eq("id", id)
+  if (error) throw new Error(error.message)
+  redirect("/winchallenge")
+}
