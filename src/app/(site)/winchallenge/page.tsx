@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
+import { StaleNote } from "@/components/replay-button"
 import { getViewer } from "@/lib/supabase/server"
 import { CreateWin } from "./create-win"
 
@@ -23,7 +24,8 @@ export default async function WinPage() {
       <PageTitle title="Winchallenge" subtitle="Spiele mit Ziel-Siegen, ein gemeinsamer Timer – schaffst du alle Siege, bevor die Zeit abläuft? Mit OBS-Overlay." />
       <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
         <section className="panel">
-          <h2 className="mb-3 font-display text-2xl">Winchallenges</h2>
+          <h2 className="mb-1 font-display text-2xl">Winchallenges</h2>
+          <StaleNote game="winchallenge" className="mb-3 text-xs text-muted" />
           <ul className="flex flex-col gap-2">
             {list?.map((w) => (
               <li key={w.id}>

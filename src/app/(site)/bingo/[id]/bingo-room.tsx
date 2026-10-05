@@ -87,7 +87,7 @@ export function BingoRoom({ initial, userId, isAdmin }: { initial: BingoState; u
         </span>
       </div>
       {error && <p className="rounded-xl border border-fail bg-fail/10 px-3 py-2 text-sm text-fail">{error}</p>}
-      {!round.official && <UnofficialNote />}
+      {!round.official && <UnofficialNote game="bingo" />}
 
       {ended && (
         <section className="panel flex flex-col items-center gap-3 text-center">

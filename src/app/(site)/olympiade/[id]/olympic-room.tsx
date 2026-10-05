@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { ScoreBoard } from "@/components/olympiade/score-board"
 import { useOlympic } from "@/components/olympiade/use-olympic"
+import { UnofficialNote } from "@/components/replay-button"
 import { CopyButton, PlayersPanel } from "@/components/session/players"
 import { buildSlices, spinTo, WheelSvg } from "@/components/wheel-svg"
 import { celebrate } from "@/lib/confetti"
@@ -116,11 +117,7 @@ export function OlympicRoom({ initial, userId, isAdmin }: { initial: OlympicStat
         <span className={clsx("chip ml-auto", running && "border-win text-win")}>{OLYMPIC_STATUS[olympic.status]}</span>
       </div>
       {error && <p className="rounded-xl border border-fail bg-fail/10 px-3 py-2 text-sm text-fail">{error}</p>}
-      {!olympic.official && (
-        <p className="rounded-xl border border-accent-2/50 bg-accent-2/10 px-3 py-2 text-sm">
-          Ohne Admin – erscheint nicht in Übersichten und Stats und wird beim Beenden gelöscht (außer ein Admin spielt mit).
-        </p>
-      )}
+      {!olympic.official && <UnofficialNote game="olympiade" />}
 
       {ended && (
         <section className="panel text-center font-display text-3xl text-accent">

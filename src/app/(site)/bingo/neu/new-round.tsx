@@ -4,6 +4,7 @@ import clsx from "clsx"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { CardEditor, CardPreview } from "@/components/bingo/card-editor"
+import { StaleNote } from "@/components/replay-button"
 import { CardFolderTabs, cardsInFolder, type CardFolder } from "@/components/bingo/card-folders"
 import type { Tables } from "@/lib/database.types"
 import { createClient } from "@/lib/supabase/client"
@@ -15,7 +16,7 @@ export function NewRound({ cards, pool, preselect, userId }: { cards: Card[]; po
   const [selected, setSelected] = useState<number | null>(preselect && cards.some((c) => c.id === preselect) ? preselect : null)
   const [creating, setCreating] = useState(cards.length === 0)
   const pre = cards.find((c) => c.id === preselect)
-  const [folder, setFolder] = useState<CardFolder>(pre ? (pre.folder as CardFolder) : "admin")
+  const [folder, setFolder] = useState<CardFolder>(pre ? (pre.approved ? (pre.folder as CardFolder) : "meine") : "admin")
   const [title, setTitle] = useState("")
   const [maxPlayers, setMaxPlayers] = useState(4)
   const [busy, setBusy] = useState(false)
@@ -73,7 +74,10 @@ export function NewRound({ cards, pool, preselect, userId }: { cards: Card[]; po
                 )}
               >
                 <span className="truncate font-bold">{c.title}</span>
-                <span className="text-xs text-muted">von {c.author_name ?? "?"}</span>
+                <span className="text-xs text-muted">
+                  von {c.author_name ?? "?"}
+                  {!c.approved && " · 🕓 noch nicht freigegeben"}
+                </span>
                 <CardPreview tasks={c.tasks} />
               </button>
             </li>
@@ -106,6 +110,7 @@ export function NewRound({ cards, pool, preselect, userId }: { cards: Card[]; po
           {busy ? "Öffne…" : "Lobby öffnen"}
         </button>
         <p className="text-xs text-muted">Runden ohne Admin werden nach dem Ende nicht gespeichert.</p>
+        <StaleNote game="bingo" />
         {error && <p className="text-sm text-fail">{error}</p>}
       </aside>
     </div>

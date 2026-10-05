@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
+import { StaleNote } from "@/components/replay-button"
 import { MAX_POINTS, POINTS_PER_BINGO, POINTS_PER_FIELD } from "@/lib/bingo"
 import { getViewer } from "@/lib/supabase/server"
 
@@ -36,7 +37,8 @@ export default async function BingoPage() {
         <Link href="/bingo/karten" className="btn-secondary">🃏 Karten ansehen &amp; erstellen</Link>
       </div>
       <section className="panel">
-        <h2 className="mb-3 font-display text-2xl">Runden</h2>
+        <h2 className="mb-1 font-display text-2xl">Runden</h2>
+          <StaleNote game="bingo" className="mb-3 text-xs text-muted" />
         <ul className="flex flex-col gap-2">
           {rounds?.map((r) => {
             const info = byRound.get(r.id)

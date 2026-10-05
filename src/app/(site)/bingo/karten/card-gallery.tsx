@@ -21,7 +21,7 @@ export function CardGallery({ cards, pool, userId, isAdmin }: { cards: Card[]; p
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-display text-2xl">Karten</h2>
           <div className="ml-auto">
-            <CardFolderTabs cards={cards} folder={folder} onChange={setFolder} userId={userId} />
+            <CardFolderTabs cards={cards} folder={folder} onChange={setFolder} userId={userId} isAdmin={isAdmin} />
           </div>
         </div>
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
@@ -30,16 +30,30 @@ export function CardGallery({ cards, pool, userId, isAdmin }: { cards: Card[]; p
               <div>
                 <div className="truncate font-bold">{c.title}</div>
                 <div className="text-xs text-muted">von {c.author_name ?? "?"}</div>
+                {!c.approved && <div className="mt-1 text-xs font-bold text-accent">🕓 Wartet auf Freigabe – nur für {c.author_id === userId ? "dich" : "Ersteller"} und Admins sichtbar</div>}
               </div>
               <CardPreview tasks={c.tasks} />
               <div className="flex flex-wrap gap-2">
                 <Link href={`/bingo/neu?karte=${c.id}`} className="btn-primary px-3 py-1 text-sm">Runde starten</Link>
+                {isAdmin && !c.approved && (
+                  <button
+                    className="btn px-3 py-1 text-sm bg-win text-black"
+                    onClick={async () => {
+                      const { error } = await createClient().rpc("admin_approve_card", { p_card: c.id })
+                      if (error) alert(error.message)
+                      router.refresh()
+                    }}
+                  >
+                    ✅ Freigeben
+                  </button>
+                )}
                 {(c.author_id === userId || isAdmin) && (
                   <button
                     className="btn-secondary px-3 py-1 text-sm"
                     onClick={async () => {
                       if (!confirm(`Karte „${c.title}“ löschen?`)) return
-                      await createClient().from("bingo_card_templates").delete().eq("id", c.id)
+                      const { error } = await createClient().from("bingo_card_templates").delete().eq("id", c.id)
+                      if (error) alert(error.message)
                       router.refresh()
                     }}
                   >
@@ -56,7 +70,11 @@ export function CardGallery({ cards, pool, userId, isAdmin }: { cards: Card[]; p
         <h2 className="mb-3 font-display text-2xl">Karte erstellen</h2>
         {userId ? (
           <>
-            <p className="mb-3 text-xs text-muted">Wird im Ordner {isAdmin ? "Admin-Karten" : "Zuschauer-Karten"} gespeichert.</p>
+            <p className="mb-3 text-xs text-muted">
+              {isAdmin
+                ? "Wird im Ordner Admin-Karten gespeichert und ist sofort für alle sichtbar."
+                : "Wird im Ordner Zuschauer-Karten gespeichert. Für alle sichtbar wird sie erst nach Freigabe durch einen Admin – du kannst sie aber sofort selbst spielen. Höchstens 5 neue Karten pro Tag."}
+            </p>
             <CardEditor
               pool={pool}
               onCreated={() => {

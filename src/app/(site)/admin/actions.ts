@@ -297,3 +297,10 @@ export async function setChannelIcon(channelKey: string, url: string | null) {
   if (!safe) throw new Error("Ungültige Bild-Adresse")
   done((await supabase.from("site_settings").upsert({ key, value: safe })).error)
 }
+
+/** Twitch-Account sperren/entsperren (Admins nicht) */
+export async function setBanned(form: FormData) {
+  const supabase = await requireAdmin()
+  const { error } = await supabase.rpc("admin_set_banned", { p_user: str(form, "user"), p_banned: str(form, "banned") === "true" })
+  done(error)
+}

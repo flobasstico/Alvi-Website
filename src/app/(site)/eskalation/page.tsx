@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
+import { StaleNote } from "@/components/replay-button"
 import { getViewer } from "@/lib/supabase/server"
 import { CreateEscalation } from "./create-escalation"
 
@@ -22,7 +23,8 @@ export default async function EskalationPage() {
       />
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
         <section className="panel">
-          <h2 className="mb-3 font-display text-2xl">Runden</h2>
+          <h2 className="mb-1 font-display text-2xl">Runden</h2>
+          <StaleNote game="eskalation" className="mb-3 text-xs text-muted" />
           <ul className="flex flex-col gap-2">
             {sessions?.map((s) => (
               <li key={s.id}>

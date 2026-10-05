@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { STALE_DAYS, staleText, type StaleGame } from "@/lib/cleanup"
 import { createClient } from "@/lib/supabase/client"
 
 /** „Nachspielen“: legt eine identische Kopie einer abgeschlossenen Runde an, der Zuschauer ist Host */
@@ -33,19 +34,29 @@ export function ReplayButton({ kind, sourceId, loggedIn }: { kind: "eskalation" 
       <button className="btn-primary px-6 py-2" onClick={replay} disabled={busy}>
         {busy ? "Wird angelegt…" : "🔁 Nachspielen"}
       </button>
-      <p className="text-xs text-muted">Identische Challenge für dich und deine Freunde – ohne Admin wird sie nicht gespeichert.</p>
+      <p className="text-xs text-muted">
+        Identische Challenge für dich und deine Freunde – ohne Admin wird sie nicht gespeichert. Nicht beendet wird sie nach {STALE_DAYS[kind]} Tagen
+        gelöscht.
+      </p>
       {error && <p className="text-sm text-fail">{error}</p>}
     </div>
   )
 }
 
-/** Hinweis in Nachspiel-Runden ohne Admin */
-export function UnofficialNote() {
+/** Hinweis in Runden ohne Admin (auch Nachspiel-Runden) */
+export function UnofficialNote({ game, replay = false }: { game: StaleGame; replay?: boolean }) {
   return (
     <p className="rounded-xl border border-accent-2/50 bg-accent-2/10 px-3 py-2 text-sm">
-      🔁 <b>Nachspiel-Runde</b> – erscheint nicht in Übersichten und Stats und wird beim Beenden gelöscht (außer ein Admin spielt mit).
+      {replay ? "🔁 " : "ℹ️ "}
+      <b>{replay ? "Nachspiel-Runde" : "Runde ohne Admin"}</b> – erscheint nicht in Übersichten und Stats und wird beim Beenden gelöscht (außer ein
+      Admin spielt mit). {staleText(game)}
     </p>
   )
+}
+
+/** Kurzer Hinweis für Übersichten und Formulare */
+export function StaleNote({ game, className }: { game: StaleGame; className?: string }) {
+  return <p className={className ?? "text-xs text-muted"}>⏳ {staleText(game)}</p>
 }
 
 /** Anzeige, wenn eine Nachspiel-Runde beendet und dadurch gelöscht wurde */

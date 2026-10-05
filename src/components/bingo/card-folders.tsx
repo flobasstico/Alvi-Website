@@ -4,12 +4,15 @@ import clsx from "clsx"
 import type { Tables } from "@/lib/database.types"
 
 type Card = Tables<"bingo_card_templates">
-export type CardFolder = "admin" | "zuschauer" | "meine"
+export type CardFolder = "admin" | "zuschauer" | "meine" | "pruefen"
 
-const LABEL: Record<CardFolder, string> = { admin: "📁 Admin-Karten", zuschauer: "📁 Zuschauer-Karten", meine: "Meine" }
+const LABEL: Record<CardFolder, string> = { admin: "📁 Admin-Karten", zuschauer: "📁 Zuschauer-Karten", meine: "Meine", pruefen: "🕓 Zu prüfen" }
 
 export function cardsInFolder(cards: Card[], folder: CardFolder, userId: string | null) {
-  return folder === "meine" ? cards.filter((c) => c.author_id === userId) : cards.filter((c) => c.folder === folder)
+  if (folder === "meine") return cards.filter((c) => c.author_id === userId)
+  // Zuschauer-Karten erscheinen erst nach Freigabe durch einen Admin
+  if (folder === "pruefen") return cards.filter((c) => !c.approved)
+  return cards.filter((c) => c.folder === folder && c.approved)
 }
 
 /** Ordner-Reiter: Karten von Admins und von Zuschauern getrennt, dazu „Meine“ */
@@ -18,13 +21,20 @@ export function CardFolderTabs({
   folder,
   onChange,
   userId,
+  isAdmin = false,
 }: {
   cards: Card[]
   folder: CardFolder
   onChange: (f: CardFolder) => void
   userId: string | null
+  isAdmin?: boolean
 }) {
-  const folders: CardFolder[] = userId ? ["admin", "zuschauer", "meine"] : ["admin", "zuschauer"]
+  const folders: CardFolder[] = [
+    "admin",
+    "zuschauer",
+    ...(userId ? (["meine"] as const) : []),
+    ...(isAdmin && cards.some((c) => !c.approved) ? (["pruefen"] as const) : []),
+  ]
   return (
     <div className="flex flex-wrap gap-1 text-sm">
       {folders.map((f) => (

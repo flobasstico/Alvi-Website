@@ -20,6 +20,11 @@ export async function Header() {
           <AuthButton name={profile?.display_name ?? null} avatar={profile?.avatar_url ?? null} />
         </div>
       </div>
+      {profile?.banned && (
+        <div className="bg-fail px-4 py-1.5 text-center text-sm font-bold text-white">
+          Dein Account ist gesperrt – du kannst zuschauen, aber nichts erstellen oder mitspielen.
+        </div>
+      )}
     </header>
   )
 }

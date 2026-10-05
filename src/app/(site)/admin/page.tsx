@@ -23,6 +23,7 @@ import {
   addRule,
   addSeason,
   deleteRow,
+  setBanned,
   moveEscalationRule,
   setCurrentSeason,
   toggleActive,
@@ -48,10 +49,11 @@ const TABS = {
   eskalation: "Eskalations-Regeln",
   seasons: "Seasons & Map",
   seite: "Seite & Kanäle",
+  nutzer: "Nutzer",
 } as const
 type Tab = keyof typeof TABS
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string }> }) {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string }> }) {
   const { supabase, user, isAdmin } = await getViewer()
   if (!isAdmin) {
     return (
@@ -63,7 +65,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </div>
     )
   }
-  const { tab: rawTab } = await searchParams
+  const { tab: rawTab, q } = await searchParams
   const tab: Tab = rawTab && rawTab in TABS ? (rawTab as Tab) : "challenges"
   const season = await getCurrentSeason(supabase)
 
@@ -89,6 +91,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       {tab === "eskalation" && <EscalationTab />}
       {tab === "seasons" && <SeasonsTab />}
       {tab === "seite" && <SiteTab />}
+      {tab === "nutzer" && <UsersTab q={q ?? ""} />}
     </>
   )
 }
@@ -437,7 +440,10 @@ function EscalationPool({
 
 async function BingoTab() {
   const { supabase } = await getViewer()
-  const { data } = await supabase.from("bingo_tasks").select("*").order("id")
+  const [{ data }, { count: pending }] = await Promise.all([
+    supabase.from("bingo_tasks").select("*").order("id"),
+    supabase.from("bingo_card_templates").select("id", { count: "exact", head: true }).eq("approved", false),
+  ])
   const activeCount = data?.filter((t) => t.active).length ?? 0
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
@@ -447,6 +453,11 @@ async function BingoTab() {
           {activeCount} aktiv – Vorschläge für „Leere Felder zufällig füllen“ beim Erstellen einer Karte. Karten selbst verwalten alle unter{" "}
           <Link href="/bingo/karten" className="text-accent-2 underline">Bingo-Karten</Link>.
         </p>
+        {!!pending && (
+          <Link href="/bingo/karten" className="mb-3 block rounded-xl border border-accent bg-accent/10 px-3 py-2 text-sm font-bold">
+            🕓 {pending} {pending === 1 ? "Zuschauer-Karte wartet" : "Zuschauer-Karten warten"} auf Freigabe → prüfen
+          </Link>
+        )}
         <ul className="divide-y divide-line">
           {data?.map((t) => (
             <Row key={t.id} inactive={!t.active}>
@@ -512,4 +523,51 @@ async function SiteTab() {
   const { supabase } = await getViewer()
   const settings = await loadSiteSettings(supabase)
   return <SiteSettingsForm values={Object.fromEntries(settings)} />
+}
+
+async function UsersTab({ q }: { q: string }) {
+  const { supabase } = await getViewer()
+  const search = q.trim().replace(/[%_\\,()]/g, "")
+  let query = supabase.from("profiles").select("*").order("created_at", { ascending: false }).limit(200)
+  if (search) query = query.or(`twitch_login.ilike.%${search}%,display_name.ilike.%${search}%`)
+  const { data: users } = await query
+  return (
+    <section className="panel">
+      <h2 className="mb-1 font-display text-2xl">Nutzer</h2>
+      <p className="mb-3 text-sm text-muted">
+        Alle, die sich mit Twitch angemeldet haben. Gesperrte können weiter zuschauen, aber nichts mehr erstellen, beitreten, abhaken oder einreichen.
+        Ihre noch nicht freigegebenen Bingo-Karten werden beim Sperren gelöscht.
+      </p>
+      <form className="mb-3 flex gap-2">
+        <input type="hidden" name="tab" value="nutzer" />
+        <input name="q" defaultValue={q} className="input" placeholder="Twitch-Name suchen" />
+        <button className="btn-secondary shrink-0">Suchen</button>
+      </form>
+      <ul className="divide-y divide-line">
+        {users?.map((u) => (
+          <Row key={u.id} inactive={u.banned}>
+            {u.avatar_url ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={u.avatar_url} alt="" className="h-7 w-7 rounded-full" />
+            ) : (
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-line text-xs">👤</span>
+            )}
+            <span className="font-semibold">{u.display_name ?? u.twitch_login}</span>
+            <span className="text-xs text-muted">@{u.twitch_login}</span>
+            {u.role === "admin" && <span className="chip border-accent text-accent">Admin</span>}
+            {u.banned && <span className="chip border-fail text-fail">Gesperrt</span>}
+            <span className="ml-auto text-xs text-muted">seit {new Date(u.created_at).toLocaleDateString("de-DE", { timeZone: "Europe/Berlin" })}</span>
+            {u.role !== "admin" && (
+              <form action={setBanned}>
+                <input type="hidden" name="user" value={u.id} />
+                <input type="hidden" name="banned" value={String(!u.banned)} />
+                <button className={clsx("px-2 py-1 text-xs", u.banned ? "btn-secondary" : "btn-danger")}>{u.banned ? "Entsperren" : "Sperren"}</button>
+              </form>
+            )}
+          </Row>
+        ))}
+        {!users?.length && <li className="py-2 text-muted">Niemand gefunden.</li>}
+      </ul>
+    </section>
+  )
 }

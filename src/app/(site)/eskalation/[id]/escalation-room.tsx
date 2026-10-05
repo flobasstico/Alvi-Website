@@ -98,7 +98,7 @@ export function EscalationRoom({
         </button>
       </div>
       {error && <p className="rounded-xl border border-fail bg-fail/10 px-3 py-2 text-sm text-fail">{error}</p>}
-      {!session.official && <UnofficialNote />}
+      {!session.official && <UnofficialNote game="eskalation" replay />}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
         <div className="flex flex-col gap-4">

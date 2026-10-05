@@ -3,6 +3,7 @@
 import clsx from "clsx"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
+import { StaleNote } from "@/components/replay-button"
 import { parseGames } from "@/lib/olympiade"
 import { createClient } from "@/lib/supabase/client"
 
@@ -66,6 +67,7 @@ export function CreateOlympic() {
         {busy ? "Öffne…" : "Lobby öffnen"}
       </button>
       <p className="text-xs text-muted">Mindestens 2 Spiele und 2 Spieler. Olympiaden ohne Admin werden nach dem Ende nicht gespeichert.</p>
+      <StaleNote game="olympiade" />
       {error && <p className="text-sm text-fail">{error}</p>}
     </div>
   )

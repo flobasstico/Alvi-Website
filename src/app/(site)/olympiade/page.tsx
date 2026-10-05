@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
+import { StaleNote } from "@/components/replay-button"
 import { OLYMPIC_STATUS } from "@/lib/olympiade"
 import { getViewer } from "@/lib/supabase/server"
 import { CreateOlympic } from "./create-olympic"
@@ -27,7 +28,8 @@ export default async function OlympiadePage() {
       />
       <div className="grid gap-6 lg:grid-cols-[1fr_400px]">
         <section className="panel">
-          <h2 className="mb-3 font-display text-2xl">Olympiaden</h2>
+          <h2 className="mb-1 font-display text-2xl">Olympiaden</h2>
+          <StaleNote game="olympiade" className="mb-3 text-xs text-muted" />
           <ul className="flex flex-col gap-2">
             {list?.map((o) => {
               const i = info(o.id)
