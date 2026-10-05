@@ -4,7 +4,7 @@ import { canBid, loadoutFor, phaseOf, quickBids, validateBid, type Auction, type
 const auction = (over: Partial<Auction> = {}): Auction => ({
   id: 1, host_id: "h", title: null, status: "laeuft", season_id: 1, start_gold: 500, items_per_player: 5, bid_step: 10,
   bid_seconds: 0, no_duplicates: false, rarities: [], max_players: 4, ended_reason: null, challenge_id: null,
-  created_at: "", ended_at: null, ...over,
+  created_at: "", ended_at: null, winner_id: null, winner_name: null, result: null, decided_at: null, ...over,
 })
 const round = (over: Partial<Round>): Round => ({
   id: 1, auction_id: 1, round_no: 1, item_id: 1, item_name: "X", item_rarity: "grau", item_type: "waffe", item_icon_url: null,

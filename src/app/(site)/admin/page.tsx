@@ -14,6 +14,7 @@ import {
 } from "@/lib/constants"
 import { BINGO_CELLS } from "@/lib/bingo"
 import { getCurrentSeason } from "@/lib/season"
+import { loadSiteSettings } from "@/lib/site"
 import { getViewer } from "@/lib/supabase/server"
 import {
   addBingoTask,
@@ -34,6 +35,7 @@ import { ItemIconUpload } from "./item-icon-upload"
 import { LootImport } from "./loot-import"
 import { DeleteAllSpots } from "./delete-all-spots"
 import { MapUpload } from "./map-upload"
+import { SiteSettingsForm } from "./site-settings-form"
 import { SpotEditor } from "./spot-editor"
 
 export const metadata = { title: "Admin" }
@@ -46,6 +48,7 @@ const TABS = {
   bingo: "Bingo-Aufgaben",
   eskalation: "Eskalations-Regeln",
   seasons: "Seasons & Map",
+  seite: "Seite & Kanäle",
 } as const
 type Tab = keyof typeof TABS
 
@@ -86,6 +89,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       {tab === "bingo" && <BingoTab />}
       {tab === "eskalation" && <EscalationTab />}
       {tab === "seasons" && <SeasonsTab />}
+      {tab === "seite" && <SiteTab />}
     </>
   )
 }
@@ -502,4 +506,10 @@ async function SeasonsTab() {
       </aside>
     </div>
   )
+}
+
+async function SiteTab() {
+  const { supabase } = await getViewer()
+  const settings = await loadSiteSettings(supabase)
+  return <SiteSettingsForm values={Object.fromEntries(settings)} />
 }

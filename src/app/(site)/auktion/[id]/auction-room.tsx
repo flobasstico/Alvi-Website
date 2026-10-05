@@ -22,7 +22,7 @@ import {
 import { celebrate } from "@/lib/confetti"
 import { ITEM_TYPE_LABEL, RARITY_CLASS, RARITY_LABEL, type Rarity } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
-import { saveAuctionChallenge } from "../actions"
+import { WinnerPicker } from "@/components/session/players"
 import { ExportButtons } from "./export-buttons"
 
 type State = { auction: Auction; players: Player[]; rounds: Round[]; bids: Bid[] }
@@ -43,12 +43,10 @@ export function AuctionRoom({
   initial,
   serverNow,
   userId,
-  isAdmin,
 }: {
   initial: State
   serverNow: number
   userId: string | null
-  isAdmin: boolean
 }) {
   const [supabase] = useState(createClient)
   const [state, setState] = useState(initial)
@@ -177,7 +175,13 @@ export function AuctionRoom({
       )}
 
       {phase.kind === "ended" && (
-        <Finale auction={auction} players={players} rounds={rounds} isAdmin={isAdmin} />
+        <Finale
+          auction={auction}
+          players={players}
+          rounds={rounds}
+          isHost={isHost}
+          onWinner={(winner) => rpc(supabase.rpc("auction_set_winner", { p_auction: auction.id, p_winner: winner }))}
+        />
       )}
 
       {phase.kind !== "ended" && phase.kind !== "lobby" && (
@@ -560,11 +564,22 @@ function History({ rounds, bids, seatName }: { rounds: Round[]; bids: Bid[]; sea
 
 // ---------------------------------------------------------------- Abschluss
 
-function Finale({ auction, players, rounds, isAdmin }: { auction: Auction; players: Player[]; rounds: Round[]; isAdmin: boolean }) {
+function Finale({
+  auction,
+  players,
+  rounds,
+  isHost,
+  onWinner,
+}: {
+  auction: Auction
+  players: Player[]
+  rounds: Round[]
+  isHost: boolean
+  onWinner: (winner: string | null) => Promise<boolean>
+}) {
   const ref = useRef<HTMLDivElement>(null)
-  const [challengeId, setChallengeId] = useState(auction.challenge_id)
-  const [saving, setSaving] = useState(false)
-  const [saveError, setSaveError] = useState<string | null>(null)
+  const [choosing, setChoosing] = useState(false)
+  const [busy, setBusy] = useState(false)
   const lotteryCount = rounds.filter((r) => r.status === "zugelost").length
   const ranking = useMemo(
     () => [...players].sort((a, b) => b.gold - a.gold).map((p) => p.seat),
@@ -590,7 +605,10 @@ function Finale({ auction, players, rounds, isAdmin }: { auction: Auction; playe
             const spent = items.reduce((s, r) => s + (r?.price ?? 0), 0)
             return (
               <div key={p.seat} className="flex flex-col items-center gap-3 rounded-2xl border border-line bg-panel p-4">
-                <div className={clsx("font-display text-2xl", SEAT_COLORS[p.seat - 1])}>{p.display_name}</div>
+                <div className={clsx("font-display text-2xl", SEAT_COLORS[p.seat - 1])}>
+                  {auction.winner_id === p.user_id && "🏆 "}
+                  {p.display_name}
+                </div>
                 <div className="w-full">
                   <LoadoutBar items={items.map(toSlot)} />
                 </div>
@@ -614,30 +632,37 @@ function Finale({ auction, players, rounds, isAdmin }: { auction: Auction; playe
         </div>
       </div>
 
+      {auction.decided_at ? (
+        <div className="panel text-center">
+          <div className="font-display text-3xl text-accent">{auction.winner_name ? `🏆 ${auction.winner_name} gewinnt!` : "Ohne Wertung beendet"}</div>
+          {auction.winner_name && <p className="text-sm text-muted">Das Ergebnis ist in den Stats eingetragen.</p>}
+        </div>
+      ) : isHost ? (
+        choosing ? (
+          <WinnerPicker
+            players={players.map((p) => ({ user_id: p.user_id, display_name: p.display_name, avatar_url: p.avatar_url }))}
+            busy={busy}
+            onBack={() => setChoosing(false)}
+            onFinish={async (winner) => {
+              setBusy(true)
+              if (await onWinner(winner)) setChoosing(false)
+              setBusy(false)
+            }}
+          />
+        ) : (
+          <div className="panel flex flex-wrap items-center justify-center gap-3 text-center">
+            <p className="text-muted">Loadouts stehen – jetzt in Fortnite spielen. Danach den Sieger eintragen:</p>
+            <button className="btn-primary px-6 py-3 font-display text-xl" onClick={() => setChoosing(true)}>
+              🏆 Sieger wählen
+            </button>
+          </div>
+        )
+      ) : (
+        <p className="panel text-center text-muted">Nach dem Spiel trägt der Host den Sieger ein.</p>
+      )}
+
       <div className="flex flex-wrap items-center gap-2">
         <ExportButtons target={ref} filename={`loot-auktion-${auction.id}.png`} />
-        {isAdmin &&
-          (challengeId ? (
-            <span className="text-sm text-win">Als Challenge #{challengeId} gespeichert – Ergebnis unter Admin eintragen.</span>
-          ) : (
-            <button
-              className="btn-secondary"
-              disabled={saving}
-              onClick={async () => {
-                setSaving(true)
-                setSaveError(null)
-                try {
-                  setChallengeId(await saveAuctionChallenge(auction.id))
-                } catch (e) {
-                  setSaveError(e instanceof Error ? e.message : "Fehler")
-                }
-                setSaving(false)
-              }}
-            >
-              Als Challenge speichern
-            </button>
-          ))}
-        {saveError && <span className="text-sm text-fail">{saveError}</span>}
       </div>
     </section>
   )

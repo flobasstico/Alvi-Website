@@ -18,7 +18,7 @@ describe("Spieler-Statistik", () => {
     p("kev", "eskalation", true),
     p("kev", "loadout", true),
     p("alvi", "auktion", false),
-    p("kev", "auktion", false),
+    p("kev", "auktion", true),
     p("alvi", "bingo", true, 12),
     p("flo", "bingo", false, 4),
     p("alvi", "bingo", false, 3),
@@ -28,9 +28,8 @@ describe("Spieler-Statistik", () => {
   it("zählt Teilnahmen, Siege und Punkte über alle Spiele", () => {
     const rows = new Map(aggregatePlayers(parts, prof).map((r) => [r.userId, r]))
     expect(rows.get("alvi")).toMatchObject({ rounds: 5, wins: 2, points: 15, pointRounds: 2, avgPoints: 7.5 })
-    expect(rows.get("kev")).toMatchObject({ rounds: 4, wins: 2, points: 0, avgPoints: null })
-    // Auktion zählt nicht in die Siegquote: Kevin 2 Siege aus 3 gewerteten Runden
-    expect(rows.get("kev")!.winRate).toBe(67)
+    expect(rows.get("kev")).toMatchObject({ rounds: 4, wins: 3, winRate: 75, points: 0, avgPoints: null })
+    expect(rows.get("alvi")!.winRate).toBe(40)
     expect(rows.get("flo")).toMatchObject({ rounds: 2, wins: 1, winRate: 50, points: 11, avgPoints: 5.5 })
   })
 

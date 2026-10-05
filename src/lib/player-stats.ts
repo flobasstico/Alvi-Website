@@ -11,8 +11,6 @@ export const PLAYER_GAME_LABEL: Record<PlayerGame, string> = {
 }
 /** Spiele mit Punkten */
 export const POINT_GAMES: readonly PlayerGame[] = ["bingo"]
-/** Spiele ohne Sieger-Wertung (dort zählen nur Teilnahmen) */
-export const NO_WINNER_GAMES: readonly PlayerGame[] = ["auktion"]
 
 /** Eine Teilnahme einer Person an einer abgeschlossenen Runde */
 export type Participation = { userId: string; game: PlayerGame; round: string; won: boolean; points: number | null }
@@ -24,8 +22,6 @@ export type PlayerRow = {
   rounds: number
   wins: number
   winRate: number
-  /** Runden mit Sieger-Wertung (ohne Loot-Auktion) */
-  ratedRounds: number
   pointRounds: number
   points: number
   avgPoints: number | null
@@ -50,7 +46,6 @@ export function aggregatePlayers(
         rounds: 0,
         wins: 0,
         winRate: 0,
-        ratedRounds: 0,
         pointRounds: 0,
         points: 0,
         avgPoints: null,
@@ -64,9 +59,7 @@ export function aggregatePlayers(
     rows.set(p.userId, r)
   }
   for (const r of rows.values()) {
-    // Siegquote nur über Runden mit Sieger-Wertung
-    r.ratedRounds = parts.filter((p) => p.userId === r.userId && (!game || p.game === game) && !NO_WINNER_GAMES.includes(p.game)).length
-    r.winRate = r.ratedRounds ? Math.round((r.wins / r.ratedRounds) * 100) : 0
+    r.winRate = Math.round((r.wins / r.rounds) * 100)
     r.avgPoints = r.pointRounds ? Math.round((r.points / r.pointRounds) * 10) / 10 : null
   }
   return [...rows.values()]

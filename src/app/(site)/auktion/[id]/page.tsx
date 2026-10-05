@@ -6,7 +6,7 @@ export default async function AuctionPage({ params }: { params: Promise<{ id: st
   const { id } = await params
   const auctionId = Number(id)
   if (!Number.isInteger(auctionId)) notFound()
-  const { supabase, user, isAdmin } = await getViewer()
+  const { supabase, user } = await getViewer()
   const [{ data: auction }, { data: players }, { data: rounds }, { data: bids }] = await Promise.all([
     supabase.from("auctions").select("*").eq("id", auctionId).maybeSingle(),
     supabase.from("auction_players").select("*").eq("auction_id", auctionId).order("seat"),
@@ -19,7 +19,6 @@ export default async function AuctionPage({ params }: { params: Promise<{ id: st
       initial={{ auction, players: players ?? [], rounds: rounds ?? [], bids: bids ?? [] }}
       serverNow={Date.now()}
       userId={user?.id ?? null}
-      isAdmin={isAdmin}
     />
   )
 }

@@ -4,7 +4,6 @@ import { PageTitle } from "@/components/page-title"
 import { SOURCE_LABEL, SOURCES, STATUS_LABEL, STATUSES, type Source, type Status } from "@/lib/constants"
 import {
   aggregatePlayers,
-  NO_WINNER_GAMES,
   PLAYER_GAME_LABEL,
   PLAYER_GAMES,
   POINT_GAMES,
@@ -42,7 +41,6 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
   ])
   const playerRows = sortPlayers(aggregatePlayers(players.parts, players.names, spiel), sort)
   const showPoints = !spiel || POINT_GAMES.includes(spiel)
-  const showWins = !spiel || !NO_WINNER_GAMES.includes(spiel)
 
   const total = stats?.find((s) => s.source === null)
   const rate = successRate(total?.won ?? 0, total?.finished ?? 0)
@@ -75,8 +73,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
           <section id="spieler" className="panel mb-6">
             <h2 className="mb-1 font-display text-2xl">Spieler</h2>
             <p className="mb-3 text-sm text-muted">
-              Alle, die bei Mehrspieler-Challenges mitgespielt haben (abgeschlossene Runden). Punkte gibt es bei Bingo; bei der
-              Loot-Auktion zählen nur Teilnahmen.
+              Alle, die bei Mehrspieler-Challenges mitgespielt haben (abgeschlossene Runden). Punkte gibt es bei Bingo.
             </p>
             <div className="mb-3 flex flex-wrap gap-1 text-sm">
               <FilterChip href={filterLink("spiel")} active={!spiel}>Alle Spiele</FilterChip>
@@ -92,8 +89,8 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                       <th className="w-10 py-2">#</th>
                       <th className="py-2">Spieler</th>
                       <SortTh label="Teilnahmen" k="teilnahmen" sort={sort} href={filterLink} />
-                      {showWins && <SortTh label="Siege" k="siege" sort={sort} href={filterLink} />}
-                      {showWins && <SortTh label="Siegquote" k="quote" sort={sort} href={filterLink} />}
+                      <SortTh label="Siege" k="siege" sort={sort} href={filterLink} />
+                      <SortTh label="Siegquote" k="quote" sort={sort} href={filterLink} />
                       {showPoints && <SortTh label="Punkte" k="punkte" sort={sort} href={filterLink} />}
                       {showPoints && <SortTh label="Ø Punkte" k="schnitt" sort={sort} href={filterLink} />}
                     </tr>
@@ -114,8 +111,8 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                           </span>
                         </td>
                         <td className="py-2 text-right tabular-nums">{r.rounds}</td>
-                        {showWins && <td className="py-2 text-right font-bold tabular-nums text-accent">{r.wins}</td>}
-                        {showWins && <td className="py-2 text-right tabular-nums">{r.ratedRounds ? `${r.winRate} %` : "–"}</td>}
+                        <td className="py-2 text-right font-bold tabular-nums text-accent">{r.wins}</td>
+                        <td className="py-2 text-right tabular-nums">{r.winRate} %</td>
                         {showPoints && <td className="py-2 text-right tabular-nums">{r.pointRounds ? r.points : "–"}</td>}
                         {showPoints && (
                           <td className="py-2 text-right tabular-nums">{r.avgPoints != null ? r.avgPoints.toLocaleString("de-DE") : "–"}</td>

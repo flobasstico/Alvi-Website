@@ -10,7 +10,7 @@ export async function loadPlayerStats(supabase: Client) {
     supabase.from("escalation_players").select("session_id, user_id"),
     supabase.from("loadout_sessions").select("id, winner_id").eq("status", "beendet"),
     supabase.from("loadout_players").select("session_id, user_id"),
-    supabase.from("auctions").select("id").eq("status", "beendet"),
+    supabase.from("auctions").select("id, winner_id").not("decided_at", "is", null),
     supabase.from("auction_players").select("auction_id, user_id"),
     supabase.from("bingo_games").select("id, task_ids").eq("status", "beendet"),
     supabase.from("bingo_cards").select("game_id, user_id, task_ids"),
@@ -32,9 +32,11 @@ export async function loadPlayerStats(supabase: Client) {
     if (loWinners.has(p.session_id))
       parts.push({ userId: p.user_id, game: "loadout", round: `lo-${p.session_id}`, won: loWinners.get(p.session_id) === p.user_id, points: null })
 
-  const aucDone = new Set((auc.data ?? []).map((a) => a.id))
+  // Auktion zählt, sobald der Host die Wertung abgeschlossen hat (Sieger oder ohne Wertung)
+  const aucWinners = new Map((auc.data ?? []).map((a) => [a.id, a.winner_id]))
   for (const p of aucPlayers.data ?? [])
-    if (aucDone.has(p.auction_id)) parts.push({ userId: p.user_id, game: "auktion", round: `auk-${p.auction_id}`, won: false, points: null })
+    if (aucWinners.has(p.auction_id))
+      parts.push({ userId: p.user_id, game: "auktion", round: `auk-${p.auction_id}`, won: aucWinners.get(p.auction_id) === p.user_id, points: null })
 
   for (const g of bingo.data ?? []) {
     const gameMarks = new Set((marks.data ?? []).filter((m) => m.game_id === g.id).map((m) => Number(m.task_id)))

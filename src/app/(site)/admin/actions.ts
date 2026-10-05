@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { ITEM_TYPES, RARITIES, STATUSES, type Status } from "@/lib/constants"
 import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
+import { CHANNELS, PAGE_KEYS, safeUrl } from "@/lib/site"
 import { requireAdmin } from "@/lib/supabase/server"
 
 const TOGGLE_TABLES = ["rules", "loot_items", "drop_spots", "bingo_tasks", "escalation_rules"] as const
@@ -252,4 +253,30 @@ export async function updateChallenge(form: FormData) {
         .eq("id", id)
     ).error,
   )
+}
+
+/** Kanal-Links und Rechtstexte speichern (leere Links werden entfernt) */
+export async function saveSiteSettings(_: unknown, form: FormData): Promise<{ error?: string; ok?: boolean }> {
+  const supabase = await requireAdmin()
+  const upserts: { key: string; value: string }[] = []
+  const removes: string[] = []
+  for (const c of CHANNELS) {
+    const raw = str(form, c.key)
+    if (!raw) {
+      removes.push(c.key)
+      continue
+    }
+    const url = safeUrl(raw)
+    if (!url) return { error: `${c.label}: ungültiger Link – bitte die komplette Adresse mit https:// eintragen.` }
+    upserts.push({ key: c.key, value: url })
+  }
+  for (const k of PAGE_KEYS) upserts.push({ key: k, value: String(form.get(k) ?? "").slice(0, 20000) })
+  const { error } = await supabase.from("site_settings").upsert(upserts)
+  if (error) return { error: error.message }
+  if (removes.length) {
+    const { error: e2 } = await supabase.from("site_settings").delete().in("key", removes)
+    if (e2) return { error: e2.message }
+  }
+  revalidatePath("/", "layout")
+  return { ok: true }
 }
