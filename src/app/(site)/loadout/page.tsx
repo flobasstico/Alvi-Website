@@ -9,7 +9,7 @@ export default async function LoadoutPage() {
   const { supabase, isAdmin } = await getViewer()
   const season = await getCurrentSeason(supabase)
   const { data: items } = season
-    ? await supabase.from("loot_items").select("id, name, rarity, type").eq("season_id", season.id).eq("active", true)
+    ? await supabase.from("loot_items").select("id, name, rarity, type, icon_url").eq("season_id", season.id).eq("active", true)
     : { data: [] }
 
   return (

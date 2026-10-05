@@ -2,7 +2,7 @@ import { pick, shuffle } from "./random"
 
 export const LOADOUT_SLOTS = 5
 
-export type LootItem = { id: number; name: string; rarity: string; type: string }
+export type LootItem = { id: number; name: string; rarity: string; type: string; icon_url?: string | null }
 
 export type LoadoutOptions = {
   rarities: readonly string[]

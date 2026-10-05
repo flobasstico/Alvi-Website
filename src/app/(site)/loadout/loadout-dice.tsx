@@ -3,6 +3,8 @@
 import clsx from "clsx"
 import { AnimatePresence, motion } from "framer-motion"
 import { useState } from "react"
+import { ItemIcon } from "@/components/item-icon"
+import { SLOT_BAR, SLOT_BG } from "@/components/loadout-bar"
 import { SaveChallenge } from "@/components/save-challenge"
 import { celebrate } from "@/lib/confetti"
 import { ITEM_TYPE_LABEL, RARITIES, RARITY_CLASS, RARITY_LABEL, type Rarity } from "@/lib/constants"
@@ -52,21 +54,34 @@ export function LoadoutDice({ items, isAdmin }: { items: LootItem[]; isAdmin: bo
                 animate={{ rotateY: 0, opacity: 1 }}
                 transition={{ duration: 0.15 }}
                 className={clsx(
-                  "flex aspect-[3/4] flex-col justify-between rounded-2xl border-2 bg-gradient-to-b p-3 shadow-lg",
-                  item ? RARITY_CLASS[item.rarity as Rarity] : "border-dashed border-line from-panel to-panel",
+                  "relative flex aspect-[3/4] flex-col overflow-hidden rounded-2xl border-2 shadow-lg",
+                  item ? "border-white/70" : "border-dashed border-line bg-panel",
                   locked[i] && "ring-4 ring-accent",
                 )}
               >
-                <span className="text-xs font-bold uppercase opacity-80">Slot {i + 1}</span>
+                {item && (
+                  <>
+                    {/* Fortnite-Look wie in der Hotbar: Raritäts-Verlauf, Lichtkegel, farbige Leiste unten */}
+                    <div className={clsx("absolute inset-0 bg-gradient-to-b", SLOT_BG[item.rarity as Rarity] ?? SLOT_BG.grau)} />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_30%,rgba(255,255,255,.45),transparent_60%)]" />
+                    <div className={clsx("absolute inset-x-0 bottom-0 h-2", SLOT_BAR[item.rarity as Rarity] ?? SLOT_BAR.grau)} />
+                  </>
+                )}
+                <span className="relative p-3 pb-0 text-xs font-bold uppercase opacity-80">Slot {i + 1}</span>
                 {item ? (
-                  <div>
-                    <div className="text-lg font-black leading-tight drop-shadow">{item.name}</div>
-                    <div className="text-xs font-semibold opacity-90">
-                      {RARITY_LABEL[item.rarity as Rarity]} · {ITEM_TYPE_LABEL[item.type as keyof typeof ITEM_TYPE_LABEL]}
+                  <>
+                    <div className="relative flex min-h-0 flex-1 items-center justify-center px-3">
+                      <ItemIcon url={item.icon_url} type={item.type} name={item.name} className="h-full max-h-40 w-full text-6xl" />
                     </div>
-                  </div>
+                    <div className="relative bg-black/35 p-3 pb-4">
+                      <div className="text-lg font-black leading-tight drop-shadow">{item.name}</div>
+                      <div className="text-xs font-semibold opacity-90">
+                        {RARITY_LABEL[item.rarity as Rarity]} · {ITEM_TYPE_LABEL[item.type as keyof typeof ITEM_TYPE_LABEL]}
+                      </div>
+                    </div>
+                  </>
                 ) : (
-                  <div className="text-center text-4xl opacity-40">?</div>
+                  <div className="flex flex-1 items-center justify-center text-4xl opacity-40">?</div>
                 )}
               </motion.div>
             </AnimatePresence>
@@ -91,7 +106,7 @@ export function LoadoutDice({ items, isAdmin }: { items: LootItem[]; isAdmin: bo
           {rolling ? "Würfelt…" : "WÜRFELN!"}
         </button>
         {isAdmin && filled.length > 0 && !rolling && (
-          <SaveChallenge source="loadout" title={title} config={{ items: filled.map(({ name, rarity, type }) => ({ name, rarity, type })) }} />
+          <SaveChallenge source="loadout" title={title} config={{ items: filled.map(({ name, rarity, type, icon_url }) => ({ name, rarity, type, icon_url })) }} />
         )}
       </div>
 

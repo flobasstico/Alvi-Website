@@ -13,7 +13,7 @@ export type SlotItem = {
 }
 
 // Fortnite-Hotbar: Raritäts-Hintergrund mit Lichtkegel, Icon mittig, farbige Leiste unten
-const SLOT_BG: Record<Rarity, string> = {
+export const SLOT_BG: Record<Rarity, string> = {
   grau: "from-[#8a8f98] to-[#4b5058]",
   gruen: "from-[#69bb1e] to-[#2f6b0a]",
   blau: "from-[#3db6f2] to-[#145a9e]",
@@ -21,7 +21,7 @@ const SLOT_BG: Record<Rarity, string> = {
   gold: "from-[#f6b13d] to-[#a14b10]",
   mythisch: "from-[#ffe57a] to-[#c28a00]",
 }
-const SLOT_BAR: Record<Rarity, string> = {
+export const SLOT_BAR: Record<Rarity, string> = {
   grau: "bg-[#b5bac2]",
   gruen: "bg-[#8fe03a]",
   blau: "bg-[#6fd0ff]",
