@@ -10,7 +10,7 @@ Website für Alvis Fortnite-Challenges: konstruieren, auswürfeln, abstimmen und
 | `/bingo` | **Bingo**: Alvis 3×3-Karte mit Punktesystem (1 pro Feld, +3 pro Bingo), Live-Rangliste und zwei OBS-Overlays (Karte, Rangliste). Zuschauer holen sich eigene Karten, Felder werden live abgehakt, mit Bestenliste |
 | `/auktion` | **Loot-Auktion**: 4 Creator mit je 500 Gold bieten verdeckt am eigenen Gerät auf zufällige Items. Der Höchstbieter gewinnt, bei Gleichstand entscheidet das Los. Haben alle geskippt, wird das Item verworfen. Gespielt wird, bis jeder 5 Items hat. Am Ende gibt es eine Loadout-Übersicht als Bild |
 | `/eskalation` | **Regel-Eskalation**: Grundregel per Glücksrad, danach kommt alle 4 Minuten (einstellbar) eine neue Zufallsregel dazu, mit Alarm-Ton. Die Regelkachel gibt es als OBS-Overlay |
-| `/stats` | **Challenge-Stats** (über das Menü): Erfolgsquote („Alvi hat 23 % geschafft“), Serien, Aufschlüsselung je Tool |
+| `/stats` | **Challenge-Stats** (über das Menü): Alvis Erfolgsquote, Serien, Aufschlüsselung je Tool, dazu die **Spieler-Tabelle** mit allen, die bei Mehrspieler-Challenges dabei waren: Teilnahmen, Siege, Siegquote, bei Bingo Punkte gesamt und Ø (Filter je Spiel, Spalten sortierbar) |
 | `/admin` | Regeln, Loot-Pool, Drop-Spots, Bingo-Aufgaben, Seasons/Map, Ergebnisse eintragen |
 
 **Stack:** Next.js 15 (App Router), TypeScript, Tailwind CSS 4, framer-motion, Supabase (Postgres + RLS, Auth mit Twitch, Realtime, Storage).

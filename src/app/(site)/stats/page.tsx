@@ -2,6 +2,17 @@ import Link from "next/link"
 import clsx from "clsx"
 import { PageTitle } from "@/components/page-title"
 import { SOURCE_LABEL, SOURCES, STATUS_LABEL, STATUSES, type Source, type Status } from "@/lib/constants"
+import {
+  aggregatePlayers,
+  NO_WINNER_GAMES,
+  PLAYER_GAME_LABEL,
+  PLAYER_GAMES,
+  POINT_GAMES,
+  sortPlayers,
+  type PlayerGame,
+  type SortKey,
+} from "@/lib/player-stats"
+import { loadPlayerStats } from "@/lib/player-stats-server"
 import { rateQuip, streaks, successRate } from "@/lib/stats"
 import { createClient } from "@/lib/supabase/server"
 
@@ -14,28 +25,36 @@ const STATUS_CLASS: Record<Status, string> = {
   gescheitert: "bg-fail/20 text-fail",
 }
 
-export default async function StatsPage({ searchParams }: { searchParams: Promise<{ quelle?: string; status?: string }> }) {
-  const { quelle, status } = await searchParams
+type Params = { quelle?: string; status?: string; spiel?: string; sort?: string }
+const SORT_KEYS: SortKey[] = ["siege", "teilnahmen", "quote", "punkte", "schnitt"]
+
+export default async function StatsPage({ searchParams }: { searchParams: Promise<Params> }) {
+  const params = await searchParams
+  const { quelle, status } = params
+  const spiel = PLAYER_GAMES.includes(params.spiel as PlayerGame) ? (params.spiel as PlayerGame) : undefined
+  const sort = SORT_KEYS.includes(params.sort as SortKey) ? (params.sort as SortKey) : "siege"
   const supabase = await createClient()
-  const [{ data: stats }, { data: all }, { data: escalationBoard }, { data: loadoutBoard }] = await Promise.all([
+  const [{ data: stats }, { data: all }, players] = await Promise.all([
     supabase.from("challenge_stats").select("*"),
     supabase.from("challenges").select("*").order("created_at", { ascending: false }),
-    supabase.from("escalation_leaderboard").select("*").order("wins", { ascending: false }).order("last_win", { ascending: true }),
-    supabase.from("loadout_leaderboard").select("*").order("wins", { ascending: false }).order("last_win", { ascending: true }),
+    loadPlayerStats(supabase),
   ])
+  const playerRows = sortPlayers(aggregatePlayers(players.parts, players.names, spiel), sort)
+  const showPoints = !spiel || POINT_GAMES.includes(spiel)
+  const showWins = !spiel || !NO_WINNER_GAMES.includes(spiel)
 
   const total = stats?.find((s) => s.source === null)
   const rate = successRate(total?.won ?? 0, total?.finished ?? 0)
   const st = streaks(all ?? [])
   const list = (all ?? []).filter((c) => (!quelle || c.source === quelle) && (!status || c.status === status))
 
-  const filterLink = (key: "quelle" | "status", value?: string) => {
+  const filterLink = (key: keyof Params, value?: string) => {
     const p = new URLSearchParams()
-    const next = { quelle, status, [key]: value }
-    if (next.quelle) p.set("quelle", next.quelle)
-    if (next.status) p.set("status", next.status)
+    const next: Params = { quelle, status, spiel, sort: sort === "siege" ? undefined : sort, [key]: value }
+    for (const k of ["spiel", "sort", "quelle", "status"] as const) if (next[k]) p.set(k, next[k]!)
     const q = p.toString()
-    return q ? `/stats?${q}` : "/stats"
+    // Spieler-Tabelle bleibt beim Filtern im Blick
+    return (q ? `/stats?${q}` : "/stats") + (key === "spiel" || key === "sort" ? "#spieler" : "")
   }
 
   return (
@@ -84,8 +103,63 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
         </div>
       </section>
 
-      <Leaderboard title="Regel-Eskalation – Siege" rows={escalationBoard ?? []} />
-      <Leaderboard title="Loadout-Würfel (Mehrspieler) – Siege" rows={loadoutBoard ?? []} />
+      <section id="spieler" className="panel mb-6 scroll-mt-20">
+        <h2 className="mb-1 font-display text-2xl">Spieler</h2>
+        <p className="mb-3 text-sm text-muted">
+          Alle, die bei Mehrspieler-Challenges mitgespielt haben (abgeschlossene Runden). Punkte gibt es bei Bingo; bei der
+          Loot-Auktion zählen nur Teilnahmen.
+        </p>
+        <div className="mb-3 flex flex-wrap gap-1 text-sm">
+          <FilterChip href={filterLink("spiel")} active={!spiel}>Alle Spiele</FilterChip>
+          {PLAYER_GAMES.map((g) => (
+            <FilterChip key={g} href={filterLink("spiel", g)} active={spiel === g}>{PLAYER_GAME_LABEL[g]}</FilterChip>
+          ))}
+        </div>
+        {playerRows.length ? (
+          <div className="-mx-2 overflow-x-auto px-2">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead>
+                <tr className="border-b border-line text-left text-xs uppercase text-muted">
+                  <th className="w-10 py-2">#</th>
+                  <th className="py-2">Spieler</th>
+                  <SortTh label="Teilnahmen" k="teilnahmen" sort={sort} href={filterLink} />
+                  {showWins && <SortTh label="Siege" k="siege" sort={sort} href={filterLink} />}
+                  {showWins && <SortTh label="Siegquote" k="quote" sort={sort} href={filterLink} />}
+                  {showPoints && <SortTh label="Punkte" k="punkte" sort={sort} href={filterLink} />}
+                  {showPoints && <SortTh label="Ø Punkte" k="schnitt" sort={sort} href={filterLink} />}
+                </tr>
+              </thead>
+              <tbody>
+                {playerRows.map((r, i) => (
+                  <tr key={r.userId} className={clsx("border-b border-line/50", i === 0 && "bg-accent/10")}>
+                    <td className="py-2 font-display text-lg">{["🥇", "🥈", "🥉"][i] ?? `${i + 1}.`}</td>
+                    <td className="py-2">
+                      <span className="flex items-center gap-2 font-bold">
+                        {r.avatar ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={r.avatar} alt="" className="h-6 w-6 rounded-full" />
+                        ) : (
+                          <span className="flex h-6 w-6 items-center justify-center rounded-full bg-line text-xs">👤</span>
+                        )}
+                        {r.name}
+                      </span>
+                    </td>
+                    <td className="py-2 text-right tabular-nums">{r.rounds}</td>
+                    {showWins && <td className="py-2 text-right font-bold tabular-nums text-accent">{r.wins}</td>}
+                    {showWins && <td className="py-2 text-right tabular-nums">{r.ratedRounds ? `${r.winRate} %` : "–"}</td>}
+                    {showPoints && <td className="py-2 text-right tabular-nums">{r.pointRounds ? r.points : "–"}</td>}
+                    {showPoints && (
+                      <td className="py-2 text-right tabular-nums">{r.avgPoints != null ? r.avgPoints.toLocaleString("de-DE") : "–"}</td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        ) : (
+          <p className="text-muted">Noch keine abgeschlossenen Runden{spiel ? ` bei ${PLAYER_GAME_LABEL[spiel]}` : ""}.</p>
+        )}
+      </section>
 
       <section className="panel">
         <h2 className="mb-3 font-display text-2xl">Alle Challenges</h2>
@@ -141,27 +215,23 @@ function FilterChip({ href, active, children }: { href: string; active: boolean;
   )
 }
 
-function Leaderboard({ title, rows }: { title: string; rows: { winner_id: string | null; name: string | null; wins: number | null }[] }) {
-  if (rows.length === 0) return null
+function SortTh({
+  label,
+  k,
+  sort,
+  href,
+}: {
+  label: string
+  k: SortKey
+  sort: SortKey
+  href: (key: keyof Params, value?: string) => string
+}) {
   return (
-    <section className="panel mb-6">
-      <h2 className="mb-3 font-display text-2xl">{title}</h2>
-      <ol className="flex flex-col gap-2">
-        {rows.map((row, i) => (
-          <li
-            key={row.winner_id ?? i}
-            className={clsx(
-              "flex items-center gap-3 rounded-xl border px-3 py-2",
-              i === 0 ? "border-accent bg-accent/10" : "border-line bg-bg/40",
-            )}
-          >
-            <span className="w-8 text-center font-display text-2xl">{["🥇", "🥈", "🥉"][i] ?? `${i + 1}.`}</span>
-            <span className="flex-1 font-bold">{row.name}</span>
-            <span className="font-display text-2xl text-accent tabular-nums">{row.wins}</span>
-            <span className="text-sm text-muted">{row.wins === 1 ? "Sieg" : "Siege"}</span>
-          </li>
-        ))}
-      </ol>
-    </section>
+    <th className="py-2 text-right">
+      <Link href={href("sort", k)} className={clsx("hover:text-white", sort === k && "text-accent")}>
+        {label}
+        {sort === k && " ▼"}
+      </Link>
+    </th>
   )
 }
