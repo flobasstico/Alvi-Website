@@ -10,7 +10,7 @@ export default async function EscalationPage({ params }: { params: Promise<{ id:
   const { supabase, user } = await getViewer()
   const [initial, { data: pool }] = await Promise.all([
     loadEscalation(supabase, sessionId),
-    supabase.from("escalation_rules").select("id, text").eq("active", true).order("id"),
+    supabase.from("escalation_rules").select("id, text").eq("active", true).eq("kind", "grund").order("id"),
   ])
   if (!initial) notFound()
   return <EscalationRoom initial={initial} pool={pool ?? []} userId={user?.id ?? null} serverNow={Date.now()} />

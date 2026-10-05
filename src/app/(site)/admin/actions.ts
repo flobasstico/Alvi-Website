@@ -162,7 +162,16 @@ export async function addEscalationRules(form: FormData) {
     .filter(Boolean)
     .map((l) => l.slice(0, 200))
   if (!lines.length) return
-  done((await supabase.from("escalation_rules").insert(lines.map((text) => ({ text })))).error)
+  const kind = escalationKind(form)
+  done((await supabase.from("escalation_rules").insert(lines.map((text) => ({ text, kind })))).error)
+}
+
+const escalationKind = (form: FormData) => (str(form, "kind") === "grund" ? "grund" : "zusatz")
+
+/** Regel in den jeweils anderen Pool verschieben (Grundregel ↔ Zusatzregel) */
+export async function moveEscalationRule(form: FormData) {
+  const supabase = await requireAdmin()
+  done((await supabase.from("escalation_rules").update({ kind: escalationKind(form) }).eq("id", Number(str(form, "id")))).error)
 }
 
 export async function updateEscalationRule(form: FormData) {

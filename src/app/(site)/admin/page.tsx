@@ -22,6 +22,7 @@ import {
   addRule,
   addSeason,
   deleteRow,
+  moveEscalationRule,
   setCurrentSeason,
   setRuleWeight,
   toggleActive,
@@ -346,34 +347,77 @@ async function SpotsTab({ seasonId, mapUrl }: { seasonId: number | null; mapUrl:
 async function EscalationTab() {
   const { supabase } = await getViewer()
   const { data } = await supabase.from("escalation_rules").select("*").order("id")
-  const active = data?.filter((r) => r.active).length ?? 0
+  const base = data?.filter((r) => r.kind === "grund") ?? []
+  const extra = data?.filter((r) => r.kind !== "grund") ?? []
+  return (
+    <div className="flex flex-col gap-6">
+      <EscalationPool
+        kind="grund"
+        title="Grundregeln"
+        hint="Eine davon wird zum Start der Runde per Glücksrad gedreht."
+        placeholder={"Eine Grundregel pro Zeile\nz. B. Nur Pistolen\nKein Bauen"}
+        rules={base}
+      />
+      <EscalationPool
+        kind="zusatz"
+        title="Zusatzregeln"
+        hint="Kommen nach jedem Timer-Ablauf dazu – per Zufall oder Chat-Abstimmung, keine Regel doppelt pro Runde."
+        placeholder={"Eine Zusatzregel pro Zeile\nz. B. Keine Schilde\nKein Sprinten"}
+        rules={extra}
+      />
+    </div>
+  )
+}
+
+function EscalationPool({
+  kind,
+  title,
+  hint,
+  placeholder,
+  rules,
+}: {
+  kind: "grund" | "zusatz"
+  title: string
+  hint: string
+  placeholder: string
+  rules: { id: number; text: string; active: boolean }[]
+}) {
+  const active = rules.filter((r) => r.active).length
+  const other = kind === "grund" ? "zusatz" : "grund"
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <section className="panel">
-        <h2 className="mb-1 font-display text-2xl">Regelpool der Regel-Eskalation</h2>
-        <p className="mb-3 text-sm text-muted">
-          {data?.length ?? 0} Regeln, {active} aktiv. Grundregel und Zusatzregeln werden zufällig aus den aktiven Regeln gezogen,
-          keine Regel doppelt pro Runde.
+        <h2 className="mb-1 font-display text-2xl">{title}</h2>
+        <p className={clsx("mb-3 text-sm", active === 0 ? "text-fail" : "text-muted")}>
+          {rules.length} Regeln, {active} aktiv. {hint}
         </p>
         <ul className="divide-y divide-line">
-          {data?.map((r) => (
+          {rules.map((r) => (
             <Row key={r.id} inactive={!r.active}>
-              <form action={updateEscalationRule} className="flex flex-1 gap-2">
+              <form action={updateEscalationRule} className="flex min-w-60 flex-1 gap-2">
                 <input type="hidden" name="id" value={r.id} />
                 <input name="text" defaultValue={r.text} maxLength={200} required className="input py-1 text-sm" />
                 <button className="btn-secondary px-2 py-1 text-xs">Speichern</button>
+              </form>
+              <form action={moveEscalationRule}>
+                <input type="hidden" name="id" value={r.id} />
+                <input type="hidden" name="kind" value={other} />
+                <button className="btn-secondary px-2 py-1 text-xs" title="In den anderen Pool verschieben">
+                  {other === "grund" ? "→ Grundregel" : "→ Zusatzregel"}
+                </button>
               </form>
               <ToggleButton table="escalation_rules" id={r.id} active={r.active} />
               <DeleteButton table="escalation_rules" id={r.id} />
             </Row>
           ))}
-          {!data?.length && <li className="py-2 text-muted">Der Pool ist noch leer – rechts Regeln hinzufügen.</li>}
+          {!rules.length && <li className="py-2 text-muted">Noch leer – rechts Regeln hinzufügen.</li>}
         </ul>
       </section>
       <aside className="panel h-fit">
-        <h2 className="mb-3 font-display text-xl">Regeln hinzufügen</h2>
+        <h2 className="mb-3 font-display text-xl">{title} hinzufügen</h2>
         <form action={addEscalationRules} className="flex flex-col gap-3">
-          <textarea name="text" className="input min-h-40" placeholder={"Eine Regel pro Zeile\nz. B. Nur graue Waffen\nKein Bauen"} required />
+          <input type="hidden" name="kind" value={kind} />
+          <textarea name="text" className="input min-h-32" placeholder={placeholder} required />
           <button className="btn-primary">Hinzufügen</button>
         </form>
       </aside>

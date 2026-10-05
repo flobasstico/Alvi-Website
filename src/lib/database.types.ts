@@ -22,9 +22,9 @@ export type Database = {
   public: {
     Tables: {
       escalation_rules: {
-        Row: { active: boolean; created_at: string; id: number; text: string }
-        Insert: { active?: boolean; created_at?: string; id?: never; text: string }
-        Update: { active?: boolean; created_at?: string; id?: never; text?: string }
+        Row: { active: boolean; created_at: string; id: number; kind: string; text: string }
+        Insert: { active?: boolean; created_at?: string; id?: never; kind?: string; text: string }
+        Update: { active?: boolean; created_at?: string; id?: never; kind?: string; text?: string }
         Relationships: []
       }
       escalation_sessions: {

@@ -11,7 +11,7 @@ export default async function EskalationPage() {
   const { supabase, isAdmin } = await getViewer()
   const [{ data: sessions }, { data: pool }] = await Promise.all([
     supabase.from("escalation_sessions").select("*").order("created_at", { ascending: false }).limit(30),
-    supabase.from("escalation_rules").select("id").eq("active", true),
+    supabase.from("escalation_rules").select("kind").eq("active", true),
   ])
 
   return (
@@ -44,7 +44,10 @@ export default async function EskalationPage() {
         {isAdmin && (
           <aside className="panel h-fit">
             <h2 className="mb-3 font-display text-2xl">Neue Runde</h2>
-            <CreateEscalation poolSize={pool?.length ?? 0} />
+            <CreateEscalation
+              baseCount={pool?.filter((r) => r.kind === "grund").length ?? 0}
+              extraCount={pool?.filter((r) => r.kind !== "grund").length ?? 0}
+            />
           </aside>
         )}
       </div>

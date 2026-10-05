@@ -4,7 +4,8 @@ import Link from "next/link"
 import { useActionState, useState } from "react"
 import { createEscalation } from "./actions"
 
-export function CreateEscalation({ poolSize }: { poolSize: number }) {
+export function CreateEscalation({ baseCount, extraCount }: { baseCount: number; extraCount: number }) {
+  const missing = baseCount === 0 ? "Grundregeln" : extraCount === 0 ? "Zusatzregeln" : null
   const [state, action, pending] = useActionState(createEscalation, undefined)
   const [mode, setMode] = useState<"zufall" | "chat">("zufall")
   return (
@@ -37,11 +38,11 @@ export function CreateEscalation({ poolSize }: { poolSize: number }) {
         </div>
       )}
       <p className="text-sm text-muted">
-        {poolSize} Regeln im Pool.{" "}
+        {baseCount} Grundregeln, {extraCount} Zusatzregeln.{" "}
         <Link href="/admin?tab=eskalation" className="text-accent-2 underline">Regelpool bearbeiten</Link>
       </p>
-      <button className="btn-primary" disabled={pending || poolSize === 0}>Runde eröffnen</button>
-      {poolSize === 0 && <p className="text-sm text-fail">Der Regelpool ist leer – zuerst Regeln anlegen.</p>}
+      <button className="btn-primary" disabled={pending || !!missing}>Runde eröffnen</button>
+      {missing && <p className="text-sm text-fail">Noch keine aktiven {missing} – zuerst im Admin-Bereich anlegen.</p>}
       {state?.error && <p className="text-sm text-fail">{state.error}</p>}
     </form>
   )
