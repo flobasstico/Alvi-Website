@@ -70,9 +70,9 @@ export type Database = {
         Relationships: Rel[]
       }
       bingo_card_templates: {
-        Row: { author_id: string; author_name: string | null; created_at: string; id: number; tasks: string[]; title: string }
-        Insert: { author_id?: string; author_name?: string | null; created_at?: string; id?: never; tasks: string[]; title: string }
-        Update: { author_id?: string; author_name?: string | null; created_at?: string; id?: never; tasks?: string[]; title?: string }
+        Row: { author_id: string; author_name: string | null; created_at: string; folder: string; id: number; tasks: string[]; title: string }
+        Insert: { author_id?: string; author_name?: string | null; created_at?: string; folder?: string; id?: never; tasks: string[]; title: string }
+        Update: { author_id?: string; author_name?: string | null; created_at?: string; folder?: string; id?: never; tasks?: string[]; title?: string }
         Relationships: Rel[]
       }
       bingo_rounds: {
@@ -127,24 +127,6 @@ export type Database = {
         Row: { amount: number | null; auction_id: number; created_at: string; round_id: number; seat: number }
         Insert: { amount?: number | null; auction_id: number; created_at?: string; round_id: number; seat: number }
         Update: { amount?: number | null; auction_id?: number; created_at?: string; round_id?: number; seat?: number }
-        Relationships: Rel[]
-      }
-      bingo_cards: {
-        Row: { bingo_at: string | null; created_at: string; game_id: number; task_ids: number[]; user_id: string }
-        Insert: { bingo_at?: string | null; created_at?: string; game_id: number; task_ids: number[]; user_id?: string }
-        Update: { bingo_at?: string | null; created_at?: string; game_id?: number; task_ids?: number[]; user_id?: string }
-        Relationships: Rel[]
-      }
-      bingo_games: {
-        Row: { challenge_id: number | null; id: number; started_at: string; status: string; task_ids: number[]; title: string | null }
-        Insert: { challenge_id?: number | null; id?: never; started_at?: string; status?: string; task_ids: number[]; title?: string | null }
-        Update: { challenge_id?: number | null; id?: never; started_at?: string; status?: string; task_ids?: number[]; title?: string | null }
-        Relationships: Rel[]
-      }
-      bingo_marks: {
-        Row: { game_id: number; marked_at: string; task_id: number }
-        Insert: { game_id: number; marked_at?: string; task_id: number }
-        Update: { game_id?: number; marked_at?: string; task_id?: number }
         Relationships: Rel[]
       }
       bingo_tasks: {
@@ -235,6 +217,7 @@ export type Database = {
       win_timer: { Args: { p_action: string; p_id: number }; Returns: undefined }
       escalation_replay: { Args: { p_source: number }; Returns: number }
       win_replay: { Args: { p_source: number }; Returns: number }
+      admin_delete_round: { Args: { p_kind: string; p_id: number }; Returns: undefined }
       bingo_card_create: { Args: { p_tasks: string[]; p_title: string }; Returns: number }
       bingo_finish: { Args: { p_round: number }; Returns: string }
       bingo_join: { Args: { p_round: number }; Returns: undefined }
@@ -242,7 +225,6 @@ export type Database = {
       bingo_mark: { Args: { p_index: number; p_on: boolean; p_round: number }; Returns: undefined }
       bingo_round_create: { Args: { p_max_players: number; p_template: number; p_title: string }; Returns: number }
       bingo_start: { Args: { p_round: number }; Returns: undefined }
-      card_has_bingo: { Args: { p_game_id: number; p_task_ids: number[] }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: { [_ in never]: never }

@@ -4,6 +4,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { CardEditor, CardPreview } from "@/components/bingo/card-editor"
+import { CardFolderTabs, cardsInFolder, type CardFolder } from "@/components/bingo/card-folders"
 import type { Tables } from "@/lib/database.types"
 import { createClient } from "@/lib/supabase/client"
 
@@ -11,19 +12,17 @@ type Card = Tables<"bingo_card_templates">
 
 export function CardGallery({ cards, pool, userId, isAdmin }: { cards: Card[]; pool: string[]; userId: string | null; isAdmin: boolean }) {
   const router = useRouter()
-  const [mine, setMine] = useState(false)
-  const list = mine ? cards.filter((c) => c.author_id === userId) : cards
+  const [folder, setFolder] = useState<CardFolder>(isAdmin || !userId ? "admin" : "zuschauer")
+  const list = cardsInFolder(cards, folder, userId)
 
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_420px]">
       <section className="panel flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
-          <h2 className="font-display text-2xl">Alle Karten ({cards.length})</h2>
-          {userId && (
-            <label className="ml-auto flex items-center gap-2 text-sm text-muted">
-              <input type="checkbox" checked={mine} onChange={(e) => setMine(e.target.checked)} /> Nur meine
-            </label>
-          )}
+          <h2 className="font-display text-2xl">Karten</h2>
+          <div className="ml-auto">
+            <CardFolderTabs cards={cards} folder={folder} onChange={setFolder} userId={userId} />
+          </div>
         </div>
         <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {list.map((c) => (
@@ -50,13 +49,22 @@ export function CardGallery({ cards, pool, userId, isAdmin }: { cards: Card[]; p
               </div>
             </li>
           ))}
-          {!list.length && <li className="text-muted">Noch keine Karten.</li>}
+          {!list.length && <li className="text-muted">Noch keine Karten in diesem Ordner.</li>}
         </ul>
       </section>
       <aside className="panel h-fit">
         <h2 className="mb-3 font-display text-2xl">Karte erstellen</h2>
         {userId ? (
-          <CardEditor pool={pool} onCreated={() => router.refresh()} />
+          <>
+            <p className="mb-3 text-xs text-muted">Wird im Ordner {isAdmin ? "Admin-Karten" : "Zuschauer-Karten"} gespeichert.</p>
+            <CardEditor
+              pool={pool}
+              onCreated={() => {
+                setFolder("meine")
+                router.refresh()
+              }}
+            />
+          </>
         ) : (
           <p className="text-muted">Mit Twitch einloggen, um eine eigene Karte zu erstellen.</p>
         )}

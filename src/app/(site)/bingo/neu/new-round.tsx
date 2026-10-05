@@ -4,6 +4,7 @@ import clsx from "clsx"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { CardEditor, CardPreview } from "@/components/bingo/card-editor"
+import { CardFolderTabs, cardsInFolder, type CardFolder } from "@/components/bingo/card-folders"
 import type { Tables } from "@/lib/database.types"
 import { createClient } from "@/lib/supabase/client"
 
@@ -13,12 +14,13 @@ export function NewRound({ cards, pool, preselect, userId }: { cards: Card[]; po
   const router = useRouter()
   const [selected, setSelected] = useState<number | null>(preselect && cards.some((c) => c.id === preselect) ? preselect : null)
   const [creating, setCreating] = useState(cards.length === 0)
-  const [filter, setFilter] = useState<"alle" | "meine">("alle")
+  const pre = cards.find((c) => c.id === preselect)
+  const [folder, setFolder] = useState<CardFolder>(pre ? (pre.folder as CardFolder) : "admin")
   const [title, setTitle] = useState("")
   const [maxPlayers, setMaxPlayers] = useState(4)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const list = filter === "meine" ? cards.filter((c) => c.author_id === userId) : cards
+  const list = cardsInFolder(cards, folder, userId)
   const card = cards.find((c) => c.id === selected) ?? null
 
   async function open() {
@@ -39,12 +41,8 @@ export function NewRound({ cards, pool, preselect, userId }: { cards: Card[]; po
       <section className="panel flex flex-col gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <h2 className="font-display text-2xl">1. Karte wählen</h2>
-          <div className="ml-auto flex gap-1 text-sm">
-            {(["alle", "meine"] as const).map((f) => (
-              <button key={f} className={clsx("rounded-lg px-2.5 py-1", filter === f ? "bg-accent text-black" : "bg-panel-2 text-muted")} onClick={() => setFilter(f)}>
-                {f === "alle" ? "Alle Karten" : "Meine"}
-              </button>
-            ))}
+          <div className="ml-auto flex flex-wrap gap-1 text-sm">
+            <CardFolderTabs cards={cards} folder={folder} onChange={setFolder} userId={userId} />
             <button className={clsx("rounded-lg px-2.5 py-1", creating ? "bg-accent text-black" : "bg-panel-2 text-muted")} onClick={() => setCreating((c) => !c)}>
               + Neue Karte
             </button>
@@ -57,6 +55,7 @@ export function NewRound({ cards, pool, preselect, userId }: { cards: Card[]; po
               onCreated={(id) => {
                 setCreating(false)
                 setSelected(id)
+                setFolder("meine")
                 router.refresh()
               }}
             />
@@ -79,7 +78,7 @@ export function NewRound({ cards, pool, preselect, userId }: { cards: Card[]; po
               </button>
             </li>
           ))}
-          {!list.length && <li className="text-muted">Noch keine Karten – erstelle oben eine.</li>}
+          {!list.length && <li className="text-muted">Keine Karten in diesem Ordner – erstelle oben eine.</li>}
         </ul>
       </section>
 

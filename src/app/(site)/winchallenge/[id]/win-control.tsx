@@ -10,7 +10,6 @@ import { useWin } from "@/components/winchallenge/use-win"
 import { WinBoard } from "@/components/winchallenge/win-board"
 import { celebrate } from "@/lib/confetti"
 import { progress, remainingSeconds, type WinState } from "@/lib/winchallenge"
-import { deleteWinChallenge } from "../actions"
 
 export function WinControl({
   initial,
@@ -210,19 +209,6 @@ export function WinControl({
             </section>
           )}
 
-          {isAdmin && (
-            <button
-              className="self-start text-sm text-muted underline hover:text-fail"
-              disabled={busy}
-              onClick={async () => {
-                if (!confirm(`Winchallenge „${c.title ?? `#${c.id}`}“ endgültig löschen?`)) return
-                setBusy(true)
-                await deleteWinChallenge(c.id)
-              }}
-            >
-              Winchallenge löschen
-            </button>
-          )}
         </div>
 
         <div className="self-start lg:sticky lg:top-20">

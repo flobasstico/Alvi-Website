@@ -1,17 +1,34 @@
-/** Spiele mit Teilnehmern (Login), die in die Spieler-Statistik eingehen */
-export const PLAYER_GAMES = ["eskalation", "loadout", "auktion", "bingo"] as const
+/** Spiele, die in die Spieler-Statistik eingehen: Mehrspieler-Runden (Login) und Alvis Solo-Challenges */
+export const PLAYER_GAMES = ["eskalation", "loadout", "auktion", "bingo", "rad", "drop", "winchallenge", "manuell"] as const
 export type PlayerGame = (typeof PLAYER_GAMES)[number]
 export const PLAYER_GAME_LABEL: Record<PlayerGame, string> = {
   eskalation: "Regel-Eskalation",
   loadout: "Loadout-Würfel",
   auktion: "Loot-Auktion",
   bingo: "Bingo",
+  rad: "Glücksrad",
+  drop: "Drop-Spot",
+  winchallenge: "Winchallenge",
+  manuell: "Manuell",
 }
 /** Spiele mit Punkten */
 export const POINT_GAMES: readonly PlayerGame[] = ["bingo"]
 
 /** Eine Teilnahme einer Person an einer abgeschlossenen Runde */
 export type Participation = { userId: string; game: PlayerGame; round: string; won: boolean; points: number | null }
+
+type ChallengeRow = { id: number; source: string; status: string }
+
+/**
+ * Alvis Solo-Challenges (Glücksrad, Drop-Spot, Winchallenge, Solo-Loadout …) als Teilnahmen von Alvi:
+ * geschafft = Sieg. Einträge, die aus einer Mehrspieler-Runde stammen (linked), zählen dort schon.
+ */
+export function soloParticipations(challenges: readonly ChallengeRow[], linked: ReadonlySet<number>, alviId: string): Participation[] {
+  return challenges
+    .filter((c) => !linked.has(c.id) && (c.status === "geschafft" || c.status === "gescheitert"))
+    .filter((c) => (PLAYER_GAMES as readonly string[]).includes(c.source))
+    .map((c) => ({ userId: alviId, game: c.source as PlayerGame, round: `ch-${c.id}`, won: c.status === "geschafft", points: null }))
+}
 
 export type PlayerRow = {
   userId: string

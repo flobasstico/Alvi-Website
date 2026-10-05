@@ -34,7 +34,12 @@ export async function deleteRow(form: FormData) {
   const supabase = await requireAdmin()
   const table = str(form, "table") as DeleteTable
   if (!DELETE_TABLES.includes(table)) throw new Error("Ungültige Tabelle")
-  const { error } = await supabase.from(table).delete().eq("id", Number(str(form, "id")))
+  const id = Number(str(form, "id"))
+  // Statistik-Eintrag: die zugehörige Runde (Eskalation, Bingo …) wird mitgelöscht
+  const { error } =
+    table === "challenges"
+      ? await supabase.rpc("admin_delete_round", { p_kind: "challenge", p_id: id })
+      : await supabase.from(table).delete().eq("id", id)
   done(error)
 }
 

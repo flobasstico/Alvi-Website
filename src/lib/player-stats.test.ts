@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { aggregatePlayers, sortPlayers, type Participation } from "./player-stats"
+import { aggregatePlayers, soloParticipations, sortPlayers, type Participation } from "./player-stats"
 
 const prof = new Map([
   ["alvi", { name: "Alvi", avatar: null }],
@@ -43,5 +43,22 @@ describe("Spieler-Statistik", () => {
     expect(sortPlayers(aggregatePlayers(parts, prof)).map((r) => r.name)).toEqual(["Kevin", "Alvi", "Flo"])
     expect(sortPlayers(aggregatePlayers(parts, prof), "punkte").map((r) => r.name)).toEqual(["Alvi", "Flo", "Kevin"])
     expect(sortPlayers(aggregatePlayers(parts, prof), "schnitt")[0].name).toBe("Alvi")
+  })
+})
+
+describe("Alvis Solo-Challenges", () => {
+  const ch = [
+    { id: 1, source: "rad", status: "geschafft" },
+    { id: 2, source: "drop", status: "gescheitert" },
+    { id: 3, source: "winchallenge", status: "geschafft" },
+    { id: 4, source: "eskalation", status: "geschafft" }, // aus einer Mehrspieler-Runde
+    { id: 5, source: "rad", status: "geplant" },
+  ]
+  it("zählt abgeschlossene Solo-Challenges als Teilnahmen von Alvi, geschafft = Sieg", () => {
+    const parts = soloParticipations(ch, new Set([4]), "alvi")
+    expect(parts.map((p) => p.round)).toEqual(["ch-1", "ch-2", "ch-3"])
+    const row = aggregatePlayers(parts, prof)[0]
+    expect(row).toMatchObject({ userId: "alvi", rounds: 3, wins: 2, winRate: 67 })
+    expect(aggregatePlayers(parts, prof, "rad")[0]).toMatchObject({ rounds: 1, wins: 1 })
   })
 })

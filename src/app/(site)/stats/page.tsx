@@ -1,5 +1,6 @@
 import Link from "next/link"
 import clsx from "clsx"
+import { AdminDeleteRound } from "@/components/admin-delete-round"
 import { PageTitle } from "@/components/page-title"
 import { SOURCE_LABEL, SOURCES, STATUS_LABEL, STATUSES, type Source, type Status } from "@/lib/constants"
 import {
@@ -14,7 +15,7 @@ import {
 import { loadPlayerStats } from "@/lib/player-stats-server"
 import { replayHref } from "@/lib/replay"
 import { rateQuip, streaks, successRate } from "@/lib/stats"
-import { createClient } from "@/lib/supabase/server"
+import { getViewer } from "@/lib/supabase/server"
 
 export const metadata = { title: "Challenge-Stats" }
 
@@ -34,7 +35,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
   const ansicht = params.ansicht === "alvi" ? "alvi" : "spieler"
   const spiel = PLAYER_GAMES.includes(params.spiel as PlayerGame) ? (params.spiel as PlayerGame) : undefined
   const sort = SORT_KEYS.includes(params.sort as SortKey) ? (params.sort as SortKey) : "siege"
-  const supabase = await createClient()
+  const { supabase, isAdmin } = await getViewer()
   const [{ data: stats }, { data: all }, players] = await Promise.all([
     supabase.from("challenge_stats").select("*"),
     supabase.from("challenges").select("*").order("created_at", { ascending: false }),
@@ -71,10 +72,31 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
 
       {ansicht === "spieler" ? (
         <>
+          <section className="panel mb-6 flex flex-wrap items-center gap-x-6 gap-y-3">
+            <div>
+              <div className="text-xs font-bold uppercase text-muted">🎮 Alvi</div>
+              <div className={clsx("font-display text-5xl", rate >= 50 ? "text-win" : "text-accent")}>{rate} %</div>
+              <div className="text-xs text-muted">seiner Challenges geschafft</div>
+            </div>
+            <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
+              <MiniStat label="Abgeschlossen" value={total?.finished ?? 0} />
+              <MiniStat label="Geschafft" value={total?.won ?? 0} className="text-win" />
+              <MiniStat label="Gescheitert" value={total?.lost ?? 0} className="text-fail" />
+              <MiniStat
+                label="Aktuelle Serie"
+                value={st.current ? `${st.current.count}× ${st.current.status === "geschafft" ? "✅" : "❌"}` : "–"}
+              />
+            </div>
+            <Link href="/stats?ansicht=alvi" className="text-sm text-accent-2 underline">
+              Alle Details →
+            </Link>
+          </section>
+
           <section id="spieler" className="panel mb-6">
             <h2 className="mb-1 font-display text-2xl">Spieler</h2>
             <p className="mb-3 text-sm text-muted">
-              Alle, die bei Mehrspieler-Challenges mitgespielt haben (abgeschlossene Runden). Punkte gibt es bei Bingo.
+              Alle, die bei Challenges mitgespielt haben (abgeschlossene Runden). Alvis Solo-Challenges zählen mit – geschafft = Sieg. Punkte gibt es bei
+              Bingo.
             </p>
             <div className="mb-3 flex flex-wrap gap-1 text-sm">
               <FilterChip href={filterLink("spiel")} active={!spiel}>Alle Spiele</FilterChip>
@@ -98,7 +120,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                   </thead>
                   <tbody>
                     {playerRows.map((r, i) => (
-                      <tr key={r.userId} className={clsx("border-b border-line/50", i === 0 && "bg-accent/10")}>
+                      <tr key={r.userId} className={clsx("border-b border-line/50", i === 0 && "bg-accent/10", r.userId === players.alviId && "font-semibold")}>
                         <td className="py-2 font-display text-lg">{["🥇", "🥈", "🥉"][i] ?? `${i + 1}.`}</td>
                         <td className="py-2">
                           <span className="flex items-center gap-2 font-bold">
@@ -109,6 +131,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-line text-xs">👤</span>
                             )}
                             {r.name}
+                            {r.userId === players.alviId && <span className="chip px-1.5 py-0 text-[10px]">Streamer</span>}
                           </span>
                         </td>
                         <td className="py-2 text-right tabular-nums">{r.rounds}</td>
@@ -205,6 +228,11 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                       🔁 Nachspielen
                     </Link>
                   )}
+                  {isAdmin && (
+                    <AdminDeleteRound kind="challenge" id={c.id} name={c.title}>
+                      🗑
+                    </AdminDeleteRound>
+                  )}
                 </li>
               ))}
               {list.length === 0 && <li className="py-2 text-muted">Keine Challenges gefunden.</li>}
@@ -221,6 +249,15 @@ function Stat({ label, value, className }: { label: string; value: string | numb
     <div className="panel p-4 text-center">
       <div className={clsx("font-display text-3xl", className)}>{value}</div>
       <div className="text-xs text-muted">{label}</div>
+    </div>
+  )
+}
+
+function MiniStat({ label, value, className }: { label: string; value: string | number; className?: string }) {
+  return (
+    <div className="rounded-xl bg-bg/40 px-3 py-2 text-center">
+      <div className={clsx("font-display text-2xl", className)}>{value}</div>
+      <div className="text-[11px] text-muted">{label}</div>
     </div>
   )
 }
