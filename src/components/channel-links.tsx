@@ -1,6 +1,5 @@
 "use client"
 
-import clsx from "clsx"
 import { useEffect, useState } from "react"
 import { createPortal } from "react-dom"
 import type { Channel, ChannelEntry } from "@/lib/site"
@@ -12,7 +11,7 @@ type Step = { channel: Channel; entry: ChannelEntry | null } | null
  * Links zu Alvis Kanälen. Vor dem Verlassen der Seite kommt eine Rückfrage (Abbrechen möglich).
  * Hat eine Plattform mehrere Kanäle (z. B. YouTube), öffnet sich zuerst eine Auswahl.
  */
-export function ChannelLinks({ channels, variant }: { channels: Channel[]; variant: "icons" | "pills" }) {
+export function ChannelLinks({ channels }: { channels: Channel[] }) {
   const [step, setStep] = useState<Step>(null)
   const close = () => setStep(null)
 
@@ -31,29 +30,18 @@ export function ChannelLinks({ channels, variant }: { channels: Channel[]; varia
 
   return (
     <>
-      {channels.map((c) =>
-        variant === "icons" ? (
-          <button
-            key={c.key}
-            type="button"
-            onClick={() => choose(c)}
-            title={c.entries.length > 1 ? `${c.label} – ${c.entries.length} Kanäle` : c.label}
-            aria-label={c.label}
-            className="rounded-xl p-1 transition hover:-translate-y-0.5 hover:bg-white/10 active:scale-90"
-          >
-            <PlatformIcon platform={c.key} src={c.icon} className="h-9 w-9" />
-          </button>
-        ) : (
-          <button
-            key={c.key}
-            type="button"
-            onClick={() => choose(c)}
-            className={clsx("rounded-full px-3 py-1 text-sm font-bold transition hover:brightness-110 active:scale-95", c.color)}
-          >
-            {c.label}
-          </button>
-        ),
-      )}
+      {channels.map((c) => (
+        <button
+          key={c.key}
+          type="button"
+          onClick={() => choose(c)}
+          title={c.entries.length > 1 ? `${c.label} – ${c.entries.length} Kanäle` : c.label}
+          aria-label={c.label}
+          className="rounded-xl p-1 transition hover:-translate-y-0.5 hover:bg-white/10 active:scale-90"
+        >
+          <PlatformIcon platform={c.key} src={c.icon} className="h-9 w-9" />
+        </button>
+      ))}
 
       {/* Portal: Kacheln mit Blur-Effekt würden ein festes Overlay sonst abschneiden */}
       {step &&

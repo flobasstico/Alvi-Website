@@ -46,6 +46,23 @@ export function PlatformIcon({ platform, className, src }: { platform: string; c
           <path d="M13.2 5.5h2.4c.3 1.7 1.4 2.8 3 3v2.4a6 6 0 0 1-3-.9v4.8a4.3 4.3 0 1 1-4.3-4.3h.4v2.5a1.9 1.9 0 1 0 1.5 1.8z" fill="#fff" />
         </svg>
       )
+    case "link_x":
+      return (
+        <svg viewBox="0 0 24 24" className={className} aria-hidden>
+          <rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="#000" stroke="#fff" strokeOpacity=".25" />
+          <path d="M6.5 6.5h3.2l8 11h-3.2z" fill="#fff" />
+          <path d="M17.2 6.5 12.9 11.3m-1.8 2-4.3 4.2" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" />
+        </svg>
+      )
+    case "link_discord":
+      return (
+        <svg viewBox="0 0 24 24" className={className} aria-hidden>
+          <rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="#5865f2" />
+          <path d="M7 8.2c1.5-.9 3-1.2 3-1.2l.3.6a11 11 0 0 1 3.4 0l.3-.6s1.5.3 3 1.2c1.2 2 1.6 4.3 1.5 6.7a8 8 0 0 1-2.9 1.5l-.6-1c.5-.2 1-.4 1.4-.7-2.5 1.2-5.3 1.2-7.8 0 .4.3.9.5 1.4.7l-.6 1a8 8 0 0 1-2.9-1.5C5.4 12.5 5.8 10.2 7 8.2z" fill="#fff" />
+          <circle cx="9.8" cy="12.3" r="1.1" fill="#5865f2" />
+          <circle cx="14.2" cy="12.3" r="1.1" fill="#5865f2" />
+        </svg>
+      )
     case "link_merch":
       return (
         <svg viewBox="0 0 24 24" className={className} aria-hidden>
