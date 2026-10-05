@@ -6,7 +6,7 @@ const TOOLS = [
   { href: "/rad", emoji: "🎡", title: "Challenge-Glücksrad", text: "Regeln wie „nur graue Waffen“ oder „kein Bauen“ – live erdreht." },
   { href: "/loadout", emoji: "🎲", title: "Loadout-Würfel", text: "5 zufällige Slots aus dem aktuellen Loot-Pool – solo oder mit mehreren Spielern." },
   { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Zufälliger Landeort plus Zusatzregel." },
-  { href: "/bingo", emoji: "🔢", title: "Bingo", text: "5×5-Karte mit Aufgaben – Zuschauer spielen live mit." },
+  { href: "/bingo", emoji: "🔢", title: "Bingo", text: "3×3-Karte mit Aufgaben – Zuschauer spielen live mit." },
   { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "4 Creator, je 500 Gold, verdeckte Gebote – bis jeder 5 Items hat." },
   { href: "/eskalation", emoji: "🚨", title: "Regel-Eskalation", text: "Grundregel per Glücksrad, alle 4 Minuten eine neue Regel – mit Alarm und OBS-Overlay." },
 ]

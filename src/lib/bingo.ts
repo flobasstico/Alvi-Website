@@ -1,17 +1,19 @@
-export const BINGO_SIZE = 5
-export const FREE_INDEX = 12
+export const BINGO_SIZE = 3
+export const BINGO_CELLS = BINGO_SIZE * BINGO_SIZE
 
-export const BINGO_LINES: number[][] = (() => {
-  const lines: number[][] = []
-  for (let r = 0; r < 5; r++) lines.push([0, 1, 2, 3, 4].map((c) => r * 5 + c))
-  for (let c = 0; c < 5; c++) lines.push([0, 1, 2, 3, 4].map((r) => r * 5 + c))
-  lines.push([0, 6, 12, 18, 24], [4, 8, 12, 16, 20])
-  return lines
-})()
+const range = Array.from({ length: BINGO_SIZE }, (_, i) => i)
 
-/** Markierte Felder einer Karte (Mitte immer frei). */
+/** Gewinnlinien: alle Reihen, alle Spalten und die beiden Diagonalen (Feld-Indizes) */
+export const BINGO_LINES: number[][] = [
+  ...range.map((r) => range.map((c) => r * BINGO_SIZE + c)),
+  ...range.map((c) => range.map((r) => r * BINGO_SIZE + c)),
+  range.map((i) => i * BINGO_SIZE + i),
+  range.map((i) => i * BINGO_SIZE + (BINGO_SIZE - 1 - i)),
+]
+
+/** Markierte Felder einer Karte (kein Freifeld). */
 export function markedCells(cardTaskIds: readonly number[], markedTaskIds: ReadonlySet<number>): boolean[] {
-  return cardTaskIds.map((id, i) => i === FREE_INDEX || markedTaskIds.has(id))
+  return cardTaskIds.map((id) => markedTaskIds.has(id))
 }
 
 /** Alle vollständigen Linien (Indizes in BINGO_LINES). */

@@ -12,6 +12,7 @@ import {
   type Rarity,
   type Source,
 } from "@/lib/constants"
+import { BINGO_CELLS } from "@/lib/bingo"
 import { getCurrentSeason } from "@/lib/season"
 import { getViewer } from "@/lib/supabase/server"
 import {
@@ -439,8 +440,8 @@ async function BingoTab() {
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <section className="panel">
         <h2 className="mb-1 font-display text-2xl">Bingo-Aufgaben</h2>
-        <p className={clsx("mb-3 text-sm", activeCount < 25 ? "text-fail" : "text-muted")}>
-          {activeCount} aktiv (mind. 25 nötig – mehr = abwechslungsreichere Zuschauer-Karten)
+        <p className={clsx("mb-3 text-sm", activeCount < BINGO_CELLS ? "text-fail" : "text-muted")}>
+          {activeCount} aktiv (mind. {BINGO_CELLS} nötig für die 3×3-Karte – mehr = abwechslungsreichere Zuschauer-Karten)
         </p>
         <ul className="divide-y divide-line">
           {data?.map((t) => (

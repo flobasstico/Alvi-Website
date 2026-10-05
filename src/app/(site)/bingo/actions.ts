@@ -1,7 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
-import { hasBingo, markedCells } from "@/lib/bingo"
+import { BINGO_CELLS, hasBingo, markedCells } from "@/lib/bingo"
 import { shuffle } from "@/lib/random"
 import { requireAdmin } from "@/lib/supabase/server"
 
@@ -9,9 +9,9 @@ export async function startBingo(title: string) {
   const supabase = await requireAdmin()
   const { data: tasks, error } = await supabase.from("bingo_tasks").select("id").eq("active", true)
   if (error) throw new Error(error.message)
-  if (!tasks || tasks.length < 25) throw new Error("Mindestens 25 aktive Bingo-Aufgaben nötig")
+  if (!tasks || tasks.length < BINGO_CELLS) throw new Error(`Mindestens ${BINGO_CELLS} aktive Bingo-Aufgaben nötig`)
   await supabase.from("bingo_games").update({ status: "beendet" }).eq("status", "laeuft")
-  // Die ersten 25 sind Alvis Karte, Zuschauer ziehen aus allen
+  // Die ersten 9 sind Alvis Karte, Zuschauer ziehen aus allen
   const { error: e2 } = await supabase
     .from("bingo_games")
     .insert({ title: title.trim() || null, task_ids: shuffle(tasks.map((t) => t.id)) })
@@ -26,7 +26,7 @@ export async function endBingo(gameId: number) {
     supabase.from("bingo_marks").select("task_id").eq("game_id", gameId),
   ])
   if (error) throw new Error(error.message)
-  const won = hasBingo(markedCells(game.task_ids.slice(0, 25), new Set((marks ?? []).map((m) => m.task_id))))
+  const won = hasBingo(markedCells(game.task_ids.slice(0, BINGO_CELLS), new Set((marks ?? []).map((m) => m.task_id))))
   const { data: ch, error: e1 } = await supabase
     .from("challenges")
     .insert({

@@ -1,27 +1,29 @@
 import { describe, expect, it } from "vitest"
-import { BINGO_LINES, completedLines, FREE_INDEX, hasBingo, markedCells } from "./bingo"
+import { BINGO_CELLS, BINGO_LINES, completedLines, hasBingo, markedCells } from "./bingo"
 
-const card = Array.from({ length: 25 }, (_, i) => i + 100)
+const card = Array.from({ length: BINGO_CELLS }, (_, i) => i + 100)
 
-describe("bingo", () => {
-  it("hat 12 Gewinnlinien", () => {
-    expect(BINGO_LINES).toHaveLength(12)
+describe("bingo 3×3", () => {
+  it("hat 9 Felder und 8 Gewinnlinien", () => {
+    expect(BINGO_CELLS).toBe(9)
+    expect(BINGO_LINES).toEqual([
+      [0, 1, 2], [3, 4, 5], [6, 7, 8],
+      [0, 3, 6], [1, 4, 7], [2, 5, 8],
+      [0, 4, 8], [2, 4, 6],
+    ])
   })
 
-  it("Mitte ist immer frei", () => {
-    expect(markedCells(card, new Set())[FREE_INDEX]).toBe(true)
-    expect(hasBingo(markedCells(card, new Set()))).toBe(false)
+  it("kein Freifeld: leere Karte hat nichts markiert", () => {
+    expect(markedCells(card, new Set()).some(Boolean)).toBe(false)
   })
 
   it.each(BINGO_LINES.map((l, i) => [i, l] as const))("Linie %i ergibt Bingo", (i, line) => {
-    const marked = new Set(line.filter((c) => c !== FREE_INDEX).map((c) => card[c]))
-    const cells = markedCells(card, marked)
+    const cells = markedCells(card, new Set(line.map((c) => card[c])))
     expect(hasBingo(cells)).toBe(true)
     expect(completedLines(cells)).toContain(i)
   })
 
-  it("4 von 5 ohne Mitte reicht nicht", () => {
-    const marked = new Set([card[0], card[1], card[2], card[3]])
-    expect(hasBingo(markedCells(card, marked))).toBe(false)
+  it("4 Felder ohne volle Linie reichen nicht", () => {
+    expect(hasBingo(markedCells(card, new Set([card[0], card[1], card[5], card[6]])))).toBe(false)
   })
 })

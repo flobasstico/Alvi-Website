@@ -3,7 +3,7 @@
 import clsx from "clsx"
 import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useRef, useState, useTransition } from "react"
-import { BINGO_LINES, completedLines, FREE_INDEX, hasBingo, markedCells } from "@/lib/bingo"
+import { BINGO_CELLS, BINGO_LINES, completedLines, hasBingo, markedCells } from "@/lib/bingo"
 import type { Tables } from "@/lib/database.types"
 import { celebrate } from "@/lib/confetti"
 import { sample } from "@/lib/random"
@@ -73,12 +73,12 @@ export function BingoBoard({
 
   async function joinGame() {
     setError(null)
-    const { error } = await supabase.from("bingo_cards").insert({ game_id: game.id, task_ids: sample(game.task_ids, 25) })
+    const { error } = await supabase.from("bingo_cards").insert({ game_id: game.id, task_ids: sample(game.task_ids, BINGO_CELLS) })
     if (error) setError(error.message)
     router.refresh()
   }
 
-  const alviCard = game.task_ids.slice(0, 25)
+  const alviCard = game.task_ids.slice(0, BINGO_CELLS)
 
   return (
     <div className="flex flex-col gap-6">
@@ -192,21 +192,18 @@ function Card({
         <h3 className="font-display text-2xl">{title}</h3>
         {bingo && <span className="animate-bounce font-display text-3xl text-accent">BINGO!</span>}
       </div>
-      <div className="grid grid-cols-5 gap-1.5">
-        {ids.map((id, i) => {
-          const free = i === FREE_INDEX
-          return (
-            <div
-              key={i}
-              className={clsx(
-                "flex aspect-square items-center justify-center rounded-lg border p-1 text-center text-[10px] font-bold leading-tight transition sm:text-xs",
-                lines.has(i) ? "border-accent bg-accent text-black" : cells[i] ? "border-win bg-win/30" : "border-line bg-bg/50",
-              )}
-            >
-              {free ? "⭐ FREI" : taskText.get(id)}
-            </div>
-          )
-        })}
+      <div className="grid grid-cols-3 gap-2">
+        {ids.map((id, i) => (
+          <div
+            key={i}
+            className={clsx(
+              "flex aspect-square items-center justify-center rounded-xl border-2 p-2 text-center text-sm font-bold leading-tight transition sm:text-base",
+              lines.has(i) ? "border-accent bg-accent text-black" : cells[i] ? "border-win bg-win/30" : "border-line bg-bg/50",
+            )}
+          >
+            {taskText.get(id)}
+          </div>
+        ))}
       </div>
     </section>
   )
