@@ -1,7 +1,8 @@
 "use client"
 
 import { useActionState } from "react"
-import { CHANNELS } from "@/lib/site"
+import { CHANNELS, iconKey } from "@/lib/site"
+import { ChannelIconUpload } from "./channel-icon-upload"
 import { saveSiteSettings } from "./actions"
 
 export function SiteSettingsForm({ values }: { values: Record<string, string> }) {
@@ -28,6 +29,7 @@ export function SiteSettingsForm({ values }: { values: Record<string, string> })
             ) : (
               <input id={c.key} name={c.key} defaultValue={values[c.key] ?? ""} placeholder="https://…" className="input" />
             )}
+            {c.key === "link_merch" && <ChannelIconUpload channelKey={c.key} current={values[iconKey(c.key)] ?? null} />}
           </div>
         ))}
       </section>

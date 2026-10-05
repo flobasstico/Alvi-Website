@@ -33,9 +33,12 @@ export function safeUrl(v: string | undefined | null): string | null {
   }
 }
 
+/** Schlüssel für ein eigenes Icon einer Plattform (z. B. Merch-Logo), im Admin hochladbar */
+export const iconKey = (channelKey: string) => `${channelKey}_icon`
+
 /** Ein Kanal: Anzeigename + Link */
 export type ChannelEntry = { name: string; url: string }
-export type Channel = { key: string; label: string; color: string; entries: ChannelEntry[] }
+export type Channel = { key: string; label: string; color: string; entries: ChannelEntry[]; icon: string | null }
 
 /**
  * Kanäle einer Plattform aus dem Admin-Feld lesen: ein Kanal pro Zeile, optional „Name | https://…“.
@@ -64,7 +67,11 @@ export function invalidChannelLine(value: string): string | null {
 
 /** Alle Plattformen mit mindestens einem Kanal */
 export function channelsFromSettings(settings: ReadonlyMap<string, string>): Channel[] {
-  return CHANNELS.map((c) => ({ key: c.key, label: c.label, color: c.color, entries: parseChannelLinks(settings.get(c.key), c.label) })).filter(
-    (c) => c.entries.length > 0,
-  )
+  return CHANNELS.map((c) => ({
+    key: c.key,
+    label: c.label,
+    color: c.color,
+    entries: parseChannelLinks(settings.get(c.key), c.label),
+    icon: safeUrl(settings.get(iconKey(c.key))),
+  })).filter((c) => c.entries.length > 0)
 }

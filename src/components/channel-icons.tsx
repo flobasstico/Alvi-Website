@@ -1,5 +1,9 @@
 // Vereinfachte Plattform-Icons (eigene, schlichte Nachbauten – keine Original-Logos)
-export function PlatformIcon({ platform, className }: { platform: string; className?: string }) {
+export function PlatformIcon({ platform, className, src }: { platform: string; className?: string; src?: string | null }) {
+  if (src) {
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img src={src} alt="" className={`${className ?? ""} rounded-md object-contain`} aria-hidden />
+  }
   switch (platform) {
     case "link_youtube":
       return (

@@ -41,7 +41,7 @@ export function ChannelLinks({ channels, variant }: { channels: Channel[]; varia
             aria-label={c.label}
             className="rounded-xl p-1 transition hover:-translate-y-0.5 hover:bg-white/10 active:scale-90"
           >
-            <PlatformIcon platform={c.key} className="h-9 w-9" />
+            <PlatformIcon platform={c.key} src={c.icon} className="h-9 w-9" />
           </button>
         ) : (
           <button
@@ -67,7 +67,7 @@ export function ChannelLinks({ channels, variant }: { channels: Channel[]; varia
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center gap-3">
-                <PlatformIcon platform={step.channel.key} className="h-8 w-8 shrink-0" />
+                <PlatformIcon platform={step.channel.key} src={step.channel.icon} className="h-8 w-8 shrink-0" />
                 <h2 id="channel-dialog-title" className="font-display text-2xl">
                   {step.entry ? "Seite verlassen?" : `Alvi auf ${step.channel.label}`}
                 </h2>
@@ -105,7 +105,7 @@ export function ChannelLinks({ channels, variant }: { channels: Channel[]; varia
                           onClick={() => setStep({ channel: step.channel, entry: e })}
                           className="flex w-full items-center gap-3 rounded-xl border border-line bg-bg/50 px-3 py-2 text-left transition hover:border-accent active:scale-[.98]"
                         >
-                          <PlatformIcon platform={step.channel.key} className="h-6 w-6 shrink-0" />
+                          <PlatformIcon platform={step.channel.key} src={step.channel.icon} className="h-6 w-6 shrink-0" />
                           <span className="min-w-0 flex-1">
                             <span className="block font-bold">{e.name}</span>
                             <span className="block truncate text-xs text-muted">{e.url.replace(/^https?:\/\/(www\.)?/, "")}</span>

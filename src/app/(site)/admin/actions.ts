@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { ITEM_TYPES, RARITIES, STATUSES, type Status } from "@/lib/constants"
 import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
-import { CHANNELS, invalidChannelLine, PAGE_KEYS } from "@/lib/site"
+import { CHANNELS, iconKey, invalidChannelLine, PAGE_KEYS, safeUrl } from "@/lib/site"
 import { requireAdmin } from "@/lib/supabase/server"
 
 const TOGGLE_TABLES = ["rules", "loot_items", "drop_spots", "bingo_tasks", "escalation_rules"] as const
@@ -280,4 +280,15 @@ export async function saveSiteSettings(_: unknown, form: FormData): Promise<{ er
   }
   revalidatePath("/", "layout")
   return { ok: true }
+}
+
+/** Eigenes Icon für eine Plattform (z. B. Merch-Logo) setzen oder mit null entfernen */
+export async function setChannelIcon(channelKey: string, url: string | null) {
+  const supabase = await requireAdmin()
+  if (!CHANNELS.some((c) => c.key === channelKey)) throw new Error("Unbekannte Plattform")
+  const key = iconKey(channelKey)
+  if (!url) return done((await supabase.from("site_settings").delete().eq("key", key)).error)
+  const safe = safeUrl(url)
+  if (!safe) throw new Error("Ungültige Bild-Adresse")
+  done((await supabase.from("site_settings").upsert({ key, value: safe })).error)
 }
