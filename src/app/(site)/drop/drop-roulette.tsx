@@ -1,5 +1,6 @@
 "use client"
 
+import clsx from "clsx"
 import { AnimatePresence, motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import { IslandMap } from "@/components/island-map"
@@ -125,17 +126,21 @@ export function DropRoulette({
 
       <aside className="panel flex flex-col gap-4">
         <div>
-          <label className="label" htmlFor="players">Spieler</label>
-          <input
-            id="players"
-            type="number"
-            min={1}
-            max={MAX_PLAYERS}
-            value={count}
-            onChange={(e) => setCount(Number(e.target.value) || 1)}
-            className="input w-24"
-            disabled={rolling}
-          />
+          <span className="label">Spieler</span>
+          <div className="flex flex-wrap gap-1" role="group" aria-label="Spieleranzahl">
+            {Array.from({ length: MAX_PLAYERS }, (_, i) => i + 1).map((n) => (
+              <button
+                key={n}
+                type="button"
+                onClick={() => setCount(n)}
+                disabled={rolling}
+                aria-pressed={n === count}
+                className={clsx("h-9 w-9 rounded-lg border font-bold transition", n === count ? "border-accent bg-accent text-black" : "border-line bg-bg/60 hover:border-accent")}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
         </div>
         {count > 1 && (
           <div className="flex flex-col gap-2">
