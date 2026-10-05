@@ -50,12 +50,12 @@ export const STATUS_LABEL: Record<Status, string> = {
 }
 
 export const NAV = [
-  { href: "/rad", label: "Glücksrad" },
-  { href: "/loadout", label: "Loadout" },
-  { href: "/drop", label: "Drop-Spot" },
-  { href: "/bingo", label: "Bingo" },
-  { href: "/auktion", label: "Auktion" },
   { href: "/eskalation", label: "Eskalation" },
+  { href: "/auktion", label: "Auktion" },
+  { href: "/bingo", label: "Bingo" },
+  { href: "/loadout", label: "Loadout" },
+  { href: "/rad", label: "Glücksrad" },
+  { href: "/drop", label: "Drop-Spot" },
   { href: "/winchallenge", label: "Winchallenge" },
   { href: "/olympiade", label: "Olympiade" },
   { href: "/stats", label: "Stats" },
