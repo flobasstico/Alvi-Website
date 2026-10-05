@@ -1,4 +1,6 @@
 import Link from "next/link"
+import { ChannelLinks } from "@/components/channel-links"
+import { channelsFromSettings, loadSiteSettings } from "@/lib/site"
 import { createClient } from "@/lib/supabase/server"
 
 const TOOLS = [
@@ -12,12 +14,12 @@ const TOOLS = [
 
 export default async function Home() {
   const supabase = await createClient()
-  const { data: active } = await supabase
-    .from("challenges")
-    .select("id, title")
-    .eq("status", "aktiv")
-    .order("played_at", { ascending: false })
-    .limit(3)
+  const [{ data: active }, settings] = await Promise.all([
+    supabase.from("challenges").select("id, title").eq("status", "aktiv").order("played_at", { ascending: false }).limit(3),
+    loadSiteSettings(supabase),
+  ])
+  const HERO_PLATFORMS = ["link_youtube", "link_twitch", "link_instagram", "link_tiktok"]
+  const channels = channelsFromSettings(settings).filter((c) => HERO_PLATFORMS.includes(c.key))
 
   return (
     <div className="flex flex-col gap-8">
@@ -26,6 +28,11 @@ export default async function Home() {
         <p className="mx-auto mt-3 max-w-xl text-lg text-muted">
           Hier werden Fortnite-Challenges gebaut, ausgewürfelt und gnadenlos getrackt.
         </p>
+        {channels.length > 0 && (
+          <div className="mt-5 flex items-center justify-center gap-3">
+            <ChannelLinks channels={channels} variant="icons" />
+          </div>
+        )}
       </section>
 
       {active && active.length > 0 && (

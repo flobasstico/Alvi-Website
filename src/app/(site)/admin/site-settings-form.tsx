@@ -10,11 +10,24 @@ export function SiteSettingsForm({ values }: { values: Record<string, string> })
     <form action={action} className="grid gap-6 lg:grid-cols-[360px_1fr]">
       <section className="panel flex h-fit flex-col gap-3">
         <h2 className="font-display text-2xl">Alvis Kanäle</h2>
-        <p className="text-sm text-muted">Erscheinen unten auf jeder Seite. Leere Felder werden nicht angezeigt.</p>
+        <p className="text-sm text-muted">Erscheinen unten auf jeder Seite; YouTube, Twitch, Instagram und TikTok zusätzlich als Icons auf der Startseite. Leere Felder werden nicht angezeigt.</p>
         {CHANNELS.map((c) => (
           <div key={c.key}>
             <label className="label" htmlFor={c.key}>{c.label}</label>
-            <input id={c.key} name={c.key} defaultValue={values[c.key] ?? ""} placeholder="https://…" className="input" />
+            {c.key === "link_youtube" ? (
+              <>
+                <textarea
+                  id={c.key}
+                  name={c.key}
+                  defaultValue={values[c.key] ?? ""}
+                  placeholder={"Ein Kanal pro Zeile: Name | Link\nAlvi | https://www.youtube.com/@…\nAlvi Clips | https://www.youtube.com/@…"}
+                  className="input min-h-28 text-sm"
+                />
+                <p className="mt-1 text-xs text-muted">Mehrere Kanäle: Besucher wählen zuerst aus einer Übersicht.</p>
+              </>
+            ) : (
+              <input id={c.key} name={c.key} defaultValue={values[c.key] ?? ""} placeholder="https://…" className="input" />
+            )}
           </div>
         ))}
       </section>

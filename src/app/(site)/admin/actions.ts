@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { ITEM_TYPES, RARITIES, STATUSES, type Status } from "@/lib/constants"
 import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
-import { CHANNELS, PAGE_KEYS, safeUrl } from "@/lib/site"
+import { CHANNELS, invalidChannelLine, PAGE_KEYS } from "@/lib/site"
 import { requireAdmin } from "@/lib/supabase/server"
 
 const TOGGLE_TABLES = ["rules", "loot_items", "drop_spots", "bingo_tasks", "escalation_rules"] as const
@@ -266,9 +266,10 @@ export async function saveSiteSettings(_: unknown, form: FormData): Promise<{ er
       removes.push(c.key)
       continue
     }
-    const url = safeUrl(raw)
-    if (!url) return { error: `${c.label}: ungültiger Link – bitte die komplette Adresse mit https:// eintragen.` }
-    upserts.push({ key: c.key, value: url })
+    const bad = invalidChannelLine(raw)
+    if (bad) return { error: `${c.label}: ungültiger Link „${bad}“ – bitte die komplette Adresse mit https:// eintragen.` }
+    // Zeilen normalisiert speichern (Name | Link)
+    upserts.push({ key: c.key, value: raw.split("\n").map((l) => l.trim()).filter(Boolean).join("\n").slice(0, 2000) })
   }
   for (const k of PAGE_KEYS) upserts.push({ key: k, value: String(form.get(k) ?? "").slice(0, 20000) })
   const { error } = await supabase.from("site_settings").upsert(upserts)
