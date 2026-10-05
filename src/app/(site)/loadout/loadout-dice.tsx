@@ -4,12 +4,15 @@ import clsx from "clsx"
 import { AnimatePresence, motion } from "framer-motion"
 import { useState } from "react"
 import { ItemIcon } from "@/components/item-icon"
+import { OverlayLink } from "@/components/live-overlay/overlay-link"
 import { SLOT_BAR, SLOT_BG } from "@/components/loadout-bar"
 import { SaveChallenge } from "@/components/save-challenge"
 import { celebrate } from "@/lib/confetti"
 import { ITEM_TYPE_LABEL, RARITIES, RARITY_CLASS, RARITY_LABEL, type Rarity } from "@/lib/constants"
 import { filterPool, LOADOUT_SLOTS, rollLoadout, type LootItem } from "@/lib/loadout"
+import { pushOverlay } from "@/lib/live-overlay"
 import { pick } from "@/lib/random"
+import { createClient } from "@/lib/supabase/client"
 
 const empty = () => Array<LootItem | null>(LOADOUT_SLOTS).fill(null)
 
@@ -19,6 +22,7 @@ export function LoadoutDice({
   fixedOptions,
   initialSlots,
   onRolled,
+  overlayLogin = null,
 }: {
   items: LootItem[]
   isAdmin: boolean
@@ -27,6 +31,8 @@ export function LoadoutDice({
   initialSlots?: (LootItem | null)[]
   /** Wird nach jedem abgeschlossenen Wurf mit dem Ergebnis aufgerufen */
   onRolled?: (slots: (LootItem | null)[]) => void
+  /** Twitch-Name für den eigenen OBS-Link; mit Login wird jeder Wurf fürs Overlay gespeichert */
+  overlayLogin?: string | null
 }) {
   const [slots, setSlots] = useState<(LootItem | null)[]>(initialSlots ?? empty)
   const [locked, setLocked] = useState<boolean[]>(Array(LOADOUT_SLOTS).fill(false))
@@ -53,6 +59,8 @@ export function LoadoutDice({
     const result = rollLoadout(items, slots, lockMask, opts)
     setSlots(result)
     onRolled?.(result)
+    if (overlayLogin)
+      pushOverlay(createClient(), "loadout", { items: result.map((i) => i && { name: i.name, rarity: i.rarity, type: i.type, icon_url: i.icon_url ?? null }) })
     setRollKey((k) => k + 1)
     setRolling(false)
     if (onlySlot === undefined) celebrate()
@@ -161,6 +169,7 @@ export function LoadoutDice({
           </p>
         </div>
       )}
+      <OverlayLink kind="loadout" login={overlayLogin} size="ca. 540 × 170" />
     </div>
   )
 }

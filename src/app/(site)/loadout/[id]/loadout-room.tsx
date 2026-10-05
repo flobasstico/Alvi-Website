@@ -15,7 +15,7 @@ type Player = Tables<"loadout_players">
 type Item = LootItem & { active: boolean }
 type State = { session: Session; players: Player[] }
 
-export function LoadoutRoom({ initial, items, userId }: { initial: State; items: Item[]; userId: string | null }) {
+export function LoadoutRoom({ initial, items, userId, login }: { initial: State; items: Item[]; userId: string | null; login: string | null }) {
   const [supabase] = useState(createClient)
   const [{ session, players }, setState] = useState(initial)
   const [busy, setBusy] = useState(false)
@@ -99,6 +99,7 @@ export function LoadoutRoom({ initial, items, userId }: { initial: State; items:
             fixedOptions={{ rarities: session.rarities, mustHeal: session.must_heal }}
             initialSlots={me.rolled_at ? toItems(me).slice(0, LOADOUT_SLOTS) : undefined}
             onRolled={saveRoll}
+            overlayLogin={login}
           />
         </section>
       )}

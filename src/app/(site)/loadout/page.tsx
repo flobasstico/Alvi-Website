@@ -13,7 +13,7 @@ const STATUS: Record<string, string> = { offen: "Würfeln läuft", laeuft: "Läu
 export default async function LoadoutPage({ searchParams }: { searchParams: Promise<{ modus?: string }> }) {
   const { modus } = await searchParams
   const multi = modus === "mehrspieler"
-  const { supabase, isAdmin } = await getViewer()
+  const { supabase, isAdmin, profile } = await getViewer()
   const season = await getCurrentSeason(supabase)
 
   return (
@@ -32,18 +32,18 @@ export default async function LoadoutPage({ searchParams }: { searchParams: Prom
           👥 Mehrspieler
         </Link>
       </nav>
-      {multi ? <MultiplayerList isAdmin={isAdmin} supabase={supabase} /> : <Solo seasonId={season?.id ?? null} isAdmin={isAdmin} supabase={supabase} />}
+      {multi ? <MultiplayerList isAdmin={isAdmin} supabase={supabase} /> : <Solo seasonId={season?.id ?? null} isAdmin={isAdmin} supabase={supabase} login={profile?.twitch_login ?? null} />}
     </>
   )
 }
 
 type Client = Awaited<ReturnType<typeof getViewer>>["supabase"]
 
-async function Solo({ seasonId, isAdmin, supabase }: { seasonId: number | null; isAdmin: boolean; supabase: Client }) {
+async function Solo({ seasonId, isAdmin, supabase, login }: { seasonId: number | null; isAdmin: boolean; supabase: Client; login: string | null }) {
   const { data: items } = seasonId
     ? await supabase.from("loot_items").select("id, name, rarity, type, icon_url").eq("season_id", seasonId).eq("active", true)
     : { data: [] }
-  return <LoadoutDice items={items ?? []} isAdmin={isAdmin} />
+  return <LoadoutDice items={items ?? []} isAdmin={isAdmin} overlayLogin={login} />
 }
 
 async function MultiplayerList({ isAdmin, supabase }: { isAdmin: boolean; supabase: Client }) {

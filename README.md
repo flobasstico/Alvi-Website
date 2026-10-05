@@ -53,6 +53,7 @@ Das Repo in Vercel importieren und die Umgebungsvariablen `NEXT_PUBLIC_SUPABASE_
 
 ## Ablauf im Stream
 
+- **Kleine OBS-Anzeigen für Loadout-Würfel und Drop-Spot**: Jeder mit Twitch-Login hat einen eigenen festen Link (aufklappbar unter „📺 OBS-Overlay“ auf der Seite): `/overlay/loadout/<twitch-name>` zeigt das zuletzt gewürfelte Loadout als kleine Hotbar, `/overlay/drop/<twitch-name>` den Landespot (bei mehreren Spielern jeder mit Farbe) und die Zusatzregel. Beide aktualisieren sich bei jedem Wurf live; Hintergrund transparent.
 - **Nachspielen**: Abgeschlossene Challenges lassen sich identisch nachspielen – Button „🔁 Nachspielen“ auf der Runden-Seite bzw. in den Stats (Tab Alvi). Regel-Eskalation: exakt gleiche Grundregel und Zusatzregeln in gleicher Reihenfolge und Taktung. Winchallenge: gleiche Spiele, Ziel-Siege und Timer. Glücksrad und Drop-Spot: zeigen Alvis Regeln bzw. Landekreise. Bingo: „Nochmal mit dieser Karte“. Loot-Auktion und Loadout-Würfel haben keine Nachspiel-Option. Wer nachspielt (Twitch-Login), ist Host seiner Kopie und lädt Freunde per Link ein. Nur Runden, bei denen mindestens ein Admin mitmacht, erscheinen in Übersichten und Stats; alle anderen werden beim Beenden gelöscht. Alvis fester OBS-Link der Winchallenge zeigt nie Nachspiel-Runden von Zuschauern.
 
 - **Spieleranzahl**: Loot-Auktion, Regel-Eskalation und Loadout-Würfel (Mehrspieler) haben beim Eröffnen das Feld „Spieler (max.)“ (2–8, Standard 4). Sind alle Plätze belegt, kann niemand mehr beitreten.

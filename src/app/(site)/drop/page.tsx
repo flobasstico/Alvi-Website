@@ -11,7 +11,7 @@ export const metadata = { title: "Drop-Spot-Roulette" }
 
 export default async function DropPage({ searchParams }: { searchParams: Promise<{ nachspielen?: string }> }) {
   const { nachspielen } = await searchParams
-  const { supabase, isAdmin } = await getViewer()
+  const { supabase, isAdmin, profile } = await getViewer()
   const season = await getCurrentSeason(supabase)
   const replayId = Number(nachspielen)
   const { data: replay } = Number.isInteger(replayId) && replayId > 0
@@ -44,7 +44,7 @@ export default async function DropPage({ searchParams }: { searchParams: Promise
           🗺️ Karte &amp; Spots bearbeiten
         </Link>
       )}
-      <DropRoulette spots={spots ?? []} rules={(rules ?? []).map((r) => ({ ...r, weight: 1 }))} mapUrl={season?.map_image_url} isAdmin={isAdmin} />
+      <DropRoulette spots={spots ?? []} rules={(rules ?? []).map((r) => ({ ...r, weight: 1 }))} mapUrl={season?.map_image_url} isAdmin={isAdmin} overlayLogin={profile?.twitch_login ?? null} />
     </>
   )
 }

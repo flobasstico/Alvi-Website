@@ -147,6 +147,12 @@ export type Database = {
         Update: { avatar_url?: string | null; display_name?: string | null; joined_at?: string; olympic_id?: number; points?: number; user_id?: string; won?: boolean }
         Relationships: Rel[]
       }
+      live_overlays: {
+        Row: { data: Json; kind: string; updated_at: string; user_id: string }
+        Insert: { data: Json; kind: string; updated_at?: string; user_id?: string }
+        Update: { data?: Json; kind?: string; updated_at?: string; user_id?: string }
+        Relationships: Rel[]
+      }
       bingo_tasks: {
         Row: { active: boolean; created_at: string; id: number; text: string }
         Insert: { active?: boolean; created_at?: string; id?: never; text: string }

@@ -4,10 +4,13 @@ import clsx from "clsx"
 import { AnimatePresence, motion } from "framer-motion"
 import { useEffect, useState } from "react"
 import { IslandMap } from "@/components/island-map"
+import { OverlayLink } from "@/components/live-overlay/overlay-link"
 import { SaveChallenge } from "@/components/save-challenge"
 import { celebrate } from "@/lib/confetti"
 import { MAX_DIAMETER, MAX_PLAYERS, MIN_DIAMETER, PLAYER_COLORS, rollCircles, type DropCircle, type DropSpot } from "@/lib/drop"
+import { pushOverlay } from "@/lib/live-overlay"
 import { pick, randomInt } from "@/lib/random"
+import { createClient } from "@/lib/supabase/client"
 
 type Rule = { id: number; text: string; weight: number }
 type Result = { circles: DropCircle[]; names: string[]; rule: Rule | null }
@@ -20,11 +23,14 @@ export function DropRoulette({
   rules,
   mapUrl,
   isAdmin,
+  overlayLogin = null,
 }: {
   spots: DropSpot[]
   rules: Rule[]
   mapUrl?: string | null
   isAdmin: boolean
+  /** Twitch-Name für den eigenen OBS-Link; mit Login wird jeder Sprung fürs Overlay gespeichert */
+  overlayLogin?: string | null
 }) {
   const [names, setNames] = useState<string[]>(["Spieler 1"])
   const [diameter, setDiameter] = useState(16)
@@ -78,8 +84,14 @@ export function DropRoulette({
       await new Promise((r) => setTimeout(r, 60 + t * t * 1.1))
     }
     setPreview(final)
-    setResult({ circles: final, names, rule: withRule && rules.length ? pick(rules) : null })
+    const rule = withRule && rules.length ? pick(rules) : null
+    setResult({ circles: final, names, rule })
     setRolling(false)
+    if (overlayLogin)
+      pushOverlay(createClient(), "drop", {
+        circles: final.map((c, i) => ({ player: names[i], spot: c.spotName, color: PLAYER_COLORS[i] })),
+        rule: rule?.text ?? null,
+      })
     celebrate()
   }
 
@@ -216,6 +228,7 @@ export function DropRoulette({
             )}
           </motion.div>
         )}
+        <OverlayLink kind="drop" login={overlayLogin} size="ca. 460 × 220" className="rounded-xl border border-line p-3" />
       </aside>
     </div>
   )
