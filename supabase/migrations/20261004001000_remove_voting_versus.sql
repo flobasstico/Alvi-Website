@@ -9,7 +9,4 @@ drop function if exists public.current_week();
 
 drop table if exists public.versus_checklist;
 drop table if exists public.versus_matches;
-
-alter table public.challenges drop constraint challenges_source_check;
-alter table public.challenges add constraint challenges_source_check
-  check (source in ('rad', 'loadout', 'drop', 'bingo', 'auktion', 'manuell'));
+-- Die erlaubten Challenge-Quellen setzt 20261004001100_escalation.sql (ohne voting/versus).
