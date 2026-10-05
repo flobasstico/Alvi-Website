@@ -9,6 +9,7 @@ export async function createLoadoutSession(_: unknown, form: FormData): Promise<
     p_title: String(form.get("title") ?? ""),
     p_rarities: form.getAll("rarity").map(String),
     p_must_heal: form.get("mustHeal") === "on",
+    p_max_players: Math.min(8, Math.max(2, Math.round(Number(form.get("max_players")) || 4))),
   })
   if (error) return { error: error.message }
   redirect(`/loadout/${data}`)

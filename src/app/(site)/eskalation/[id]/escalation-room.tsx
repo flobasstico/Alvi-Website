@@ -121,6 +121,7 @@ export function EscalationRoom({
             players={players}
             hostId={session.host_id}
             ended={session.status === "beendet"}
+            maxPlayers={session.max_players}
             userId={userId}
             isHost={isHost}
             isPlayer={isPlayer}

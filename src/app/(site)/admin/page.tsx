@@ -24,7 +24,6 @@ import {
   deleteRow,
   moveEscalationRule,
   setCurrentSeason,
-  setRuleWeight,
   toggleActive,
   updateChallenge,
   updateEscalationRule,
@@ -174,12 +173,6 @@ async function RulesTab() {
                 .map((r) => (
                   <Row key={r.id} inactive={!r.active}>
                     <span className="flex-1 font-semibold">{r.text}</span>
-                    <form action={setRuleWeight} className="flex items-center gap-1">
-                      <input type="hidden" name="id" value={r.id} />
-                      <label className="text-xs text-muted">Gewicht</label>
-                      <input name="weight" type="number" min={1} max={10} defaultValue={r.weight} className="input w-16 py-1 text-sm" />
-                      <button className="btn-secondary px-2 py-1 text-xs">OK</button>
-                    </form>
                     <ToggleButton table="rules" id={r.id} active={r.active} />
                     <DeleteButton table="rules" id={r.id} />
                   </Row>
@@ -196,10 +189,6 @@ async function RulesTab() {
             <option value="rad">Glücksrad</option>
             <option value="drop">Drop-Zusatzregel</option>
           </select>
-          <div>
-            <label className="label">Gewicht (1–10, höher = häufiger)</label>
-            <input name="weight" type="number" min={1} max={10} defaultValue={1} className="input" />
-          </div>
           <button className="btn-primary">Hinzufügen</button>
         </form>
       </aside>

@@ -14,6 +14,10 @@ export function CreateLoadoutSession() {
         <label className="label" htmlFor="title">Titel (optional)</label>
         <input id="title" name="title" className="input" placeholder="z. B. Squad-Abend mit Kevin" />
       </div>
+      <div>
+        <label className="label" htmlFor="max_players">Spieler (max.)</label>
+        <input id="max_players" name="max_players" type="number" min={2} max={8} defaultValue={4} className="input" />
+      </div>
       <fieldset>
         <legend className="label">Seltenheiten</legend>
         <div className="flex flex-wrap gap-2">

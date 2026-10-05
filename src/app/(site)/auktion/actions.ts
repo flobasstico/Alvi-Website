@@ -25,6 +25,7 @@ export async function createAuction(form: FormData) {
       season_id: season.id,
       start_gold: Math.round(clampInt(form.get("start_gold"), 0, 100000, 500) / 10) * 10,
       items_per_player: clampInt(form.get("items_per_player"), 1, 10, 5),
+      max_players: clampInt(form.get("max_players"), 2, 8, 4),
       bid_seconds: clampInt(form.get("bid_seconds"), 0, 600, 0),
       no_duplicates: form.get("no_duplicates") === "on",
       rarities,

@@ -18,7 +18,7 @@ export default async function DropPage() {
   return (
     <>
       <PageTitle title="Drop-Spot-Roulette" subtitle="Zufälliger Landeort auf der aktuellen Map – plus eine Zusatzregel." />
-      <DropRoulette spots={spots ?? []} rules={rules ?? []} mapUrl={season?.map_image_url} isAdmin={isAdmin} />
+      <DropRoulette spots={spots ?? []} rules={(rules ?? []).map((r) => ({ ...r, weight: 1 }))} mapUrl={season?.map_image_url} isAdmin={isAdmin} />
     </>
   )
 }

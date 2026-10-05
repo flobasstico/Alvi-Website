@@ -2,21 +2,21 @@
 insert into public.seasons (name, is_current) values ('Aktuelle Season', true);
 
 insert into public.rules (text, category, weight) values
-  ('Nur graue Waffen', 'rad', 2),
-  ('Kein Bauen', 'rad', 2),
+  ('Nur graue Waffen', 'rad', 1),
+  ('Kein Bauen', 'rad', 1),
   ('Nur Heilung aus Fischen', 'rad', 1),
   ('Keine Schilde', 'rad', 1),
-  ('Nur eine Waffe gleichzeitig', 'rad', 2),
+  ('Nur eine Waffe gleichzeitig', 'rad', 1),
   ('Kein Sprinten', 'rad', 1),
   ('Nur Pickaxe bis zum ersten Kill', 'rad', 1),
-  ('Kein Fahrzeug', 'rad', 2),
+  ('Kein Fahrzeug', 'rad', 1),
   ('Nur Loot vom Boden', 'rad', 1),
-  ('Erste Waffe muss behalten werden', 'rad', 2),
+  ('Erste Waffe muss behalten werden', 'rad', 1),
   ('Keine Kisten öffnen', 'rad', 1),
   ('Nur Scharfschützengewehre', 'rad', 1),
   ('Erst 3 Fische fangen, dann looten', 'drop', 1),
-  ('Landen ohne Gleiter-Umweg (direkt runter)', 'drop', 2),
-  ('Erste gefundene Waffe ist die einzige', 'drop', 2),
+  ('Landen ohne Gleiter-Umweg (direkt runter)', 'drop', 1),
+  ('Erste gefundene Waffe ist die einzige', 'drop', 1),
   ('Bis zur zweiten Zone im POI bleiben', 'drop', 1),
   ('Keine Heilung bis zum ersten Kill', 'drop', 1);
 

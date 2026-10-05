@@ -17,7 +17,7 @@ export default async function RadPage() {
     <>
       <PageTitle title="Challenge-Glücksrad" subtitle="Dreh am Rad – die Regel gilt für die nächste Runde. Mehrfach drehen stapelt die Regeln." />
       {rules && rules.length >= 2 ? (
-        <Wheel rules={rules} isAdmin={isAdmin} />
+        <Wheel rules={rules.map((r) => ({ ...r, weight: 1 }))} isAdmin={isAdmin} /* alle Regeln gleich wahrscheinlich */ />
       ) : (
         <p className="panel">Mindestens zwei aktive Regeln nötig – im Admin-Bereich anlegen.</p>
       )}

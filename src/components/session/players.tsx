@@ -16,6 +16,7 @@ export function PlayersPanel({
   onJoin,
   onLeave,
   canJoin = true,
+  maxPlayers,
 }: {
   players: SessionPlayer[]
   hostId: string
@@ -28,13 +29,18 @@ export function PlayersPanel({
   onLeave: (user: string | null) => void
   /** Beitreten nur bis zu diesem Zeitpunkt möglich (z. B. vor dem Start) */
   canJoin?: boolean
+  maxPlayers?: number
 }) {
   const pageUrl = typeof window === "undefined" ? "" : location.href
+  const full = !!maxPlayers && players.length >= maxPlayers
   return (
     <div className="panel flex flex-col gap-3">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-display text-xl">Mitspieler ({players.length})</h2>
-        {!ended && canJoin && userId && !isPlayer && (
+        <h2 className="font-display text-xl">
+          Mitspieler ({players.length}
+          {maxPlayers ? `/${maxPlayers}` : ""})
+        </h2>
+        {!ended && canJoin && userId && !isPlayer && !full && (
           <button className="btn-primary ml-auto px-3 py-1 text-sm" disabled={busy} onClick={onJoin}>Mitspielen</button>
         )}
         {!ended && isPlayer && !isHost && (

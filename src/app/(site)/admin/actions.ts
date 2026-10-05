@@ -42,14 +42,7 @@ export async function addRule(form: FormData) {
   const text = str(form, "text")
   if (!text) return
   const category = str(form, "category") === "drop" ? "drop" : "rad"
-  const weight = Math.min(10, Math.max(1, Number(str(form, "weight")) || 1))
-  done((await supabase.from("rules").insert({ text, category, weight })).error)
-}
-
-export async function setRuleWeight(form: FormData) {
-  const supabase = await requireAdmin()
-  const weight = Math.min(10, Math.max(1, Number(str(form, "weight")) || 1))
-  done((await supabase.from("rules").update({ weight }).eq("id", Number(str(form, "id")))).error)
+  done((await supabase.from("rules").insert({ text, category })).error)
 }
 
 export async function addLoot(form: FormData) {

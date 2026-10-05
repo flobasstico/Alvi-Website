@@ -60,6 +60,10 @@ export default async function AuktionPage() {
                 </div>
               </div>
               <div>
+                <label className="label" htmlFor="max_players">Spieler (max.)</label>
+                <input id="max_players" name="max_players" type="number" min={2} max={8} defaultValue={4} className="input" />
+              </div>
+              <div>
                 <label className="label" htmlFor="bid_seconds">Bietzeit pro Item (Sekunden, 0 = unbegrenzt)</label>
                 <input id="bid_seconds" name="bid_seconds" type="number" min={0} max={600} defaultValue={30} className="input" />
                 <p className="mt-1 text-xs text-muted">Wer bis Ablauf nicht handelt, skippt automatisch.</p>

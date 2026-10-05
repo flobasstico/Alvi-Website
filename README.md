@@ -4,7 +4,7 @@ Website für Alvis Fortnite-Challenges: konstruieren, auswürfeln, abstimmen und
 
 | Seite | Funktion |
 |---|---|
-| `/rad` | **Challenge-Glücksrad**: gewichtete Regeln, mehrfach drehen stapelt die Regeln |
+| `/rad` | **Challenge-Glücksrad**: alle Regeln gleich wahrscheinlich, mehrfach drehen stapelt die Regeln |
 | `/loadout` | **Loadout-Würfel**: 5 Slots aus dem Loot-Pool der aktuellen Season, mit Item-Bildern. Slots sperren oder einzeln neu würfeln, Raritäts-Filter, Heilung garantiert, jedes Item nur einmal. Solo oder **Mehrspieler** (jeder würfelt sein eigenes Loadout) |
 | `/drop` | **Drop-Spot-Roulette**: zufälliger Landeort auf der Map plus Zusatzregel |
 | `/bingo` | **Bingo**: Alvis 5×5-Karte. Zuschauer holen sich eigene Karten, Felder werden live abgehakt, mit Bestenliste |
@@ -50,6 +50,8 @@ insert into public.admin_logins (twitch_login) values ('twitch_name');
 Das Repo in Vercel importieren und die Umgebungsvariablen `NEXT_PUBLIC_SUPABASE_URL` und `NEXT_PUBLIC_SUPABASE_ANON_KEY` setzen (Werte wie in `.env.example`).
 
 ## Ablauf im Stream
+
+- **Spieleranzahl**: Loot-Auktion, Regel-Eskalation und Loadout-Würfel (Mehrspieler) haben beim Eröffnen das Feld „Spieler (max.)“ (2–8, Standard 4). Sind alle Plätze belegt, kann niemand mehr beitreten.
 
 - **Rad, Loadout und Drop**: Als Admin erscheinen nach dem Wurf die Buttons „Challenge starten“ und „Für später merken“. Das Ergebnis (geschafft/gescheitert, Video-Link) trägst du unter `/admin` ein.
 - **Bingo**: Unter `/bingo` eine neue Runde starten (mind. 25 aktive Aufgaben). Zuschauer holen sich ihre Karte. Alvi hakt erledigte Aufgaben ab. „Runde beenden & werten“ zählt die Runde als geschafft, wenn Alvis Karte ein Bingo hat.

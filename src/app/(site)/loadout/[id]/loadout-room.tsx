@@ -161,6 +161,7 @@ export function LoadoutRoom({ initial, items, userId }: { initial: State; items:
         isPlayer={!!me}
         busy={busy}
         canJoin={session.status === "offen"}
+        maxPlayers={session.max_players}
         onJoin={() => call(() => supabase.rpc("loadout_join", { p_session: id }))}
         onLeave={(user) => call(() => supabase.rpc("loadout_leave", { p_session: id, p_user: user }))}
       />

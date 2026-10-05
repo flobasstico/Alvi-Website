@@ -18,6 +18,10 @@ export function CreateEscalation({ baseCount, extraCount }: { baseCount: number;
         <label className="label" htmlFor="minutes">Neue Regel alle … Minuten</label>
         <input id="minutes" name="minutes" type="number" min={0.5} max={60} step={0.5} defaultValue={4} className="input" />
       </div>
+      <div>
+        <label className="label" htmlFor="max_players">Spieler (max.)</label>
+        <input id="max_players" name="max_players" type="number" min={2} max={8} defaultValue={4} className="input" />
+      </div>
       <fieldset className="flex flex-col gap-2">
         <legend className="label">Modus</legend>
         <label className="flex items-start gap-2 text-sm">
