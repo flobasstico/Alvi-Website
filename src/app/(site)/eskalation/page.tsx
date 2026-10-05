@@ -10,7 +10,7 @@ const STATUS: Record<string, string> = { bereit: "Bereit", laeuft: "Läuft", bee
 export default async function EskalationPage() {
   const { supabase, isAdmin } = await getViewer()
   const [{ data: sessions }, { data: pool }] = await Promise.all([
-    supabase.from("escalation_sessions").select("*").order("created_at", { ascending: false }).limit(30),
+    supabase.from("escalation_sessions").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30),
     supabase.from("escalation_rules").select("kind").eq("active", true),
   ])
 

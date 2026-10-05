@@ -10,7 +10,7 @@ const STATUS: Record<string, string> = { bereit: "Bereit", laeuft: "Läuft", pau
 export default async function WinPage() {
   const { supabase, isAdmin } = await getViewer()
   const [{ data: list }, { data: games }] = await Promise.all([
-    supabase.from("win_challenges").select("*").order("created_at", { ascending: false }).limit(30),
+    supabase.from("win_challenges").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30),
     supabase.from("win_challenge_games").select("challenge_id, wins, target"),
   ])
   const sum = (id: number) => {

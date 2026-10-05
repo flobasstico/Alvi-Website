@@ -9,8 +9,8 @@ export default async function WinDetailPage({ params }: { params: Promise<{ id: 
   const { id } = await params
   const winId = Number(id)
   if (!Number.isInteger(winId)) notFound()
-  const { supabase, isAdmin } = await getViewer()
+  const { supabase, user, isAdmin } = await getViewer()
   const initial = await fetchWin(supabase, winId)
   if (!initial) notFound()
-  return <WinControl initial={initial} isAdmin={isAdmin} serverNow={Date.now()} />
+  return <WinControl initial={initial} isAdmin={isAdmin} userId={user?.id ?? null} serverNow={Date.now()} />
 }

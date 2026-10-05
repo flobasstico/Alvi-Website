@@ -19,6 +19,8 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
   const [state, setState] = useState(initial)
   const [now, setNow] = useState(serverNow)
   const [newest, setNewest] = useState<number | null>(null)
+  // Nachspiel-Runden ohne Admin werden beim Beenden gelöscht
+  const [gone, setGone] = useState(false)
   const id = initial.session.id
   const known = useRef<number | null>(null)
   const soundRef = useRef(sound)
@@ -31,7 +33,10 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
       supabase.from("escalation_players").select("*").eq("session_id", id).order("joined_at"),
       supabase.from("escalation_polls").select("*").eq("session_id", id).order("position"),
     ])
-    if (!s.data) return
+    if (!s.data) {
+      if (!s.error || s.error.code === "PGRST116") setGone(true)
+      return
+    }
     const pollIds = (polls.data ?? []).map((x) => x.id)
     const { data: counts } = pollIds.length
       ? await supabase.from("escalation_poll_counts").select("*").in("poll_id", pollIds)
@@ -103,5 +108,5 @@ export function useEscalation(initial: EscState, serverNow: number, { sound }: {
   }, [newest])
 
   const openPoll = polls.find((p) => p.status === "offen") ?? null
-  return { session, rules: visible, allRules: rules, players, polls, openPoll, now, newest, refetch, supabase }
+  return { session, rules: visible, allRules: rules, players, polls, openPoll, now, newest, refetch, supabase, gone }
 }

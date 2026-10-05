@@ -12,6 +12,7 @@ import {
   type SortKey,
 } from "@/lib/player-stats"
 import { loadPlayerStats } from "@/lib/player-stats-server"
+import { replayHref } from "@/lib/replay"
 import { rateQuip, streaks, successRate } from "@/lib/stats"
 import { createClient } from "@/lib/supabase/server"
 
@@ -198,6 +199,11 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                     <a href={c.video_url} target="_blank" rel="noreferrer" className="text-sm text-accent-2 underline">
                       Video
                     </a>
+                  )}
+                  {replayHref(c) && (
+                    <Link href={replayHref(c)!} className="text-sm text-accent-2 underline">
+                      🔁 Nachspielen
+                    </Link>
                   )}
                 </li>
               ))}

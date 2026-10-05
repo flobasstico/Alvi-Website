@@ -28,9 +28,9 @@ export type Database = {
         Relationships: []
       }
       escalation_sessions: {
-        Row: { max_players: number; challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; interval_s: number; pool_exhausted: boolean; result: string | null; started_at: string | null; status: string; title: string | null; winner_id: string | null; winner_name: string | null; mode: string; twitch_channel: string | null }
-        Insert: { max_players?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null; mode?: string; twitch_channel?: string | null }
-        Update: { max_players?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null; mode?: string; twitch_channel?: string | null }
+        Row: { official: boolean; replay_of: number | null; script: Json | null; max_players: number; challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; interval_s: number; pool_exhausted: boolean; result: string | null; started_at: string | null; status: string; title: string | null; winner_id: string | null; winner_name: string | null; mode: string; twitch_channel: string | null }
+        Insert: { official?: boolean; replay_of?: number | null; script?: Json | null; max_players?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null; mode?: string; twitch_channel?: string | null }
+        Update: { official?: boolean; replay_of?: number | null; script?: Json | null; max_players?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; interval_s?: number; pool_exhausted?: boolean; result?: string | null; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null; mode?: string; twitch_channel?: string | null }
         Relationships: Rel[]
       }
       escalation_polls: {
@@ -58,9 +58,9 @@ export type Database = {
         Relationships: Rel[]
       }
       win_challenges: {
-        Row: { challenge_id: number | null; created_at: string; duration_s: number; elapsed_s: number; ended_at: string | null; host_id: string; id: number; result: string | null; started_at: string | null; status: string; title: string | null }
-        Insert: { challenge_id?: number | null; created_at?: string; duration_s?: number; elapsed_s?: number; ended_at?: string | null; host_id?: string; id?: never; result?: string | null; started_at?: string | null; status?: string; title?: string | null }
-        Update: { challenge_id?: number | null; created_at?: string; duration_s?: number; elapsed_s?: number; ended_at?: string | null; host_id?: string; id?: never; result?: string | null; started_at?: string | null; status?: string; title?: string | null }
+        Row: { official: boolean; replay_of: number | null; challenge_id: number | null; created_at: string; duration_s: number; elapsed_s: number; ended_at: string | null; host_id: string; id: number; result: string | null; started_at: string | null; status: string; title: string | null }
+        Insert: { official?: boolean; replay_of?: number | null; challenge_id?: number | null; created_at?: string; duration_s?: number; elapsed_s?: number; ended_at?: string | null; host_id?: string; id?: never; result?: string | null; started_at?: string | null; status?: string; title?: string | null }
+        Update: { official?: boolean; replay_of?: number | null; challenge_id?: number | null; created_at?: string; duration_s?: number; elapsed_s?: number; ended_at?: string | null; host_id?: string; id?: never; result?: string | null; started_at?: string | null; status?: string; title?: string | null }
         Relationships: Rel[]
       }
       win_challenge_games: {
@@ -215,6 +215,8 @@ export type Database = {
       win_add: { Args: { p_delta: number; p_game: number }; Returns: number }
       win_finish: { Args: { p_id: number }; Returns: string }
       win_timer: { Args: { p_action: string; p_id: number }; Returns: undefined }
+      escalation_replay: { Args: { p_source: number }; Returns: number }
+      win_replay: { Args: { p_source: number }; Returns: number }
       card_has_bingo: { Args: { p_game_id: number; p_task_ids: number[] }; Returns: boolean }
       is_admin: { Args: never; Returns: boolean }
     }

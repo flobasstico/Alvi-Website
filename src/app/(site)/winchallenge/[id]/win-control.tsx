@@ -2,7 +2,9 @@
 
 import clsx from "clsx"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
+import { GoneNote, ReplayButton, UnofficialNote } from "@/components/replay-button"
 import { CopyButton } from "@/components/session/players"
 import { useWin } from "@/components/winchallenge/use-win"
 import { WinBoard } from "@/components/winchallenge/win-board"
@@ -10,13 +12,28 @@ import { celebrate } from "@/lib/confetti"
 import { progress, remainingSeconds, type WinState } from "@/lib/winchallenge"
 import { deleteWinChallenge } from "../actions"
 
-export function WinControl({ initial, isAdmin, serverNow }: { initial: WinState; isAdmin: boolean; serverNow: number }) {
+export function WinControl({
+  initial,
+  isAdmin,
+  userId,
+  serverNow,
+}: {
+  initial: WinState
+  isAdmin: boolean
+  userId: string | null
+  serverNow: number
+}) {
   const { state, setState, now, refetch, supabase } = useWin(initial, serverNow)
+  const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [newName, setNewName] = useState("")
   const [newTarget, setNewTarget] = useState(1)
-  const { challenge: c, games } = state!
+  const c = state?.challenge ?? initial.challenge
+  const games = state?.games ?? []
+  // Steuern dürfen Admins und der Host (Zuschauer bei ihrer Nachspiel-Runde)
+  const canControl = isAdmin || (!!userId && userId === c.host_id)
+  const back = c.replay_of ? `/winchallenge/${c.replay_of}` : "/winchallenge"
   const p = progress(games)
   const remaining = remainingSeconds(c, now)
   const ended = c.status === "beendet"
@@ -36,7 +53,7 @@ export function WinControl({ initial, isAdmin, serverNow }: { initial: WinState;
   useEffect(() => {
     if (p.complete && !wasComplete.current) {
       celebrate()
-      if (isAdmin && c.status === "laeuft") void run(() => supabase.rpc("win_timer", { p_id: c.id, p_action: "pause" }))
+      if (canControl && c.status === "laeuft") void run(() => supabase.rpc("win_timer", { p_id: c.id, p_action: "pause" }))
     }
     wasComplete.current = p.complete
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -51,16 +68,20 @@ export function WinControl({ initial, isAdmin, serverNow }: { initial: WinState;
   const overlayUrl = typeof window === "undefined" ? "" : `${location.origin}/overlay/winchallenge`
   const overlayIdUrl = typeof window === "undefined" ? "" : `${location.origin}/overlay/winchallenge/${c.id}`
 
+  // Nachspiel-Runde ohne Admin wurde beim Beenden gelöscht
+  if (!state) return <GoneNote back={back} />
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
         <Link href="/winchallenge" className="text-sm text-muted hover:text-white">← Winchallenges</Link>
       </div>
       {error && <p className="rounded-xl border border-fail bg-fail/10 px-3 py-2 text-sm text-fail">{error}</p>}
+      {!c.official && <UnofficialNote />}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
         <div className="flex flex-col gap-4">
-          {isAdmin && !ended ? (
+          {canControl && !ended ? (
             <>
               <section className="panel flex flex-col gap-3">
                 <h2 className="font-display text-2xl">Timer</h2>
@@ -145,31 +166,41 @@ export function WinControl({ initial, isAdmin, serverNow }: { initial: WinState;
               <button
                 className="btn-danger self-start px-6 py-3 font-display text-xl"
                 disabled={busy}
-                onClick={() =>
-                  confirm(p.complete ? "Winchallenge als GESCHAFFT werten?" : "Noch nicht alle Siege – Winchallenge als GESCHEITERT werten?") &&
-                  run(() => supabase.rpc("win_finish", { p_id: c.id }))
-                }
+                onClick={async () => {
+                  const question = !c.official
+                    ? "Winchallenge beenden? Nachspiel-Runden ohne Admin werden nicht gespeichert."
+                    : p.complete
+                      ? "Winchallenge als GESCHAFFT werten?"
+                      : "Noch nicht alle Siege – Winchallenge als GESCHEITERT werten?"
+                  if (!confirm(question)) return
+                  await run(() => supabase.rpc("win_finish", { p_id: c.id }))
+                  if (!c.official) router.push(back)
+                }}
               >
                 ⏹ Beenden &amp; werten
               </button>
             </>
           ) : (
-            <section className="panel text-muted">
-              {ended ? (c.result === "geschafft" ? "🏆 Geschafft! Das Ergebnis steht in den Stats." : "Gescheitert – das Ergebnis steht in den Stats.") : "Live-Ansicht – gesteuert wird von Alvi."}
+            <section className="panel flex flex-col items-center gap-3 text-center text-muted">
+              {ended ? (c.result === "geschafft" ? "🏆 Geschafft! Das Ergebnis steht in den Stats." : "Gescheitert – das Ergebnis steht in den Stats.") : "Live-Ansicht – gesteuert vom Host."}
+              {ended && c.official && <ReplayButton kind="winchallenge" sourceId={c.id} loggedIn={!!userId} />}
             </section>
           )}
 
-          {isAdmin && (
+          {canControl && (
             <section className="panel flex flex-col gap-2">
               <h2 className="font-display text-xl">OBS-Overlay</h2>
               <p className="text-sm text-muted">
-                Als <b>Browserquelle</b> einfügen (z. B. 480 × 600), Hintergrund transparent. Der erste Link zeigt immer die neueste Winchallenge – in OBS nur einmal einrichten.
+                Als <b>Browserquelle</b> einfügen (z. B. 480 × 600), Hintergrund transparent.
+                {c.official && " Der erste Link zeigt immer die neueste Winchallenge – in OBS nur einmal einrichten."}
               </p>
-              <div className="flex gap-2">
-                <input readOnly value={overlayUrl} className="input font-mono text-xs" onFocus={(e) => e.target.select()} />
-                <CopyButton text={overlayUrl} />
-              </div>
-              <details className="text-xs text-muted">
+              {c.official && (
+                <div className="flex gap-2">
+                  <input readOnly value={overlayUrl} className="input font-mono text-xs" onFocus={(e) => e.target.select()} />
+                  <CopyButton text={overlayUrl} />
+                </div>
+              )}
+              <details className="text-xs text-muted" open={!c.official}>
                 <summary className="cursor-pointer">Link nur für diese Winchallenge</summary>
                 <div className="mt-2 flex gap-2">
                   <input readOnly value={overlayIdUrl} className="input font-mono text-xs" onFocus={(e) => e.target.select()} />
@@ -195,7 +226,7 @@ export function WinControl({ initial, isAdmin, serverNow }: { initial: WinState;
         </div>
 
         <div className="self-start lg:sticky lg:top-20">
-          <WinBoard state={state!} now={now} />
+          <WinBoard state={state} now={now} />
         </div>
       </div>
     </div>

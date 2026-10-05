@@ -1,14 +1,34 @@
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
+import { ReplayBanner } from "@/components/replay-banner"
+import { dropCircles } from "@/lib/replay"
 import { getCurrentSeason } from "@/lib/season"
 import { getViewer } from "@/lib/supabase/server"
+import { DropReplay } from "./drop-replay"
 import { DropRoulette } from "./drop-roulette"
 
 export const metadata = { title: "Drop-Spot-Roulette" }
 
-export default async function DropPage() {
+export default async function DropPage({ searchParams }: { searchParams: Promise<{ nachspielen?: string }> }) {
+  const { nachspielen } = await searchParams
   const { supabase, isAdmin } = await getViewer()
   const season = await getCurrentSeason(supabase)
+  const replayId = Number(nachspielen)
+  const { data: replay } = Number.isInteger(replayId) && replayId > 0
+    ? await supabase.from("challenges").select("*").eq("id", replayId).eq("source", "drop").maybeSingle()
+    : { data: null }
+  if (replay) {
+    const { circles, rule } = dropCircles(replay.config)
+    return (
+      <>
+        <PageTitle title="Drop-Spot-Roulette" subtitle="Alvis Landebereich – exakt wie im Original." />
+        <ReplayBanner title={replay.title} status={({ geschafft: "geschafft ✅", gescheitert: "gescheitert ❌" } as Record<string, string>)[replay.status] ?? replay.status} back="/drop">
+          <p className="text-sm">Landet im markierten Kreis{circles.length > 1 ? " – jeder in seinem eigenen" : ""}.</p>
+        </ReplayBanner>
+        <DropReplay circles={circles} rule={rule} mapUrl={season?.map_image_url} />
+      </>
+    )
+  }
   const [{ data: spots }, { data: rules }] = await Promise.all([
     season
       ? supabase.from("drop_spots").select("id, name, x, y").eq("season_id", season.id).eq("active", true)

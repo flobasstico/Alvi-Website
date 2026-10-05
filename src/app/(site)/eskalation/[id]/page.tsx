@@ -13,5 +13,9 @@ export default async function EscalationPage({ params }: { params: Promise<{ id:
     supabase.from("escalation_rules").select("id, text").eq("active", true).eq("kind", "grund").order("id"),
   ])
   if (!initial) notFound()
-  return <EscalationRoom initial={initial} pool={pool ?? []} userId={user?.id ?? null} serverNow={Date.now()} />
+  // Nachspiel-Runde: die Grundregel steht fest und muss auf dem Rad sein (auch wenn sie nicht mehr im Pool ist)
+  const scripted = Array.isArray(initial.session.script) ? (initial.session.script[0] as { rule_id: number | null; text: string } | undefined) : undefined
+  const wheelPool =
+    scripted && !(pool ?? []).some((r) => r.id === scripted.rule_id) ? [...(pool ?? []), { id: scripted.rule_id ?? -1, text: scripted.text }] : (pool ?? [])
+  return <EscalationRoom initial={initial} pool={wheelPool} userId={user?.id ?? null} serverNow={Date.now()} />
 }

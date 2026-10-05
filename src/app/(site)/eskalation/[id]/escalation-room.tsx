@@ -2,8 +2,10 @@
 
 import { useMotionValue } from "framer-motion"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useMemo, useState } from "react"
 import { ChatBridge } from "@/components/escalation/chat-bridge"
+import { GoneNote, ReplayButton, UnofficialNote } from "@/components/replay-button"
 import { RuleBoard } from "@/components/escalation/rule-board"
 import { useEscalation, type EscState } from "@/components/escalation/use-escalation"
 import { buildSlices, spinTo, WheelSvg } from "@/components/wheel-svg"
@@ -26,7 +28,8 @@ export function EscalationRoom({
   serverNow: number
 }) {
   const [sound, setSound] = useState(false)
-  const { session, rules, allRules, players, polls, openPoll, now, newest, refetch, supabase } = useEscalation(initial, serverNow, { sound })
+  const { session, rules, allRules, players, polls, openPoll, now, newest, refetch, supabase, gone } = useEscalation(initial, serverNow, { sound })
+  const router = useRouter()
   const isHost = !!userId && userId === session.host_id
   const isPlayer = !!userId && players.some((p) => p.user_id === userId)
   const [busy, setBusy] = useState(false)
@@ -71,7 +74,7 @@ export function EscalationRoom({
       setSpinning(false)
       return
     }
-    const slice = slices.find((s) => s.item.id === data) ?? slices[0]
+    const slice = slices.find((s) => s.item.id === (data ?? -1)) ?? slices[0]
     await spinTo(rotation, slice)
     setSpinning(false)
     celebrate()
@@ -81,6 +84,9 @@ export function EscalationRoom({
   const overlayUrl = typeof window === "undefined" ? "" : `${location.origin}/overlay/eskalation/${session.id}`
   const needsBase = session.status === "bereit" && allRules.length === 0
   const showWheel = isHost && (needsBase || spinning)
+
+  const back = session.replay_of ? `/eskalation/${session.replay_of}` : "/eskalation"
+  if (gone) return <GoneNote back={back} />
 
   return (
     <div className="flex flex-col gap-6">
@@ -92,6 +98,7 @@ export function EscalationRoom({
         </button>
       </div>
       {error && <p className="rounded-xl border border-fail bg-fail/10 px-3 py-2 text-sm text-fail">{error}</p>}
+      {!session.official && <UnofficialNote />}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_440px]">
         <div className="flex flex-col gap-4">
@@ -109,9 +116,16 @@ export function EscalationRoom({
               status={session.status}
               busy={busy}
               onStart={() => call(() => supabase.rpc("escalation_start", { p_session: session.id }))}
-              onFinish={(winner) => call(() => supabase.rpc("escalation_finish", { p_session: session.id, p_winner: winner }))}
+              onFinish={async (winner) => {
+                await call(() => supabase.rpc("escalation_finish", { p_session: session.id, p_winner: winner }))
+                if (!session.official) router.push(back)
+              }}
               players={players}
               winnerName={session.winner_name}
+              official={session.official}
+              replay={
+                session.official ? <ReplayButton kind="eskalation" sourceId={session.id} loggedIn={!!userId} /> : null
+              }
             />
           )}
 
@@ -159,6 +173,8 @@ function HostPanel({
   onFinish,
   players,
   winnerName,
+  official,
+  replay,
 }: {
   isHost: boolean
   status: string
@@ -167,6 +183,8 @@ function HostPanel({
   onFinish: (winner: string | null) => void
   players: EscPlayer[]
   winnerName: string | null
+  official: boolean
+  replay: React.ReactNode
 }) {
   const [choosing, setChoosing] = useState(false)
 
@@ -178,6 +196,7 @@ function HostPanel({
           {winnerName ? "Das Ergebnis ist in den Stats eingetragen." : "Ohne Wertung beendet."}{" "}
           <Link href="/eskalation" className="text-accent-2 underline">Neue Runde</Link>
         </p>
+        <div className="mt-2">{replay}</div>
       </div>
     )
   }
@@ -203,7 +222,13 @@ function HostPanel({
           <p className="text-xs text-muted">Danach kommt automatisch nach jedem Timer-Ablauf eine neue Regel dazu.</p>
         </>
       )}
-      <button className="btn-danger px-8 py-3 font-display text-2xl" onClick={() => setChoosing(true)} disabled={busy}>
+      <button
+        className="btn-danger px-8 py-3 font-display text-2xl"
+        onClick={() =>
+          official ? setChoosing(true) : confirm("Runde beenden? Nachspiel-Runden ohne Admin werden nicht gespeichert.") && onFinish(null)
+        }
+        disabled={busy}
+      >
         ⏹ ENDE
       </button>
     </div>
