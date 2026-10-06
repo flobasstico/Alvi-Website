@@ -75,6 +75,18 @@ export type Database = {
         Update: { approved?: boolean; author_id?: string; author_name?: string | null; created_at?: string; folder?: string; id?: never; tasks?: string[]; title?: string }
         Relationships: Rel[]
       }
+      viewer_rounds: {
+        Row: { game: string; id: number; played_at: string }
+        Insert: { game: string; id?: never; played_at?: string }
+        Update: { game?: string; id?: never; played_at?: string }
+        Relationships: Rel[]
+      }
+      viewer_round_players: {
+        Row: { placement: number | null; points: number | null; round_id: number; user_id: string; won: boolean }
+        Insert: { placement?: number | null; points?: number | null; round_id: number; user_id: string; won?: boolean }
+        Update: { placement?: number | null; points?: number | null; round_id?: number; user_id?: string; won?: boolean }
+        Relationships: Rel[]
+      }
       suggestions: {
         Row: { author_id: string; body: string; created_at: string; id: number }
         Insert: { author_id?: string; body: string; created_at?: string; id?: never }
@@ -208,9 +220,9 @@ export type Database = {
         Relationships: Rel[]
       }
       profiles: {
-        Row: { avatar_url: string | null; banned: boolean; created_at: string; display_name: string | null; id: string; role: string; twitch_login: string | null }
-        Insert: { avatar_url?: string | null; banned?: boolean; created_at?: string; display_name?: string | null; id: string; role?: string; twitch_login?: string | null }
-        Update: { avatar_url?: string | null; banned?: boolean; created_at?: string; display_name?: string | null; id?: string; role?: string; twitch_login?: string | null }
+        Row: { avatar_url: string | null; banned: boolean; created_at: string; display_name: string | null; id: string; is_public: boolean; role: string; twitch_login: string | null }
+        Insert: { avatar_url?: string | null; banned?: boolean; created_at?: string; display_name?: string | null; id: string; is_public?: boolean; role?: string; twitch_login?: string | null }
+        Update: { avatar_url?: string | null; banned?: boolean; created_at?: string; display_name?: string | null; id?: string; is_public?: boolean; role?: string; twitch_login?: string | null }
         Relationships: []
       }
       rules: {
@@ -288,6 +300,7 @@ export type Database = {
       olympic_spin: { Args: { p_id: number }; Returns: number }
       olympic_decide: { Args: { p_game: number; p_winner: string }; Returns: undefined }
       olympic_finish: { Args: { p_id: number }; Returns: string }
+      set_profile_public: { Args: { p_public: boolean }; Returns: undefined }
       suggestion_create: { Args: { p_body: string }; Returns: number }
       suggestion_vote: { Args: { p_id: number; p_value: number }; Returns: undefined }
       bingo_card_create: { Args: { p_tasks: string[]; p_title: string }; Returns: number }

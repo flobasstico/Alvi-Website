@@ -1,13 +1,14 @@
 import type { createClient } from "@/lib/supabase/server"
-import { soloParticipations, type Participation } from "./player-stats"
+import { soloParticipations, type Participation, type PlayerGame } from "./player-stats"
 
 type Client = Awaited<ReturnType<typeof createClient>>
 
 const ALVI_FALLBACK = "main-creator"
 
 /** Alle Teilnahmen an abgeschlossenen Mehrspieler-Runden und Alvis Solo-Challenges + Namen der Personen */
-export async function loadPlayerStats(supabase: Client) {
-  const [esc, escPlayers, lo, loPlayers, auc, aucPlayers, bingo, cards, oly, olyPlayers, challenges, linked, setting] = await Promise.all([
+/** keepUser: diese Person auch bei privatem Profil mitzählen (für die eigene Profilseite) */
+export async function loadPlayerStats(supabase: Client, keepUser?: string) {
+  const [esc, escPlayers, lo, loPlayers, auc, aucPlayers, bingo, cards, oly, olyPlayers, challenges, linked, setting, vRounds, vPlayers] = await Promise.all([
     supabase.from("escalation_sessions").select("id, winner_id").eq("status", "beendet").eq("official", true),
     supabase.from("escalation_players").select("session_id, user_id"),
     supabase.from("loadout_sessions").select("id, winner_id").eq("status", "beendet").eq("official", true),
@@ -28,6 +29,9 @@ export async function loadPlayerStats(supabase: Client) {
       supabase.from("olympics").select("challenge_id").not("challenge_id", "is", null),
     ]),
     supabase.from("site_settings").select("value").eq("key", "main_creator_login").maybeSingle(),
+    // Zuschauer-Runden (ohne Admin): Ergebnisse werden beim Beenden festgehalten
+    supabase.from("viewer_rounds").select("id, game"),
+    supabase.from("viewer_round_players").select("round_id, user_id, won, points"),
   ])
   const parts: Participation[] = []
   const winners = new Map((esc.data ?? []).map((s) => [s.id, s.winner_id]))
@@ -63,11 +67,21 @@ export async function loadPlayerStats(supabase: Client) {
   const linkedIds = new Set(linked.flatMap((r) => (r.data ?? []).map((x) => x.challenge_id as number)))
   parts.push(...soloParticipations(challenges.data ?? [], linkedIds, alviId))
 
-  const ids = [...new Set(parts.map((p) => p.userId))].filter((id) => id !== ALVI_FALLBACK)
+  const gameOf = new Map((vRounds.data ?? []).map((r) => [r.id, r.game as PlayerGame]))
+  const viewerParts: Participation[] = (vPlayers.data ?? [])
+    .filter((p) => gameOf.has(p.round_id))
+    .map((p) => ({ userId: p.user_id, game: gameOf.get(p.round_id)!, round: `zs-${p.round_id}`, won: p.won, points: p.points }))
+
+  const ids = [...new Set([...parts, ...viewerParts].map((p) => p.userId))].filter((id) => id !== ALVI_FALLBACK)
   const { data: profiles } = ids.length
-    ? await supabase.from("profiles").select("id, display_name, twitch_login, avatar_url").in("id", ids)
+    ? await supabase.from("profiles").select("id, display_name, twitch_login, avatar_url, is_public").in("id", ids)
     : { data: [] }
-  const names = new Map((profiles ?? []).map((p) => [p.id, { name: p.display_name ?? p.twitch_login ?? "Unbekannt", avatar: p.avatar_url }]))
-  if (!names.has(alviId)) names.set(alviId, { name: "Alvi", avatar: null })
-  return { parts, names, alviId }
+  // Private Profile tauchen in keiner Tabelle auf
+  const hidden = new Set((profiles ?? []).filter((p) => !p.is_public && p.id !== keepUser).map((p) => p.id))
+  const names = new Map(
+    (profiles ?? []).map((p) => [p.id, { name: p.display_name ?? p.twitch_login ?? "Unbekannt", avatar: p.avatar_url, login: p.twitch_login }]),
+  )
+  if (!names.has(alviId)) names.set(alviId, { name: "Alvi", avatar: null, login: null })
+  const visible = (p: Participation) => !hidden.has(p.userId)
+  return { parts: parts.filter(visible), viewerParts: viewerParts.filter(visible), names, alviId }
 }

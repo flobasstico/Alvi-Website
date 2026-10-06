@@ -19,6 +19,9 @@ import { getViewer } from "@/lib/supabase/server"
 
 export const metadata = { title: "Challenge-Stats" }
 
+/** Spiele, die Zuschauer ohne Admin spielen können */
+const VIEWER_GAMES: readonly PlayerGame[] = ["eskalation", "loadout", "auktion", "bingo", "olympiade", "winchallenge"]
+
 const STATUS_CLASS: Record<Status, string> = {
   geplant: "bg-panel-2 text-muted",
   aktiv: "bg-accent-2/20 text-accent-2",
@@ -32,7 +35,7 @@ const SORT_KEYS: SortKey[] = ["siege", "teilnahmen", "quote", "punkte", "schnitt
 export default async function StatsPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams
   const { quelle, status } = params
-  const ansicht = params.ansicht === "alvi" ? "alvi" : "spieler"
+  const ansicht = params.ansicht === "alvi" ? "alvi" : params.ansicht === "zuschauer" ? "zuschauer" : "spieler"
   const spiel = PLAYER_GAMES.includes(params.spiel as PlayerGame) ? (params.spiel as PlayerGame) : undefined
   const sort = SORT_KEYS.includes(params.sort as SortKey) ? (params.sort as SortKey) : "siege"
   const { supabase, isAdmin } = await getViewer()
@@ -41,7 +44,13 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
     supabase.from("challenges").select("*").order("created_at", { ascending: false }),
     loadPlayerStats(supabase),
   ])
-  const playerRows = sortPlayers(aggregatePlayers(players.parts, players.names, spiel), sort)
+  const viewer = ansicht === "zuschauer"
+  const playerRows = sortPlayers(aggregatePlayers(viewer ? players.viewerParts : players.parts, players.names, spiel), sort)
+  // Häufigkeit: gespielte Zuschauer-Runden je Spiel
+  const viewerRounds = new Map<PlayerGame, Set<string>>()
+  for (const p of players.viewerParts) viewerRounds.set(p.game, (viewerRounds.get(p.game) ?? new Set()).add(p.round))
+  const frequency = [...viewerRounds].map(([game, rounds]) => ({ game, count: rounds.size })).sort((a, b) => b.count - a.count)
+  const maxFreq = Math.max(1, ...frequency.map((f) => f.count))
   const showPoints = !spiel || POINT_GAMES.includes(spiel)
 
   const total = stats?.find((s) => s.source === null)
@@ -51,7 +60,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
 
   const filterLink = (key: keyof Params, value?: string) => {
     const p = new URLSearchParams()
-    const next: Params = { ansicht: ansicht === "alvi" ? "alvi" : undefined, quelle, status, spiel, sort: sort === "siege" ? undefined : sort, [key]: value }
+    const next: Params = { ansicht: ansicht === "spieler" ? undefined : ansicht, quelle, status, spiel, sort: sort === "siege" ? undefined : sort, [key]: value }
     for (const k of ["ansicht", "spiel", "sort", "quelle", "status"] as const) if (next[k]) p.set(k, next[k]!)
     const q = p.toString()
     return q ? `/stats?${q}` : "/stats"
@@ -68,10 +77,34 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
         <Link href="/stats?ansicht=alvi" className={clsx("btn px-4 py-2", ansicht === "alvi" ? "bg-accent text-black" : "btn-secondary")}>
           🎮 Alvi
         </Link>
+        <Link href="/stats?ansicht=zuschauer" className={clsx("btn px-4 py-2", ansicht === "zuschauer" ? "bg-accent text-black" : "btn-secondary")}>
+          🧑‍🤝‍🧑 Zuschauer
+        </Link>
       </nav>
 
-      {ansicht === "spieler" ? (
+      {ansicht !== "alvi" ? (
         <>
+          {viewer ? (
+            <section className="panel mb-6">
+              <h2 className="mb-1 font-display text-2xl">Zuschauer-Runden</h2>
+              <p className="mb-3 text-sm text-muted">
+                Runden, die Zuschauer ohne Admin gespielt haben. Die Runden selbst werden nach dem Beenden gelöscht – Sieger, Punkte und Platzierungen
+                bleiben hier erhalten. Sie zählen getrennt von den offiziellen Stats.
+              </p>
+              <div className="flex flex-col gap-2">
+                {frequency.map((f) => (
+                  <div key={f.game} className="grid grid-cols-[120px_1fr_48px] items-center gap-3 text-sm sm:grid-cols-[160px_1fr_60px]">
+                    <span className="font-semibold">{PLAYER_GAME_LABEL[f.game]}</span>
+                    <div className="h-4 overflow-hidden rounded-full bg-panel-2">
+                      <div className="h-full rounded-full bg-accent-2" style={{ width: `${(f.count / maxFreq) * 100}%` }} />
+                    </div>
+                    <span className="text-right tabular-nums">{f.count}×</span>
+                  </div>
+                ))}
+                {!frequency.length && <p className="text-muted">Noch keine Zuschauer-Runden gespielt.</p>}
+              </div>
+            </section>
+          ) : (
           <section className="panel mb-6 flex flex-wrap items-center gap-x-6 gap-y-3">
             <div>
               <div className="text-xs font-bold uppercase text-muted">🎮 Alvi</div>
@@ -91,16 +124,18 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
               Alle Details →
             </Link>
           </section>
+          )}
 
           <section id="spieler" className="panel mb-6">
-            <h2 className="mb-1 font-display text-2xl">Spieler</h2>
+            <h2 className="mb-1 font-display text-2xl">{viewer ? "Zuschauer-Rangliste" : "Spieler"}</h2>
             <p className="mb-3 text-sm text-muted">
-              Alle, die bei Challenges mitgespielt haben (abgeschlossene Runden). Alvis Solo-Challenges zählen mit – geschafft = Sieg. Punkte gibt es bei
-              Bingo und Olympiade.
+              {viewer
+                ? "Alle, die in Zuschauer-Runden mitgespielt haben. Punkte gibt es bei Bingo und Olympiade. Private Profile werden nicht angezeigt."
+                : "Alle, die bei offiziellen Challenges mitgespielt haben (abgeschlossene Runden). Alvis Solo-Challenges zählen mit – geschafft = Sieg. Punkte gibt es bei Bingo und Olympiade. Private Profile werden nicht angezeigt."}
             </p>
             <div className="mb-3 flex flex-wrap gap-1 text-sm">
               <FilterChip href={filterLink("spiel")} active={!spiel}>Alle Spiele</FilterChip>
-              {PLAYER_GAMES.map((g) => (
+              {PLAYER_GAMES.filter((g) => !viewer || VIEWER_GAMES.includes(g)).map((g) => (
                 <FilterChip key={g} href={filterLink("spiel", g)} active={spiel === g}>{PLAYER_GAME_LABEL[g]}</FilterChip>
               ))}
             </div>
@@ -130,7 +165,13 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                             ) : (
                               <span className="flex h-6 w-6 items-center justify-center rounded-full bg-line text-xs">👤</span>
                             )}
-                            {r.name}
+                            {players.names.get(r.userId)?.login ? (
+                              <Link href={`/profil/${players.names.get(r.userId)!.login}`} className="hover:text-accent hover:underline">
+                                {r.name}
+                              </Link>
+                            ) : (
+                              r.name
+                            )}
                             {r.userId === players.alviId && <span className="chip px-1.5 py-0 text-[10px]">Streamer</span>}
                           </span>
                         </td>

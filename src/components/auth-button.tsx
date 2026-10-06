@@ -1,9 +1,10 @@
 "use client"
 
+import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 
-export function AuthButton({ name, avatar }: { name: string | null; avatar: string | null }) {
+export function AuthButton({ name, avatar, login }: { name: string | null; avatar: string | null; login?: string | null }) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -25,11 +26,14 @@ export function AuthButton({ name, avatar }: { name: string | null; avatar: stri
 
   return (
     <div className="flex items-center gap-2">
-      {avatar && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={avatar} alt="" className="h-8 w-8 rounded-full border border-line" />
-      )}
-      <span className="hidden text-sm font-semibold sm:inline">{name}</span>
+      {/* Bild und Name führen zum eigenen Profil */}
+      <Link href={login ? `/profil/${login}` : "/"} className="flex items-center gap-2 hover:text-accent" title="Mein Profil">
+        {avatar && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img src={avatar} alt="" className="h-8 w-8 rounded-full border border-line" />
+        )}
+        <span className="hidden text-sm font-semibold sm:inline">{name}</span>
+      </Link>
       <button
         className="btn-secondary px-3 py-1 text-sm"
         onClick={async () => {
