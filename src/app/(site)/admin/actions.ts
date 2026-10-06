@@ -308,43 +308,6 @@ export async function setBanned(form: FormData) {
 }
 
 // ---------- Creator-Liga ----------
-/** „3, 2, 1“ → [3, 2, 1] (nur ganze Zahlen 0–100, höchstens 10 Plätze) */
-function parseScheme(text: string) {
-  const nums = text
-    .split(/[,;\s]+/)
-    .filter(Boolean)
-    .map((n) => Math.round(Number(n)))
-  if (!nums.length || nums.length > 10 || nums.some((n) => !Number.isFinite(n) || n < 0 || n > 100)) {
-    throw new Error("Punkteschema z. B. „3, 2, 1“ (bis zu 10 Plätze, Werte 0–100)")
-  }
-  return nums
-}
-
-export async function addLeagueSeason(form: FormData) {
-  const supabase = await requireAdmin()
-  const name = str(form, "name")
-  if (!name) return
-  const scheme = parseScheme(str(form, "scheme") || "3,2,1")
-  await supabase.from("league_seasons").update({ is_current: false }).eq("is_current", true)
-  done((await supabase.from("league_seasons").insert({ name, points_scheme: scheme, is_current: true })).error)
-}
-
-export async function setCurrentLeagueSeason(form: FormData) {
-  const supabase = await requireAdmin()
-  await supabase.from("league_seasons").update({ is_current: false }).eq("is_current", true)
-  done((await supabase.from("league_seasons").update({ is_current: true }).eq("id", Number(str(form, "id")))).error)
-}
-
-export async function updateLeagueSeason(form: FormData) {
-  const supabase = await requireAdmin()
-  const name = str(form, "name")
-  if (!name) throw new Error("Bitte einen Namen eingeben")
-  done(
-    (await supabase.from("league_seasons").update({ name, points_scheme: parseScheme(str(form, "scheme")) }).eq("id", Number(str(form, "id"))))
-      .error,
-  )
-}
-
 /** Creator anlegen/ändern; optional per Twitch-Name mit einem Profil verknüpfen */
 export async function saveCreator(form: FormData) {
   const supabase = await requireAdmin()

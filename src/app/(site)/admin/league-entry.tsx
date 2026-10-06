@@ -3,7 +3,7 @@
 import clsx from "clsx"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
-import { isYoutubeUrl, type Creator, type LeagueChallenge, type LeagueResult, type LeagueSeason } from "@/lib/league"
+import { isYoutubeUrl, type Creator, type LeagueChallenge, type LeagueResult } from "@/lib/league"
 import { createClient } from "@/lib/supabase/client"
 
 type Entry = { on: boolean; won: boolean; points: string; placement: string }
@@ -11,20 +11,15 @@ const EMPTY: Entry = { on: false, won: false, points: "", placement: "" }
 
 /** Liga-Challenge eintragen oder bearbeiten: Teilnehmer ankreuzen, dann Sieger bzw. Punkte */
 export function LeagueEntry({
-  seasons,
   creators,
   categories,
   edit,
 }: {
-  seasons: LeagueSeason[]
   creators: Creator[]
   categories: string[]
   edit: { challenge: LeagueChallenge; results: LeagueResult[] } | null
 }) {
   const router = useRouter()
-  const current = seasons.find((s) => s.is_current) ?? seasons[0]
-  // Neue Challenges landen immer in der aktuellen Liga-Season, bearbeitete bleiben in ihrer
-  const season = edit?.challenge.season_id ?? current?.id ?? 0
   const [title, setTitle] = useState(edit?.challenge.title ?? "")
   const [video, setVideo] = useState(edit?.challenge.youtube_url ?? "")
   const [category, setCategory] = useState(edit?.challenge.category ?? "")
@@ -57,7 +52,6 @@ export function LeagueEntry({
     })
     const { error } = await createClient().rpc("league_save_challenge", {
       p_id: edit?.challenge.id ?? null,
-      p_season: season,
       p_title: title,
       p_category: category || null,
       p_played_at: date || null,
@@ -71,7 +65,6 @@ export function LeagueEntry({
     router.refresh()
   }
 
-  if (!seasons.length) return <p className="text-muted">Zuerst rechts eine Liga-Season anlegen.</p>
   if (creators.length < 2) return <p className="text-muted">Zuerst mindestens zwei Creator anlegen.</p>
 
   return (

@@ -153,12 +153,6 @@ export type Database = {
         Update: { data?: Json; kind?: string; updated_at?: string; user_id?: string }
         Relationships: Rel[]
       }
-      league_seasons: {
-        Row: { created_at: string; id: number; is_current: boolean; name: string; points_scheme: number[] }
-        Insert: { created_at?: string; id?: never; is_current?: boolean; name: string; points_scheme?: number[] }
-        Update: { created_at?: string; id?: never; is_current?: boolean; name?: string; points_scheme?: number[] }
-        Relationships: Rel[]
-      }
       creators: {
         Row: { avatar_url: string | null; created_at: string; id: number; name: string; profile_id: string | null; youtube_url: string | null }
         Insert: { avatar_url?: string | null; created_at?: string; id?: never; name: string; profile_id?: string | null; youtube_url?: string | null }
@@ -166,9 +160,9 @@ export type Database = {
         Relationships: Rel[]
       }
       league_challenges: {
-        Row: { category: string | null; created_at: string; id: number; played_at: string; scoring: string; season_id: number; title: string; youtube_url: string }
-        Insert: { category?: string | null; created_at?: string; id?: never; played_at?: string; scoring: string; season_id: number; title: string; youtube_url: string }
-        Update: { category?: string | null; created_at?: string; id?: never; played_at?: string; scoring?: string; season_id?: number; title?: string; youtube_url?: string }
+        Row: { category: string | null; created_at: string; id: number; played_at: string; scoring: string; title: string; youtube_url: string }
+        Insert: { category?: string | null; created_at?: string; id?: never; played_at?: string; scoring: string; title: string; youtube_url: string }
+        Update: { category?: string | null; created_at?: string; id?: never; played_at?: string; scoring?: string; title?: string; youtube_url?: string }
         Relationships: Rel[]
       }
       league_results: {
@@ -269,7 +263,7 @@ export type Database = {
       admin_approve_card: { Args: { p_card: number }; Returns: undefined }
       join_code: { Args: { p_kind: string; p_id: number }; Returns: string | null }
       league_save_challenge: {
-        Args: { p_id: number | null; p_season: number; p_title: string; p_category: string | null; p_played_at: string | null; p_scoring: string; p_video: string; p_results: Json }
+        Args: { p_id: number | null; p_title: string; p_category: string | null; p_played_at: string | null; p_scoring: string; p_video: string; p_results: Json }
         Returns: number
       }
       admin_delete_round: { Args: { p_kind: string; p_id: number }; Returns: undefined }

@@ -22,12 +22,9 @@ import {
   addManualChallenge,
   addRule,
   addSeason,
-  addLeagueSeason,
   deleteCreator,
   deleteRow,
   saveCreator,
-  setCurrentLeagueSeason,
-  updateLeagueSeason,
   setBanned,
   moveEscalationRule,
   setCurrentSeason,
@@ -582,8 +579,7 @@ async function UsersTab({ q }: { q: string }) {
 
 async function LeagueTab({ edit }: { edit: number | null }) {
   const { supabase } = await getViewer()
-  const [{ data: seasons }, { data: creators }, { data: cats }, editing] = await Promise.all([
-    supabase.from("league_seasons").select("*").order("created_at", { ascending: false }),
+  const [{ data: creators }, { data: cats }, editing] = await Promise.all([
     supabase.from("creators").select("*").order("name"),
     supabase.from("league_challenges").select("category").not("category", "is", null),
     edit
@@ -614,7 +610,7 @@ async function LeagueTab({ edit }: { edit: number | null }) {
             </>
           )}
         </p>
-        <LeagueEntry key={edit ?? "neu"} seasons={seasons ?? []} creators={creators ?? []} categories={categories} edit={editData} />
+        <LeagueEntry key={edit ?? "neu"} creators={creators ?? []} categories={categories} edit={editData} />
       </section>
 
       <aside className="flex flex-col gap-6">
@@ -678,35 +674,6 @@ async function LeagueTab({ edit }: { edit: number | null }) {
           </form>
         </section>
 
-        <section className="panel">
-          <h2 className="mb-2 font-display text-xl">Liga-Seasons</h2>
-          <ul className="divide-y divide-line">
-            {seasons?.map((s) => (
-              <li key={s.id} className="flex flex-col gap-2 py-2">
-                <form action={updateLeagueSeason} className="flex flex-wrap items-center gap-2">
-                  <input type="hidden" name="id" value={s.id} />
-                  <input name="name" defaultValue={s.name} className="input w-36 flex-1 py-1 text-sm" required />
-                  <input name="scheme" defaultValue={s.points_scheme.join(", ")} className="input w-24 py-1 text-sm" title="Ligapunkte für Platz 1, 2, 3 …" />
-                  <button className="btn-secondary px-2 py-1 text-xs">Speichern</button>
-                </form>
-                {s.is_current ? (
-                  <span className="chip self-start border-win text-win">Aktuell</span>
-                ) : (
-                  <form action={setCurrentLeagueSeason}>
-                    <input type="hidden" name="id" value={s.id} />
-                    <button className="btn-secondary px-2 py-1 text-xs">Als aktuell setzen</button>
-                  </form>
-                )}
-              </li>
-            ))}
-          </ul>
-          <form action={addLeagueSeason} className="mt-3 flex flex-col gap-2">
-            <input name="name" className="input" placeholder="z. B. Season 2" required />
-            <input name="scheme" className="input" defaultValue="3, 2, 1" title="Ligapunkte für Platz 1, 2, 3 …" />
-            <p className="text-xs text-muted">Punkteschema: Ligapunkte für Platz 1, 2, 3 … (weitere Plätze 0).</p>
-            <button className="btn-primary">Anlegen & aktivieren</button>
-          </form>
-        </section>
       </aside>
     </div>
   )

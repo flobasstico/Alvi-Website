@@ -6,7 +6,7 @@ import { LineChart } from "@/components/league/line-chart"
 import { PieChart } from "@/components/league/pie-chart"
 import { YoutubeButton } from "@/components/league/youtube-button"
 import { PageTitle } from "@/components/page-title"
-import { creatorColors, leagueTable, pointsTimeline, winShare, type LeagueSort } from "@/lib/league"
+import { creatorColors, leaguePoints, leagueTable, pointsTimeline, winShare, type LeagueSort } from "@/lib/league"
 import { loadLeague } from "@/lib/league-server"
 import { getViewer } from "@/lib/supabase/server"
 
@@ -14,29 +14,18 @@ export const metadata = { title: "Creator-Liga" }
 
 const SORTS: LeagueSort[] = ["ligapunkte", "siege", "teilnahmen", "quote", "punkte"]
 
-export default async function LigaPage({ searchParams }: { searchParams: Promise<{ season?: string; sort?: string }> }) {
+export default async function LigaPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
   const params = await searchParams
   const sort = SORTS.includes(params.sort as LeagueSort) ? (params.sort as LeagueSort) : "ligapunkte"
   const { supabase, isAdmin } = await getViewer()
-  const league = await loadLeague(supabase, params.season)
-  const { seasons, selected, forever, creators, challenges, results, schemeOf } = league
+  const { creators, challenges, results } = await loadLeague(supabase)
 
-  const rows = leagueTable(challenges, results, creators, schemeOf, sort)
+  const rows = leagueTable(challenges, results, creators, sort)
   const colors = creatorColors(creators)
   const names = new Map(creators.map((c) => [c.id, c.name]))
-  const timeline = pointsTimeline(challenges, results, rows, schemeOf)
-  const scheme = selected ? schemeOf(selected.id) : null
+  const timeline = pointsTimeline(challenges, results, rows)
 
-  // Links behalten Season bzw. Sortierung bei, je nachdem was geändert wird
-  const link = (next: { season?: string; sort?: string }) => {
-    const p = new URLSearchParams()
-    const s = "season" in next ? next.season : params.season
-    const o = "sort" in next ? next.sort : sort === "ligapunkte" ? undefined : sort
-    if (s) p.set("season", s)
-    if (o) p.set("sort", o)
-    const q = p.toString()
-    return q ? `/liga?${q}` : "/liga"
-  }
+  const link = (next: { sort?: string }) => (next.sort ? `/liga?sort=${next.sort}` : "/liga")
 
   return (
     <>
@@ -45,36 +34,18 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
         subtitle="Challenges, die Alvi und seine Kollegen außerhalb der Website spielen – mit Ligapunkten, Siegen und Videos. Wer ist der Beste?"
       />
 
-      <nav className="mb-6 flex flex-wrap gap-1 text-sm">
-        {seasons.map((s) => (
-          <Link
-            key={s.id}
-            href={link({ season: String(s.id) })}
-            className={clsx("rounded-lg px-3 py-1.5 font-semibold", !forever && selected?.id === s.id ? "bg-accent text-black" : "bg-panel-2 text-muted hover:text-white")}
-          >
-            {s.name}
-            {s.is_current && " ●"}
-          </Link>
-        ))}
-        <Link
-          href={link({ season: "ewig" })}
-          className={clsx("rounded-lg px-3 py-1.5 font-semibold", forever ? "bg-accent text-black" : "bg-panel-2 text-muted hover:text-white")}
-        >
-          Ewige Tabelle
-        </Link>
-        {isAdmin && (
-          <Link href="/admin?tab=liga" className="btn-secondary ml-auto px-3 py-1.5 text-sm">
+      {isAdmin && (
+        <div className="mb-6 flex justify-end">
+          <Link href="/admin?tab=liga" className="btn-secondary px-3 py-1.5 text-sm">
             + Challenge eintragen
           </Link>
-        )}
-      </nav>
+        </div>
+      )}
 
       <section className="panel mb-6">
-        <h2 className="mb-1 font-display text-2xl">Tabelle</h2>
+        <h2 className="mb-1 font-display text-2xl">Ewige Tabelle</h2>
         <p className="mb-3 text-sm text-muted">
-          Ligapunkte nach Platzierung je Challenge
-          {scheme ? `: ${scheme.map((p, i) => `${i + 1}. Platz ${p}`).join(", ")}` : " (Punkteschema der jeweiligen Season)"}. Bei Punkte-Challenges zählt
-          die Rangfolge der Punkte.
+          Ligapunkte nach Platzierung je Challenge: 1. Platz 3, 2. Platz 2, 3. Platz 1. Bei Punkte-Challenges zählt die Rangfolge der Punkte.
         </p>
         {rows.length ? (
           <div className="-mx-2 overflow-x-auto px-2">
@@ -122,7 +93,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
             </table>
           </div>
         ) : (
-          <p className="text-muted">Noch keine Challenges in {forever ? "der Liga" : "dieser Season"}.</p>
+          <p className="text-muted">Noch keine Challenges eingetragen.</p>
         )}
       </section>
 
@@ -180,7 +151,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: colors.get(r.creator_id) }} />
                       <span className="font-semibold">{r.won ? "🏆 " : `${r.placement}. `}{names.get(r.creator_id) ?? "?"}</span>
                       {r.points != null && <span className="text-muted">{r.points} P.</span>}
-                      <span className="text-xs text-accent">+{schemeOf(c.season_id)[r.placement - 1] ?? 0}</span>
+                      <span className="text-xs text-accent">+{leaguePoints(r.placement)}</span>
                     </li>
                   ))}
                 </ol>

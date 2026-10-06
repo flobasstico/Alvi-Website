@@ -1,10 +1,8 @@
 /** Creator-Liga: Ligapunkte, Tabelle, Diagramm-Daten und Kopf-an-Kopf (rein, ohne Datenbank) */
 
-export type LeagueSeason = { id: number; name: string; is_current: boolean; points_scheme: number[] }
 export type Creator = { id: number; name: string; avatar_url: string | null; youtube_url?: string | null }
 export type LeagueChallenge = {
   id: number
-  season_id: number
   title: string
   category: string | null
   played_at: string
@@ -16,8 +14,8 @@ export type LeagueResult = { challenge_id: number; creator_id: number; placement
 export const DEFAULT_SCHEME = [3, 2, 1]
 export const CREATOR_COLORS = ["#facc15", "#22d3ee", "#f472b6", "#4ade80", "#fb923c", "#a78bfa", "#f87171", "#60a5fa", "#e5e7eb", "#2dd4bf"]
 
-/** Ligapunkte für eine Platzierung (Platz 1 = scheme[0] …, danach 0) */
-export const leaguePoints = (placement: number, scheme: readonly number[] = DEFAULT_SCHEME) => scheme[placement - 1] ?? 0
+/** Ligapunkte für eine Platzierung: 1. Platz 3, 2. Platz 2, 3. Platz 1, danach 0 */
+export const leaguePoints = (placement: number) => DEFAULT_SCHEME[placement - 1] ?? 0
 
 /** Feste Farbe je Creator (nach Anlage-Reihenfolge), überall gleich */
 export function creatorColors(creators: readonly Creator[]) {
@@ -38,29 +36,25 @@ export type LeagueRow = {
 }
 export type LeagueSort = "ligapunkte" | "siege" | "teilnahmen" | "quote" | "punkte"
 
-type SchemeOf = (seasonId: number) => readonly number[]
-
 export function leagueTable(
   challenges: readonly LeagueChallenge[],
   results: readonly LeagueResult[],
   creators: readonly Creator[],
-  schemeOf: SchemeOf,
   sort: LeagueSort = "ligapunkte",
 ): LeagueRow[] {
   const colors = creatorColors(creators)
   const byId = new Map(creators.map((c) => [c.id, c]))
-  const season = new Map(challenges.map((c) => [c.id, c.season_id]))
+  const known = new Set(challenges.map((c) => c.id))
   const rows = new Map<number, LeagueRow>()
   for (const r of results) {
-    const s = season.get(r.challenge_id)
     const c = byId.get(r.creator_id)
-    if (s == null || !c) continue
+    if (!known.has(r.challenge_id) || !c) continue
     const row =
       rows.get(c.id) ??
       ({ creatorId: c.id, name: c.name, avatar: c.avatar_url, color: colors.get(c.id)!, youtube: c.youtube_url ?? null, leaguePoints: 0, wins: 0, rounds: 0, winRate: 0, points: null } as LeagueRow)
     row.rounds++
     if (r.won) row.wins++
-    row.leaguePoints += leaguePoints(r.placement, schemeOf(s))
+    row.leaguePoints += leaguePoints(r.placement)
     if (r.points != null) row.points = (row.points ?? 0) + r.points
     rows.set(c.id, row)
   }
@@ -100,7 +94,6 @@ export function pointsTimeline(
   challenges: readonly LeagueChallenge[],
   results: readonly LeagueResult[],
   rows: readonly LeagueRow[],
-  schemeOf: SchemeOf,
   top = 6,
 ): Timeline {
   const ordered = [...challenges].sort((a, b) => a.played_at.localeCompare(b.played_at) || a.id - b.id)
@@ -111,7 +104,7 @@ export function pointsTimeline(
   const values = new Map(shown.map((r) => [r.creatorId, [] as number[]]))
   for (const ch of ordered) {
     for (const r of byChallenge.get(ch.id) ?? []) {
-      if (totals.has(r.creator_id)) totals.set(r.creator_id, totals.get(r.creator_id)! + leaguePoints(r.placement, schemeOf(ch.season_id)))
+      if (totals.has(r.creator_id)) totals.set(r.creator_id, totals.get(r.creator_id)! + leaguePoints(r.placement))
     }
     for (const [id, list] of values) list.push(totals.get(id)!)
   }
