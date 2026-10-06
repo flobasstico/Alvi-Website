@@ -23,7 +23,8 @@ export function LeagueEntry({
 }) {
   const router = useRouter()
   const current = seasons.find((s) => s.is_current) ?? seasons[0]
-  const [season, setSeason] = useState(edit?.challenge.season_id ?? current?.id ?? 0)
+  // Neue Challenges landen immer in der aktuellen Liga-Season, bearbeitete bleiben in ihrer
+  const season = edit?.challenge.season_id ?? current?.id ?? 0
   const [title, setTitle] = useState(edit?.challenge.title ?? "")
   const [video, setVideo] = useState(edit?.challenge.youtube_url ?? "")
   const [category, setCategory] = useState(edit?.challenge.category ?? "")
@@ -101,21 +102,9 @@ export function LeagueEntry({
             ))}
           </datalist>
         </div>
-        <div className="grid grid-cols-2 gap-2">
-          <div>
-            <label className="label" htmlFor="lg-date">Datum</label>
-            <input id="lg-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
-          </div>
-          <div>
-            <label className="label" htmlFor="lg-season">Season</label>
-            <select id="lg-season" value={season} onChange={(e) => setSeason(Number(e.target.value))} className="input">
-              {seasons.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div>
+          <label className="label" htmlFor="lg-date">Datum</label>
+          <input id="lg-date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input" />
         </div>
       </div>
 
