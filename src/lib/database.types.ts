@@ -160,9 +160,9 @@ export type Database = {
         Relationships: Rel[]
       }
       creators: {
-        Row: { avatar_url: string | null; created_at: string; id: number; name: string; profile_id: string | null }
-        Insert: { avatar_url?: string | null; created_at?: string; id?: never; name: string; profile_id?: string | null }
-        Update: { avatar_url?: string | null; created_at?: string; id?: never; name?: string; profile_id?: string | null }
+        Row: { avatar_url: string | null; created_at: string; id: number; name: string; profile_id: string | null; youtube_url: string | null }
+        Insert: { avatar_url?: string | null; created_at?: string; id?: never; name: string; profile_id?: string | null; youtube_url?: string | null }
+        Update: { avatar_url?: string | null; created_at?: string; id?: never; name?: string; profile_id?: string | null; youtube_url?: string | null }
         Relationships: Rel[]
       }
       league_challenges: {

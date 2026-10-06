@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { ITEM_TYPES, RARITIES, STATUSES, type Status } from "@/lib/constants"
 import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
+import { isYoutubeUrl } from "@/lib/league"
 import { CHANNELS, iconKey, invalidChannelLine, PAGE_KEYS, safeUrl } from "@/lib/site"
 import { requireAdmin } from "@/lib/supabase/server"
 
@@ -350,6 +351,8 @@ export async function saveCreator(form: FormData) {
   if (!name) throw new Error("Bitte einen Namen eingeben")
   const avatar = str(form, "avatar_url")
   if (avatar && !safeUrl(avatar)) throw new Error("Bild-Link muss mit https:// beginnen")
+  const youtube = str(form, "youtube_url")
+  if (!isYoutubeUrl(youtube)) throw new Error("Bitte den YouTube-Kanal angeben (https://youtube.com/@…)")
   const login = str(form, "twitch").replace(/^@/, "").toLowerCase()
   let profileId: string | null = null
   if (login) {
@@ -357,7 +360,7 @@ export async function saveCreator(form: FormData) {
     if (!data) throw new Error(`Kein Profil mit dem Twitch-Namen „${login}“ – die Person muss sich einmal eingeloggt haben`)
     profileId = data.id
   }
-  const row = { name, avatar_url: avatar || null, profile_id: profileId }
+  const row = { name, avatar_url: avatar || null, youtube_url: youtube, profile_id: profileId }
   const id = Number(str(form, "id"))
   const { error } = id ? await supabase.from("creators").update(row).eq("id", id) : await supabase.from("creators").insert(row)
   if (error?.code === "23505") throw new Error(`„${name}“ gibt es schon`)

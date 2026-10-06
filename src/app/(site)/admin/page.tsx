@@ -633,10 +633,19 @@ async function LeagueTab({ edit }: { edit: number | null }) {
                     )}
                     <span className="flex-1 font-semibold">{c.name}</span>
                     {c.profile_id && <span className="text-xs text-muted">@{loginOf.get(c.profile_id)}</span>}
+                    {!c.youtube_url && <span className="text-xs text-fail">YouTube fehlt</span>}
                   </summary>
                   <form action={saveCreator} className="mt-2 flex flex-col gap-2">
                     <input type="hidden" name="id" value={c.id} />
                     <input name="name" defaultValue={c.name} className="input py-1 text-sm" required maxLength={40} />
+                    <input
+                      name="youtube_url"
+                      defaultValue={c.youtube_url ?? ""}
+                      className="input py-1 text-sm"
+                      placeholder="YouTube-Kanal (https://youtube.com/@…)"
+                      required
+                      pattern="https://(www\.|m\.)?(youtube\.com|youtu\.be)/.+"
+                    />
                     <input name="avatar_url" defaultValue={c.avatar_url ?? ""} className="input py-1 text-sm" placeholder="Bild-Link (optional)" />
                     <input name="twitch" defaultValue={c.profile_id ? (loginOf.get(c.profile_id) ?? "") : ""} className="input py-1 text-sm" placeholder="Twitch-Name verknüpfen (optional)" />
                     <div className="flex gap-2">
@@ -654,6 +663,14 @@ async function LeagueTab({ edit }: { edit: number | null }) {
           </ul>
           <form action={saveCreator} className="mt-3 flex flex-col gap-2">
             <input name="name" className="input" placeholder="Name, z. B. Kevin" required maxLength={40} />
+            <input
+              name="youtube_url"
+              className="input"
+              placeholder="YouTube-Kanal (https://youtube.com/@…)"
+              required
+              pattern="https://(www\.|m\.)?(youtube\.com|youtu\.be)/.+"
+              title="Link zum YouTube-Kanal, z. B. https://youtube.com/@alvivb"
+            />
             <input name="avatar_url" className="input" placeholder="Bild-Link (optional)" />
             <input name="twitch" className="input" placeholder="Twitch-Name verknüpfen (optional)" />
             <button className="btn-primary">+ Creator anlegen</button>

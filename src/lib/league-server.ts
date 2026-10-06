@@ -7,7 +7,7 @@ type Client = Awaited<ReturnType<typeof createClient>>
 export async function loadLeague(supabase: Client, season: string | undefined) {
   const [{ data: seasons }, { data: creators }] = await Promise.all([
     supabase.from("league_seasons").select("id, name, is_current, points_scheme").order("created_at", { ascending: false }),
-    supabase.from("creators").select("id, name, avatar_url").order("id"),
+    supabase.from("creators").select("id, name, avatar_url, youtube_url").order("id"),
   ])
   const all = (seasons ?? []) as LeagueSeason[]
   const forever = season === "ewig"

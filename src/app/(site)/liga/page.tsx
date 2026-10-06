@@ -102,7 +102,13 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                         ) : (
                           <span className="h-3 w-3 rounded-full" style={{ background: r.color }} />
                         )}
-                        {r.name}
+                        {r.youtube ? (
+                          <YoutubeButton url={r.youtube} title={r.name} kind="kanal">
+                            {r.name}
+                          </YoutubeButton>
+                        ) : (
+                          r.name
+                        )}
                       </span>
                     </td>
                     <td className="py-2 text-right font-display text-lg tabular-nums text-accent">{r.leaguePoints}</td>

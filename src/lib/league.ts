@@ -1,7 +1,7 @@
 /** Creator-Liga: Ligapunkte, Tabelle, Diagramm-Daten und Kopf-an-Kopf (rein, ohne Datenbank) */
 
 export type LeagueSeason = { id: number; name: string; is_current: boolean; points_scheme: number[] }
-export type Creator = { id: number; name: string; avatar_url: string | null }
+export type Creator = { id: number; name: string; avatar_url: string | null; youtube_url?: string | null }
 export type LeagueChallenge = {
   id: number
   season_id: number
@@ -29,6 +29,7 @@ export type LeagueRow = {
   name: string
   avatar: string | null
   color: string
+  youtube: string | null
   leaguePoints: number
   wins: number
   rounds: number
@@ -56,7 +57,7 @@ export function leagueTable(
     if (s == null || !c) continue
     const row =
       rows.get(c.id) ??
-      ({ creatorId: c.id, name: c.name, avatar: c.avatar_url, color: colors.get(c.id)!, leaguePoints: 0, wins: 0, rounds: 0, winRate: 0, points: null } as LeagueRow)
+      ({ creatorId: c.id, name: c.name, avatar: c.avatar_url, color: colors.get(c.id)!, youtube: c.youtube_url ?? null, leaguePoints: 0, wins: 0, rounds: 0, winRate: 0, points: null } as LeagueRow)
     row.rounds++
     if (r.won) row.wins++
     row.leaguePoints += leaguePoints(r.placement, schemeOf(s))
