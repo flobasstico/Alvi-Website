@@ -1,6 +1,7 @@
 import Link from "next/link"
 import { ChannelLinks } from "@/components/channel-links"
-import { HeroHighlights } from "@/components/hero-highlights"
+import { Suspense } from "react"
+import { HeroHighlights, HeroHighlightsSkeleton } from "@/components/hero-highlights"
 import { BingoIcon, GoldBarsIcon, LeagueIcon, MapIcon, WheelIcon } from "@/components/tile-icons"
 import { leagueTable } from "@/lib/league"
 import { loadLeague } from "@/lib/league-server"
@@ -25,22 +26,11 @@ const TOOLS = [
 
 export default async function Home() {
   const supabase = await createClient()
-  const [{ data: active }, settings, season, league, players, { data: total }] = await Promise.all([
+  const [{ data: active }, settings, season] = await Promise.all([
     supabase.from("challenges").select("id, title").eq("status", "aktiv").order("played_at", { ascending: false }).limit(3),
     loadSiteSettings(supabase),
     getCurrentSeason(supabase),
-    loadLeague(supabase),
-    loadPlayerStats(supabase),
-    supabase.from("challenge_stats").select("won, finished").is("source", null).maybeSingle(),
   ])
-  // Vorschau in der großen Kachel: Liga-Podest und Stats
-  const podium = leagueTable(league.challenges, league.results, league.creators)
-    .slice(0, 3)
-    .map((r) => ({ id: r.creatorId, name: r.name, avatar: r.avatar, value: r.leaguePoints, color: r.color }))
-  const topPlayers = sortPlayers(aggregatePlayers(players.parts, players.names), "siege")
-    .filter((r) => r.wins > 0)
-    .slice(0, 3)
-    .map((r) => ({ id: r.userId, name: r.name, avatar: r.avatar, value: r.wins }))
   // Bild-Icons statt Emojis; Drop-Spot zeigt die hochgeladene Karte der aktuellen Season
   const icons: Record<string, React.ReactNode> = {
     "/rad": <WheelIcon />,
@@ -65,13 +55,10 @@ export default async function Home() {
         )}
         {/* Fortnite-Creator-Code: am Handy unter den Icons, ab Tablet unten rechts in der Ecke */}
         <CreatorCode className="mt-5 sm:hidden" />
-        <HeroHighlights
-          league={podium}
-          challenges={league.challenges.length}
-          rate={successRate(total?.won ?? 0, total?.finished ?? 0)}
-          finished={total?.finished ?? 0}
-          players={topPlayers}
-        />
+        {/* Liga und Stats laden nach, damit die Startseite sofort erscheint */}
+        <Suspense fallback={<HeroHighlightsSkeleton />}>
+          <Highlights />
+        </Suspense>
         {/* Unten: kleiner Link zu den Minispielen (links), Creator Code (rechts, ab Tablet) */}
         <div className="mt-5 flex flex-col items-center gap-2 px-1 sm:flex-row sm:justify-between">
           <Link href="/minispiele" className="rounded-full border border-line bg-bg/50 px-3 py-1 text-sm text-muted hover:border-accent hover:text-accent">
@@ -110,5 +97,31 @@ function CreatorCode({ className }: { className: string }) {
     <p className={`text-sm text-muted ${className}`}>
       Creator Code: <span className="font-display text-base tracking-wide text-accent">Alvivb</span>
     </p>
+  )
+}
+
+/** Vorschau in der großen Kachel: Liga-Podest und Stats (aufwendigere Abfragen, darum gestreamt) */
+async function Highlights() {
+  const supabase = await createClient()
+  const [league, players, { data: total }] = await Promise.all([
+    loadLeague(supabase),
+    loadPlayerStats(supabase),
+    supabase.from("challenge_stats").select("won, finished").is("source", null).maybeSingle(),
+  ])
+  const podium = leagueTable(league.challenges, league.results, league.creators)
+    .slice(0, 3)
+    .map((r) => ({ id: r.creatorId, name: r.name, avatar: r.avatar, value: r.leaguePoints, color: r.color }))
+  const topPlayers = sortPlayers(aggregatePlayers(players.parts, players.names), "siege")
+    .filter((r) => r.wins > 0)
+    .slice(0, 3)
+    .map((r) => ({ id: r.userId, name: r.name, avatar: r.avatar, value: r.wins }))
+  return (
+    <HeroHighlights
+      league={podium}
+      challenges={league.challenges.length}
+      rate={successRate(total?.won ?? 0, total?.finished ?? 0)}
+      finished={total?.finished ?? 0}
+      players={topPlayers}
+    />
   )
 }

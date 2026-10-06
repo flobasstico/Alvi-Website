@@ -179,7 +179,7 @@ export function StormRun({ onFinish }: { onFinish: (score: number) => void }) {
           ctx.fill()
         } else {
           ctx.save()
-          ctx.translate(i.x, i.y + Math.sin(t * 6 + i.x) * 2)
+          ctx.translate(i.x, i.y)
           ctx.rotate(Math.PI / 4)
           ctx.fillRect(-6, -6, 12, 12)
           ctx.restore()

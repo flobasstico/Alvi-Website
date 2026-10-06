@@ -143,3 +143,14 @@ function RateRing({ rate }: { rate: number }) {
     </svg>
   )
 }
+
+/** Platzhalter, solange Liga und Stats laden (gleiche Größe wie die Karten) */
+export function HeroHighlightsSkeleton() {
+  return (
+    <div className="mx-auto mt-8 grid max-w-4xl gap-4 sm:grid-cols-2" aria-hidden>
+      {[0, 1].map((i) => (
+        <div key={i} className="h-[280px] animate-pulse rounded-2xl border border-line bg-bg/50" />
+      ))}
+    </div>
+  )
+}
