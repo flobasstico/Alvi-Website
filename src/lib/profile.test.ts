@@ -20,5 +20,7 @@ describe("Zuschauerprofil", () => {
     const b = badges({ ...none, rounds: 3, wins: 1, suggestions: 1, watchMinutes: 6000 })
     expect(b.filter((x) => x.earned).map((x) => x.key)).toEqual(["erste-runde", "erster-sieg", "ideengeber", "treue-seele"])
     expect(b[0].earned && !b[b.length - 1].earned).toBe(true)
+    const m = badges({ ...none, minigames: [{ best: 300, rank_alltime: 1, top_week: true, beat_alvi: false }] })
+    expect(m.filter((x) => x.earned).map((x) => x.key)).toEqual(["minispieler", "highscore", "top-woche"])
   })
 })

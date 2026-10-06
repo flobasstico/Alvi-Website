@@ -87,6 +87,12 @@ export type Database = {
         Update: { placement?: number | null; points?: number | null; round_id?: number; user_id?: string; won?: boolean }
         Relationships: Rel[]
       }
+      minigame_runs: {
+        Row: { finished_at: string | null; game: string; id: number; score: number | null; started_at: string; user_id: string }
+        Insert: { finished_at?: string | null; game: string; id?: never; score?: number | null; started_at?: string; user_id?: string }
+        Update: { finished_at?: string | null; game?: string; id?: never; score?: number | null; started_at?: string; user_id?: string }
+        Relationships: Rel[]
+      }
       suggestions: {
         Row: { author_id: string; body: string; created_at: string; id: number }
         Insert: { author_id?: string; body: string; created_at?: string; id?: never }
@@ -301,6 +307,17 @@ export type Database = {
       olympic_decide: { Args: { p_game: number; p_winner: string }; Returns: undefined }
       olympic_finish: { Args: { p_id: number }; Returns: string }
       set_profile_public: { Args: { p_public: boolean }; Returns: undefined }
+      minigame_start: { Args: { p_game: string }; Returns: number }
+      minigame_submit: { Args: { p_run: number; p_score: number }; Returns: boolean }
+      minigame_board: {
+        Args: { p_game: string; p_period?: string; p_limit?: number }
+        Returns: { run_id: number; user_id: string; name: string | null; login: string | null; avatar: string | null; score: number; achieved_at: string; is_alvi: boolean }[]
+      }
+      minigame_alvi_best: { Args: { p_game: string }; Returns: number | null }
+      minigame_profile: {
+        Args: { p_user: string }
+        Returns: { game: string; best: number; plays: number; rank_alltime: number; top_week: boolean; beat_alvi: boolean }[]
+      }
       suggestion_create: { Args: { p_body: string }; Returns: number }
       suggestion_vote: { Args: { p_id: number; p_value: number }; Returns: undefined }
       bingo_card_create: { Args: { p_tasks: string[]; p_title: string }; Returns: number }

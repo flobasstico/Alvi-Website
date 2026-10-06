@@ -58,6 +58,7 @@ export const NAV = [
   { href: "/drop", label: "Drop-Spot" },
   { href: "/winchallenge", label: "Winchallenge" },
   { href: "/olympiade", label: "Olympiade" },
+  { href: "/minispiele", label: "Minispiele" },
   { href: "/liga", label: "Creator-Liga" },
   { href: "/stats", label: "Stats" },
   { href: "/ranglisten", label: "Ranglisten" },

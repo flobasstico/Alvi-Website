@@ -1,6 +1,7 @@
 import clsx from "clsx"
 import Link from "next/link"
 import { notFound } from "next/navigation"
+import { MINIGAMES } from "@/lib/minigames"
 import { PLAYER_GAME_LABEL } from "@/lib/player-stats"
 import { loadPlayerStats } from "@/lib/player-stats-server"
 import { badges, gameLines, totals } from "@/lib/profile"
@@ -37,11 +38,12 @@ export default async function ProfilPage({ params }: { params: Promise<{ login: 
   }
 
   const { data: setting } = await supabase.from("site_settings").select("value").eq("key", "main_creator_login").maybeSingle()
-  const [stats, { data: suggestions }, { count: cards }, se] = await Promise.all([
+  const [stats, { data: suggestions }, { count: cards }, se, { data: mini }] = await Promise.all([
     loadPlayerStats(supabase, profile.id),
     supabase.from("suggestions").select("id").eq("author_id", profile.id),
     supabase.from("bingo_card_templates").select("id", { count: "exact", head: true }).eq("author_id", profile.id).eq("approved", true),
     seChannelId(setting?.value?.trim() || "alvivb").then((id) => (id && profile.twitch_login ? seUser(id, profile.twitch_login) : null)),
+    supabase.rpc("minigame_profile", { p_user: profile.id }),
   ])
   const ids = (suggestions ?? []).map((s) => s.id)
   const { data: votes } = ids.length ? await supabase.from("suggestion_votes").select("suggestion_id, value").in("suggestion_id", ids) : { data: [] }
@@ -65,6 +67,7 @@ export default async function ProfilPage({ params }: { params: Promise<{ login: 
     bestSuggestionLikes: Math.max(0, ...likesPer.values()),
     cards: cards ?? 0,
     watchMinutes: se?.watchtime ?? null,
+    minigames: mini ?? [],
   })
   const earned = list.filter((b) => b.earned).length
 
@@ -155,6 +158,33 @@ export default async function ProfilPage({ params }: { params: Promise<{ login: 
           </div>
         </section>
       </div>
+
+      <section className="panel mb-6">
+        <h2 className="mb-3 font-display text-2xl">Minispiele</h2>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {MINIGAMES.map((g) => {
+            const m = (mini ?? []).find((x) => x.game === g.key)
+            return (
+              <Link key={g.key} href={`/minispiele/${g.key}`} className="rounded-xl border border-line bg-bg/40 p-3 hover:border-accent">
+                <div className="font-bold">
+                  {g.emoji} {g.title}
+                </div>
+                {m ? (
+                  <Numbers
+                    items={[
+                      ["Bestwert", m.best.toLocaleString("de-DE")],
+                      ["Rang", profile.is_public ? `#${m.rank_alltime}` : "–"],
+                      ["Runden", m.plays],
+                    ]}
+                  />
+                ) : (
+                  <p className="text-sm text-muted">Noch nicht gespielt.</p>
+                )}
+              </Link>
+            )
+          })}
+        </div>
+      </section>
 
       <section className="panel">
         <h2 className="mb-3 font-display text-2xl">

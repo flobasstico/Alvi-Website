@@ -31,11 +31,14 @@ export type BadgeInput = {
   bestSuggestionLikes: number
   cards: number
   watchMinutes: number | null
+  /** Minispiele: je Spiel Bestwert, Rang (ewig), in den Top 10 der Woche, Alvi geschlagen */
+  minigames?: readonly { best: number; rank_alltime: number; top_week: boolean; beat_alvi: boolean }[]
 }
 export type Badge = { key: string; emoji: string; title: string; text: string; earned: boolean }
 
 /** Alle Abzeichen, freigeschaltete zuerst */
 export function badges(i: BadgeInput): Badge[] {
+  const mg = i.minigames ?? []
   const list: Badge[] = [
     { key: "erste-runde", emoji: "🎮", title: "Mitspieler", text: "Erste Runde gespielt", earned: i.rounds >= 1 },
     { key: "stammspieler", emoji: "🔁", title: "Stammspieler", text: "25 Runden gespielt", earned: i.rounds >= 25 },
@@ -49,6 +52,10 @@ export function badges(i: BadgeInput): Badge[] {
     { key: "kartenbauer", emoji: "🃏", title: "Kartenbauer", text: "Eine Bingo-Karte erstellt", earned: i.cards >= 1 },
     { key: "treue-seele", emoji: "⏱️", title: "Treue Seele", text: "100 Stunden Watchtime", earned: (i.watchMinutes ?? 0) >= 6000 },
     { key: "urgestein", emoji: "🗿", title: "Urgestein", text: "1.000 Stunden Watchtime", earned: (i.watchMinutes ?? 0) >= 60000 },
+    { key: "minispieler", emoji: "🕹️", title: "Minispieler", text: "Ein Minispiel gespielt", earned: !!mg.length },
+    { key: "highscore", emoji: "🚀", title: "Highscore geknackt", text: "Platz 1 in einem Minispiel", earned: mg.some((m) => m.rank_alltime === 1) },
+    { key: "top-woche", emoji: "📅", title: "Top 10 der Woche", text: "In den Wochen-Top-10 eines Minispiels", earned: mg.some((m) => m.top_week) },
+    { key: "alvi-geschlagen", emoji: "😈", title: "Alvi geschlagen", text: "Alvis Bestwert in einem Minispiel übertroffen", earned: mg.some((m) => m.beat_alvi) },
   ]
   return [...list.filter((b) => b.earned), ...list.filter((b) => !b.earned)]
 }

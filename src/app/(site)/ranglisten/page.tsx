@@ -1,7 +1,18 @@
 import clsx from "clsx"
 import Link from "next/link"
+import { Leaderboard } from "@/components/minigames/leaderboard"
 import { PageTitle } from "@/components/page-title"
-import { formatWatchtime, PAGE_SIZE, rankEntries, seChannelId, seLeaderboard, seUser, type SeBoard, type SeUser } from "@/lib/streamelements"
+import { isMinigame, MINIGAMES } from "@/lib/minigames"
+import {
+  formatWatchtime,
+  PAGE_SIZE,
+  rankEntries,
+  seChannelId,
+  seLeaderboard,
+  seUser,
+  type SeBoard,
+  type SeUser,
+} from "@/lib/streamelements"
 import { getViewer } from "@/lib/supabase/server"
 
 export const metadata = { title: "Community-Ranglisten" }
@@ -16,19 +27,21 @@ type Params = { tab?: string; seite?: string; suche?: string }
 
 export default async function RanglistenPage({ searchParams }: { searchParams: Promise<Params> }) {
   const params = await searchParams
+  // Minispiel-Bestenlisten laufen über die eigene Datenbank, der Rest über StreamElements
+  const mini = isMinigame(params.tab) ? params.tab : null
   const board = BOARDS.find((b) => b.key === params.tab) ?? BOARDS[0]
   const page = Math.min(Math.max(1, Number(params.seite) || 1), 1000)
   const search = (params.suche ?? "").trim().slice(0, 30)
 
-  const { supabase, profile } = await getViewer()
+  const { supabase, user, profile, isAdmin } = await getViewer()
   const { data: setting } = await supabase.from("site_settings").select("value").eq("key", "main_creator_login").maybeSingle()
   const channel = setting?.value?.trim() || "alvivb"
   const channelId = await seChannelId(channel)
 
   const [list, first, me, found] = channelId
     ? await Promise.all([
-        seLeaderboard(channelId, board.key, page),
-        page > 1 ? seLeaderboard(channelId, board.key, 1) : null,
+        mini ? null : seLeaderboard(channelId, board.key, page),
+        !mini && page > 1 ? seLeaderboard(channelId, board.key, 1) : null,
         profile?.twitch_login ? seUser(channelId, profile.twitch_login) : null,
         search ? seUser(channelId, search) : null,
       ])
@@ -39,7 +52,12 @@ export default async function RanglistenPage({ searchParams }: { searchParams: P
   const pages = list ? Math.max(1, Math.ceil(list.total / PAGE_SIZE)) : 1
   const link = (next: Params) => {
     const p = new URLSearchParams()
-    const merged: Params = { tab: board.key === "watchtime" ? undefined : board.key, seite: undefined, suche: search || undefined, ...next }
+    const merged: Params = {
+      tab: mini ?? (board.key === "watchtime" ? undefined : board.key),
+      seite: undefined,
+      suche: search || undefined,
+      ...next,
+    }
     for (const k of ["tab", "seite", "suche"] as const) if (merged[k]) p.set(k, merged[k]!)
     const q = p.toString()
     return q ? `/ranglisten?${q}` : "/ranglisten"
@@ -50,49 +68,74 @@ export default async function RanglistenPage({ searchParams }: { searchParams: P
     <>
       <PageTitle
         title="Community-Ranglisten"
-        subtitle="Wer schaut am meisten zu? Watchtime und Kanalpunkte aus Alvis Stream – dieselben Werte wie bei !watchtime und !points im Chat."
+        subtitle="Wer schaut am meisten zu? Watchtime und Kanalpunkte aus Alvis Stream – dieselben Werte wie bei !watchtime und !points im Chat – und die Bestenlisten der Minispiele."
       />
 
-      {!channelId ? (
-        <p className="panel text-muted">Die Ranglisten sind gerade nicht erreichbar. Bitte später nochmal versuchen.</p>
+      {channelId && (
+        <div className="mb-6 grid gap-4 md:grid-cols-2">
+          {me && <UserCard title="Deine Werte" user={me} />}
+          <section className={clsx("panel", !me && "md:col-span-2")}>
+            <h2 className="mb-2 font-display text-xl">Zuschauer suchen</h2>
+            <form action="/ranglisten" className="flex gap-2">
+              {(mini || board.key !== "watchtime") && <input type="hidden" name="tab" value={mini ?? board.key} />}
+              <input name="suche" defaultValue={search} className="input" placeholder="Twitch-Name" maxLength={30} />
+              <button className="btn-primary px-4">Suchen</button>
+            </form>
+            {search &&
+              (found ? <UserCard user={found} compact /> : <p className="mt-3 text-sm text-muted">„{search}“ wurde nicht gefunden.</p>)}
+          </section>
+        </div>
+      )}
+
+      <nav className="mb-3 flex flex-wrap gap-2">
+        {BOARDS.map((b) => (
+          <Link
+            key={b.key}
+            href={link({ tab: b.key === "watchtime" ? undefined : b.key })}
+            className={clsx("btn px-4 py-2", !mini && board.key === b.key ? "bg-accent text-black" : "btn-secondary")}
+          >
+            {b.label}
+          </Link>
+        ))}
+        {MINIGAMES.map((g) => (
+          <Link
+            key={g.key}
+            href={link({ tab: g.key })}
+            className={clsx("btn px-4 py-2", mini === g.key ? "bg-accent text-black" : "btn-secondary")}
+          >
+            {g.emoji} {g.title}
+          </Link>
+        ))}
+      </nav>
+
+      {mini ? (
+        <section className="panel">
+          <Leaderboard key={mini} game={mini} myId={user?.id ?? null} isAdmin={isAdmin} initialPeriod="ewig" />
+          <Link href={`/minispiele/${mini}`} className="btn-primary mt-4">
+            ▶ Selbst spielen
+          </Link>
+        </section>
       ) : (
         <>
-          <div className="mb-6 grid gap-4 md:grid-cols-2">
-            {me && <UserCard title="Deine Werte" user={me} />}
-            <section className={clsx("panel", !me && "md:col-span-2")}>
-              <h2 className="mb-2 font-display text-xl">Zuschauer suchen</h2>
-              <form action="/ranglisten" className="flex gap-2">
-                {board.key !== "watchtime" && <input type="hidden" name="tab" value={board.key} />}
-                <input name="suche" defaultValue={search} className="input" placeholder="Twitch-Name" maxLength={30} />
-                <button className="btn-primary px-4">Suchen</button>
-              </form>
-              {search && (found ? <UserCard user={found} compact /> : <p className="mt-3 text-sm text-muted">„{search}“ wurde nicht gefunden.</p>)}
-            </section>
-          </div>
-
-          <nav className="mb-3 flex flex-wrap gap-2">
-            {BOARDS.map((b) => (
-              <Link
-                key={b.key}
-                href={link({ tab: b.key === "watchtime" ? undefined : b.key })}
-                className={clsx("btn px-4 py-2", board.key === b.key ? "bg-accent text-black" : "btn-secondary")}
-              >
-                {b.label}
-              </Link>
-            ))}
-          </nav>
-
           <section className="panel">
-            {list ? (
+            {!channelId ? (
+              <p className="text-muted">Die Ranglisten sind gerade nicht erreichbar. Bitte später nochmal versuchen.</p>
+            ) : list ? (
               <>
                 <ol className="divide-y divide-line/50">
                   {rows.map(({ rank, ...e }) => {
                     return (
                       <li
                         key={e.username}
-                        className={clsx("-mx-2 flex items-center gap-3 rounded-lg px-2 py-2", rank <= 3 && "sm:text-lg", e.username.toLowerCase() === myLogin && "bg-accent/10")}
+                        className={clsx(
+                          "-mx-2 flex items-center gap-3 rounded-lg px-2 py-2",
+                          rank <= 3 && "sm:text-lg",
+                          e.username.toLowerCase() === myLogin && "bg-accent/10",
+                        )}
                       >
-                        <span className="w-10 shrink-0 font-display tabular-nums text-muted sm:w-12">{["🥇", "🥈", "🥉"][rank - 1] ?? `${rank}.`}</span>
+                        <span className="w-10 shrink-0 font-display tabular-nums text-muted sm:w-12">
+                          {["🥇", "🥈", "🥉"][rank - 1] ?? `${rank}.`}
+                        </span>
                         <span className="min-w-0 flex-1 truncate font-semibold">{e.username}</span>
                         <span className="shrink-0 font-bold tabular-nums text-accent">{value(e.value)}</span>
                       </li>
