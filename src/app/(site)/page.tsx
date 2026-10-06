@@ -6,14 +6,14 @@ import { channelsFromSettings, loadSiteSettings } from "@/lib/site"
 import { createClient } from "@/lib/supabase/server"
 
 const TOOLS = [
-  { href: "/eskalation", emoji: "🚨", title: "Regel-Eskalation", text: "Grundregel per Glücksrad, alle 4 Minuten eine neue Regel – mit Alarm und OBS-Overlay." },
-  { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "2–8 Creator bieten verdeckt mit Gold auf Items – bis jeder sein Loadout hat." },
+  { href: "/eskalation", emoji: "🚨", title: "Regel-Eskalation", text: "1. Regel per Glücksrad, danach alle 4 Minuten per Zufall eine extra Regel!!\nOBS-Einbindung inklusive." },
+  { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "Bietet, um euer Loadout zusammenzustellen! Wer geht am schlausten mit seinem Gold um?\nFür 2–8 Spieler." },
   { href: "/bingo", emoji: "🔢", title: "Bingo", text: "Alle spielen dieselbe 3×3-Karte und haken für sich ab – mit eigenen Karten, Punkten und OBS-Overlay." },
-  { href: "/loadout", emoji: "🎲", title: "Loadout-Würfel", text: "5 zufällige Slots aus dem aktuellen Loot-Pool – solo oder mit mehreren Spielern." },
-  { href: "/rad", emoji: "🎡", title: "Challenge-Glücksrad", text: "Regeln wie „nur graue Waffen“ oder „kein Bauen“ – live erdreht." },
-  { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Zufälliger Landebereich als Kreis – solo oder für mehrere Spieler, plus Zusatzregel." },
-  { href: "/winchallenge", emoji: "🏆", title: "Winchallenge", text: "Mehrere Spiele, je eine Zahl an Siegen, ein Timer – alles schaffen, bevor die Zeit abläuft. Mit OBS-Overlay." },
-  { href: "/olympiade", emoji: "🥇", title: "Olympiade", text: "Spiele aufs Glücksrad, drehen, extern spielen, Sieger markieren – jedes Spiel ist einen Punkt mehr wert. Mit OBS-Overlay." },
+  { href: "/loadout", emoji: "🎲", title: "Loadout-Würfel", text: "Stellt euer Loadout mit dem Zufallswürfel zusammen. Bis zu 3-mal neu würfeln – klug entscheiden, welche Items fix sein sollten!" },
+  { href: "/rad", emoji: "🎡", title: "Challenge-Glücksrad", text: "Stellt euch eure individuellen Regeln mit dem Glücksrad zusammen!" },
+  { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Per Zufall wird euer Landingspot entschieden! Wer holt sich den Sieg?\nExtraregeln inklusive!\nMax. 8 Spieler." },
+  { href: "/winchallenge", emoji: "🏆", title: "Winchallenge", text: "Stellt euch eure eigene Winchallenge zusammen oder spielt die der Jungs nach!" },
+  { href: "/olympiade", emoji: "🥇", title: "Olympiade", text: "Spiele aufs Glücksrad, drehen, extern spielen, Sieger markieren – jedes Spiel ist einen Punkt mehr wert." },
 ]
 
 export default async function Home() {
@@ -62,7 +62,7 @@ export default async function Home() {
           <Link key={t.href} href={t.href} className="panel group transition hover:-translate-y-1 hover:border-accent">
             <div className="flex h-12 items-center text-4xl">{icons[t.href] ?? t.emoji}</div>
             <h2 className="mt-2 font-display text-2xl group-hover:text-accent">{t.title}</h2>
-            <p className="text-sm text-muted">{t.text}</p>
+            <p className="whitespace-pre-line text-sm text-muted">{t.text}</p>
           </Link>
         ))}
         {/* Noch in Arbeit: leere Kachel mit Banner, nicht klickbar */}
