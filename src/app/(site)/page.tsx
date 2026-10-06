@@ -46,6 +46,10 @@ export default async function Home() {
             <ChannelLinks channels={channels} />
           </div>
         )}
+        {/* Fortnite-Creator-Code: am Handy unter den Icons, ab Tablet unten rechts in der Ecke */}
+        <p className="mt-5 text-sm text-muted sm:absolute sm:bottom-4 sm:right-5 sm:mt-0">
+          Creator Code: <span className="font-display text-base tracking-wide text-accent">Alvivb</span>
+        </p>
       </section>
 
       {active && active.length > 0 && (
