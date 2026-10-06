@@ -71,10 +71,23 @@ export function rankEntries(entries: readonly SeEntry[], page: number, firstPage
   return entries.filter((e) => !isBot(e.username)).map((e) => ({ ...e, rank: ++rank }))
 }
 
-/** Minuten lesbar: „1.234 Std. 5 Min.“ */
+/** Einheiten für die Watchtime (1 Monat = 30 Tage) */
+const UNITS: [number, string][] = [
+  [30 * 24 * 60, "Mon."],
+  [7 * 24 * 60, "Wo."],
+  [24 * 60, "Tg."],
+  [60, "Std."],
+  [1, "Min."],
+]
+
+/** Minuten lesbar: „2 Mon. 1 Wo. 3 Tg. 4 Std. 5 Min.“ – leere Einheiten entfallen */
 export function formatWatchtime(minutes: number) {
-  const h = Math.floor(minutes / 60)
-  const m = Math.round(minutes % 60)
-  if (!h) return `${m} Min.`
-  return `${h.toLocaleString("de-DE")} Std.${m ? ` ${m} Min.` : ""}`
+  let rest = Math.max(0, Math.round(minutes))
+  const parts: string[] = []
+  for (const [size, label] of UNITS) {
+    const n = Math.floor(rest / size)
+    rest -= n * size
+    if (n) parts.push(`${n} ${label}`)
+  }
+  return parts.join(" ") || "0 Min."
 }

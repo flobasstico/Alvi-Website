@@ -93,8 +93,11 @@ export default async function RanglistenPage({ searchParams }: { searchParams: P
                         className={clsx("-mx-2 flex items-center gap-3 rounded-lg px-2 py-2", rank <= 3 && "sm:text-lg", e.username.toLowerCase() === myLogin && "bg-accent/10")}
                       >
                         <span className="w-10 shrink-0 font-display tabular-nums text-muted sm:w-12">{["🥇", "🥈", "🥉"][rank - 1] ?? `${rank}.`}</span>
-                        <span className="min-w-0 flex-1 truncate font-semibold">{e.username}</span>
-                        <span className="font-bold tabular-nums text-accent">{value(e.value)}</span>
+                        {/* Handy: Wert unter dem Namen, sonst rechtsbündig daneben */}
+                        <span className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+                          <span className="truncate font-semibold">{e.username}</span>
+                          <span className="text-sm font-bold tabular-nums text-accent sm:text-right sm:text-[length:inherit]">{value(e.value)}</span>
+                        </span>
                       </li>
                     )
                   })}
@@ -136,8 +139,10 @@ function UserCard({ title, user, compact }: { title?: string; user: SeUser; comp
     <section className={clsx(compact ? "mt-3 rounded-xl border border-line bg-bg/40 p-3" : "panel")}>
       {title && <h2 className="mb-2 font-display text-xl">{title}</h2>}
       <div className="mb-2 font-bold">{user.username}</div>
-      <div className="grid grid-cols-3 gap-2 text-center">
-        <Stat label="Watchtime" value={formatWatchtime(user.watchtime)} />
+      <div className="grid grid-cols-2 gap-2 text-center">
+        <div className="col-span-2">
+          <Stat label="Watchtime" value={formatWatchtime(user.watchtime)} />
+        </div>
         <Stat label="Punkte" value={user.points.toLocaleString("de-DE")} />
         <Stat label="Punkte-Rang" value={user.rank ? `#${user.rank.toLocaleString("de-DE")}` : "–"} />
       </div>

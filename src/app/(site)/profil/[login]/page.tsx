@@ -95,7 +95,13 @@ export default async function ProfilPage({ params }: { params: Promise<{ login: 
         </Box>
         <Box title="📺 Im Stream" hint="Werte von StreamElements">
           {se ? (
-            <Numbers items={[["Watchtime", formatWatchtime(se.watchtime)], ["Punkte", se.points.toLocaleString("de-DE")], ["Punkte-Rang", se.rank ? `#${se.rank}` : "–"]]} />
+            <div className="flex flex-col gap-2">
+              <div className="rounded-lg bg-panel-2 px-2 py-2 text-center">
+                <div className="font-display text-lg leading-tight text-accent">{formatWatchtime(se.watchtime)}</div>
+                <div className="text-[11px] text-muted">Watchtime</div>
+              </div>
+              <Numbers items={[["Punkte", se.points.toLocaleString("de-DE")], ["Punkte-Rang", se.rank ? `#${se.rank}` : "–"]]} />
+            </div>
           ) : (
             <p className="text-sm text-muted">Keine Daten gefunden.</p>
           )}
@@ -193,7 +199,7 @@ function Box({ title, hint, children }: { title: string; hint: string; children:
 
 function Numbers({ items }: { items: [string, string | number][] }) {
   return (
-    <div className="grid grid-cols-3 gap-2 text-center">
+    <div className={clsx("grid gap-2 text-center", items.length === 2 ? "grid-cols-2" : "grid-cols-3")}>
       {items.map(([label, value]) => (
         <div key={label} className="rounded-lg bg-panel-2 px-1 py-2">
           <div className="font-display text-xl leading-tight text-accent">{value}</div>
