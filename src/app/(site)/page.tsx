@@ -94,16 +94,6 @@ export default async function Home() {
             <p className="whitespace-pre-line text-sm text-muted">{t.text}</p>
           </Link>
         ))}
-        {/* Noch in Arbeit: leere Kachel mit Banner, nicht klickbar */}
-        <div className="panel relative flex min-h-40 cursor-not-allowed flex-col overflow-hidden" aria-disabled="true">
-          <div className="text-4xl grayscale">🏔️</div>
-          <h2 className="mt-2 font-display text-2xl">Die ultimative Challenge</h2>
-          <div className="mt-auto flex justify-center pt-4">
-            <span className="-rotate-3 rounded-lg bg-accent px-5 py-1.5 font-display text-xl text-black shadow-[0_0_24px_rgba(255,214,10,.45)]">
-              Bald verfügbar
-            </span>
-          </div>
-        </div>
       </section>
     </div>
   )
