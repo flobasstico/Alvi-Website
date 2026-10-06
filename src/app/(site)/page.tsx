@@ -1,6 +1,6 @@
 import Link from "next/link"
 import { ChannelLinks } from "@/components/channel-links"
-import { BingoIcon, GoldBarsIcon, MapIcon, WheelIcon } from "@/components/tile-icons"
+import { BingoIcon, GoldBarsIcon, LeagueIcon, MapIcon, WheelIcon } from "@/components/tile-icons"
 import { getCurrentSeason } from "@/lib/season"
 import { channelsFromSettings, loadSiteSettings } from "@/lib/site"
 import { createClient } from "@/lib/supabase/server"
@@ -14,6 +14,7 @@ const TOOLS = [
   { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Per Zufall wird euer Landingspot entschieden! Wer holt sich den Sieg?\nExtraregeln inklusive!\nMax. 8 Spieler." },
   { href: "/winchallenge", emoji: "🏆", title: "Winchallenge", text: "Stellt euch eure eigene Winchallenge zusammen oder spielt die der Jungs nach!" },
   { href: "/olympiade", emoji: "🥇", title: "Olympiade", text: "Spiele aufs Glücksrad, drehen, extern spielen, Sieger markieren – jedes Spiel ist einen Punkt mehr wert." },
+  { href: "/liga", emoji: "🏆", title: "Creator-Liga", text: "Die Challenges der Creator außerhalb der Website – mit Ligapunkten, Siegen, Videos und Kopf-an-Kopf-Duellen." },
 ]
 
 export default async function Home() {
@@ -29,6 +30,7 @@ export default async function Home() {
     "/drop": <MapIcon url={season?.map_image_url} />,
     "/bingo": <BingoIcon />,
     "/auktion": <GoldBarsIcon />,
+    "/liga": <LeagueIcon />,
   }
   const channels = channelsFromSettings(settings)
 

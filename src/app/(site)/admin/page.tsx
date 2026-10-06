@@ -22,7 +22,12 @@ import {
   addManualChallenge,
   addRule,
   addSeason,
+  addLeagueSeason,
+  deleteCreator,
   deleteRow,
+  saveCreator,
+  setCurrentLeagueSeason,
+  updateLeagueSeason,
   setBanned,
   moveEscalationRule,
   setCurrentSeason,
@@ -32,6 +37,7 @@ import {
   updateLootItem,
 } from "./actions"
 import { ItemIconUpload } from "./item-icon-upload"
+import { LeagueEntry } from "./league-entry"
 import { LootImport } from "./loot-import"
 import { DeleteAllSpots } from "./delete-all-spots"
 import { MapUpload } from "./map-upload"
@@ -49,11 +55,12 @@ const TABS = {
   eskalation: "Eskalations-Regeln",
   seasons: "Seasons & Map",
   seite: "Seite & Kanäle",
+  liga: "Creator-Liga",
   nutzer: "Nutzer",
 } as const
 type Tab = keyof typeof TABS
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string }> }) {
+export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string; bearbeiten?: string }> }) {
   const { supabase, user, isAdmin } = await getViewer()
   if (!isAdmin) {
     return (
@@ -65,7 +72,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </div>
     )
   }
-  const { tab: rawTab, q } = await searchParams
+  const { tab: rawTab, q, bearbeiten } = await searchParams
   const tab: Tab = rawTab && rawTab in TABS ? (rawTab as Tab) : "challenges"
   const season = await getCurrentSeason(supabase)
 
@@ -91,6 +98,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       {tab === "eskalation" && <EscalationTab />}
       {tab === "seasons" && <SeasonsTab />}
       {tab === "seite" && <SiteTab />}
+      {tab === "liga" && <LeagueTab edit={Number(bearbeiten) || null} />}
       {tab === "nutzer" && <UsersTab q={q ?? ""} />}
     </>
   )
@@ -569,5 +577,119 @@ async function UsersTab({ q }: { q: string }) {
         {!users?.length && <li className="py-2 text-muted">Niemand gefunden.</li>}
       </ul>
     </section>
+  )
+}
+
+async function LeagueTab({ edit }: { edit: number | null }) {
+  const { supabase } = await getViewer()
+  const [{ data: seasons }, { data: creators }, { data: cats }, editing] = await Promise.all([
+    supabase.from("league_seasons").select("*").order("created_at", { ascending: false }),
+    supabase.from("creators").select("*").order("name"),
+    supabase.from("league_challenges").select("category").not("category", "is", null),
+    edit
+      ? Promise.all([
+          supabase.from("league_challenges").select("*").eq("id", edit).maybeSingle(),
+          supabase.from("league_results").select("*").eq("challenge_id", edit),
+        ])
+      : null,
+  ])
+  const { data: links } = await supabase
+    .from("profiles")
+    .select("id, twitch_login")
+    .in("id", (creators ?? []).map((c) => c.profile_id).filter((x): x is string => !!x))
+  const loginOf = new Map((links ?? []).map((p) => [p.id, p.twitch_login]))
+  const categories = [...new Set((cats ?? []).map((c) => c.category!).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"))
+  const editData = editing?.[0].data ? { challenge: editing[0].data, results: editing[1].data ?? [] } : null
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+      <section className="panel h-fit">
+        <h2 className="mb-1 font-display text-2xl">{editData ? `„${editData.challenge.title}“ bearbeiten` : "Challenge eintragen"}</h2>
+        <p className="mb-3 text-sm text-muted">
+          Für Challenges außerhalb der Website. Erscheint unter <Link href="/liga" className="text-accent-2 underline">/liga</Link>.
+          {editData && (
+            <>
+              {" "}
+              <Link href="/admin?tab=liga" className="underline">Abbrechen</Link>
+            </>
+          )}
+        </p>
+        <LeagueEntry key={edit ?? "neu"} seasons={seasons ?? []} creators={creators ?? []} categories={categories} edit={editData} />
+      </section>
+
+      <aside className="flex flex-col gap-6">
+        <section className="panel">
+          <h2 className="mb-2 font-display text-xl">Creator</h2>
+          <ul className="divide-y divide-line">
+            {creators?.map((c) => (
+              <li key={c.id} className="py-2">
+                <details>
+                  <summary className="flex cursor-pointer items-center gap-2">
+                    {c.avatar_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img src={c.avatar_url} alt="" className="h-6 w-6 rounded-full object-cover" />
+                    ) : (
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-line text-xs">👤</span>
+                    )}
+                    <span className="flex-1 font-semibold">{c.name}</span>
+                    {c.profile_id && <span className="text-xs text-muted">@{loginOf.get(c.profile_id)}</span>}
+                  </summary>
+                  <form action={saveCreator} className="mt-2 flex flex-col gap-2">
+                    <input type="hidden" name="id" value={c.id} />
+                    <input name="name" defaultValue={c.name} className="input py-1 text-sm" required maxLength={40} />
+                    <input name="avatar_url" defaultValue={c.avatar_url ?? ""} className="input py-1 text-sm" placeholder="Bild-Link (optional)" />
+                    <input name="twitch" defaultValue={c.profile_id ? (loginOf.get(c.profile_id) ?? "") : ""} className="input py-1 text-sm" placeholder="Twitch-Name verknüpfen (optional)" />
+                    <div className="flex gap-2">
+                      <button className="btn-secondary px-2 py-1 text-xs">Speichern</button>
+                    </div>
+                  </form>
+                  <form action={deleteCreator} className="mt-1">
+                    <input type="hidden" name="id" value={c.id} />
+                    <button className="text-xs text-muted underline hover:text-fail">Löschen (nur ohne Ergebnisse)</button>
+                  </form>
+                </details>
+              </li>
+            ))}
+            {!creators?.length && <li className="py-2 text-sm text-muted">Noch keine Creator.</li>}
+          </ul>
+          <form action={saveCreator} className="mt-3 flex flex-col gap-2">
+            <input name="name" className="input" placeholder="Name, z. B. Kevin" required maxLength={40} />
+            <input name="avatar_url" className="input" placeholder="Bild-Link (optional)" />
+            <input name="twitch" className="input" placeholder="Twitch-Name verknüpfen (optional)" />
+            <button className="btn-primary">+ Creator anlegen</button>
+          </form>
+        </section>
+
+        <section className="panel">
+          <h2 className="mb-2 font-display text-xl">Liga-Seasons</h2>
+          <ul className="divide-y divide-line">
+            {seasons?.map((s) => (
+              <li key={s.id} className="flex flex-col gap-2 py-2">
+                <form action={updateLeagueSeason} className="flex flex-wrap items-center gap-2">
+                  <input type="hidden" name="id" value={s.id} />
+                  <input name="name" defaultValue={s.name} className="input w-36 flex-1 py-1 text-sm" required />
+                  <input name="scheme" defaultValue={s.points_scheme.join(", ")} className="input w-24 py-1 text-sm" title="Ligapunkte für Platz 1, 2, 3 …" />
+                  <button className="btn-secondary px-2 py-1 text-xs">Speichern</button>
+                </form>
+                {s.is_current ? (
+                  <span className="chip self-start border-win text-win">Aktuell</span>
+                ) : (
+                  <form action={setCurrentLeagueSeason}>
+                    <input type="hidden" name="id" value={s.id} />
+                    <button className="btn-secondary px-2 py-1 text-xs">Als aktuell setzen</button>
+                  </form>
+                )}
+              </li>
+            ))}
+          </ul>
+          <form action={addLeagueSeason} className="mt-3 flex flex-col gap-2">
+            <input name="name" className="input" placeholder="z. B. Season 2" required />
+            <input name="scheme" className="input" defaultValue="3, 2, 1" title="Ligapunkte für Platz 1, 2, 3 …" />
+            <p className="text-xs text-muted">Punkteschema: Ligapunkte für Platz 1, 2, 3 … (weitere Plätze 0).</p>
+            <button className="btn-primary">Anlegen & aktivieren</button>
+          </form>
+        </section>
+      </aside>
+    </div>
   )
 }

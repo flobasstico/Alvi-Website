@@ -79,3 +79,26 @@ export function MapIcon({ url }: { url: string | null | undefined }) {
     </div>
   )
 }
+
+/** Creator-Liga: kleiner Pokal vor einem Kuchendiagramm */
+export function LeagueIcon() {
+  return (
+    <svg viewBox="0 0 48 48" className={BOX} aria-hidden>
+      <circle cx="30" cy="20" r="16" fill="#2a2650" />
+      <path d="M30 20 L30 4 A16 16 0 0 1 45.2 25 Z" fill="#facc15" />
+      <path d="M30 20 L45.2 25 A16 16 0 0 1 22 33.9 Z" fill="#22d3ee" />
+      <path d="M30 20 L22 33.9 A16 16 0 0 1 30 4 Z" fill="#f472b6" />
+      <circle cx="30" cy="20" r="6" fill="#0b0a1f" />
+      <path d="M6 20 H22 V25 A8 8 0 0 1 6 25 Z" fill="url(#cup)" stroke="#8a5a00" strokeWidth="1" />
+      <path d="M6 22 H3 A3 3 0 0 0 6 28 M22 22 H25 A3 3 0 0 1 22 28" fill="none" stroke="#f5b301" strokeWidth="1.6" />
+      <rect x="12.5" y="32" width="3" height="6" fill="#c27c00" />
+      <rect x="8" y="38" width="12" height="4" rx="1" fill="#f5b301" stroke="#8a5a00" strokeWidth="1" />
+      <defs>
+        <linearGradient id="cup" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#ffe680" />
+          <stop offset="1" stopColor="#c27c00" />
+        </linearGradient>
+      </defs>
+    </svg>
+  )
+}

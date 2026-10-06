@@ -153,6 +153,30 @@ export type Database = {
         Update: { data?: Json; kind?: string; updated_at?: string; user_id?: string }
         Relationships: Rel[]
       }
+      league_seasons: {
+        Row: { created_at: string; id: number; is_current: boolean; name: string; points_scheme: number[] }
+        Insert: { created_at?: string; id?: never; is_current?: boolean; name: string; points_scheme?: number[] }
+        Update: { created_at?: string; id?: never; is_current?: boolean; name?: string; points_scheme?: number[] }
+        Relationships: Rel[]
+      }
+      creators: {
+        Row: { avatar_url: string | null; created_at: string; id: number; name: string; profile_id: string | null }
+        Insert: { avatar_url?: string | null; created_at?: string; id?: never; name: string; profile_id?: string | null }
+        Update: { avatar_url?: string | null; created_at?: string; id?: never; name?: string; profile_id?: string | null }
+        Relationships: Rel[]
+      }
+      league_challenges: {
+        Row: { category: string | null; created_at: string; id: number; played_at: string; scoring: string; season_id: number; title: string; youtube_url: string }
+        Insert: { category?: string | null; created_at?: string; id?: never; played_at?: string; scoring: string; season_id: number; title: string; youtube_url: string }
+        Update: { category?: string | null; created_at?: string; id?: never; played_at?: string; scoring?: string; season_id?: number; title?: string; youtube_url?: string }
+        Relationships: Rel[]
+      }
+      league_results: {
+        Row: { challenge_id: number; creator_id: number; placement: number; points: number | null; won: boolean }
+        Insert: { challenge_id: number; creator_id: number; placement: number; points?: number | null; won?: boolean }
+        Update: { challenge_id?: number; creator_id?: number; placement?: number; points?: number | null; won?: boolean }
+        Relationships: Rel[]
+      }
       bingo_tasks: {
         Row: { active: boolean; created_at: string; id: number; text: string }
         Insert: { active?: boolean; created_at?: string; id?: never; text: string }
@@ -244,6 +268,10 @@ export type Database = {
       admin_set_banned: { Args: { p_user: string; p_banned: boolean }; Returns: undefined }
       admin_approve_card: { Args: { p_card: number }; Returns: undefined }
       join_code: { Args: { p_kind: string; p_id: number }; Returns: string | null }
+      league_save_challenge: {
+        Args: { p_id: number | null; p_season: number; p_title: string; p_category: string | null; p_played_at: string | null; p_scoring: string; p_video: string; p_results: Json }
+        Returns: number
+      }
       admin_delete_round: { Args: { p_kind: string; p_id: number }; Returns: undefined }
       olympic_create: { Args: { p_title: string | null; p_games: string[]; p_max_players: number }; Returns: number }
       olympic_join: { Args: { p_id: number; p_code?: string | null }; Returns: string | null }

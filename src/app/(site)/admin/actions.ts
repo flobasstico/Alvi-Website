@@ -304,3 +304,71 @@ export async function setBanned(form: FormData) {
   const { error } = await supabase.rpc("admin_set_banned", { p_user: str(form, "user"), p_banned: str(form, "banned") === "true" })
   done(error)
 }
+
+// ---------- Creator-Liga ----------
+/** „3, 2, 1“ → [3, 2, 1] (nur ganze Zahlen 0–100, höchstens 10 Plätze) */
+function parseScheme(text: string) {
+  const nums = text
+    .split(/[,;\s]+/)
+    .filter(Boolean)
+    .map((n) => Math.round(Number(n)))
+  if (!nums.length || nums.length > 10 || nums.some((n) => !Number.isFinite(n) || n < 0 || n > 100)) {
+    throw new Error("Punkteschema z. B. „3, 2, 1“ (bis zu 10 Plätze, Werte 0–100)")
+  }
+  return nums
+}
+
+export async function addLeagueSeason(form: FormData) {
+  const supabase = await requireAdmin()
+  const name = str(form, "name")
+  if (!name) return
+  const scheme = parseScheme(str(form, "scheme") || "3,2,1")
+  await supabase.from("league_seasons").update({ is_current: false }).eq("is_current", true)
+  done((await supabase.from("league_seasons").insert({ name, points_scheme: scheme, is_current: true })).error)
+}
+
+export async function setCurrentLeagueSeason(form: FormData) {
+  const supabase = await requireAdmin()
+  await supabase.from("league_seasons").update({ is_current: false }).eq("is_current", true)
+  done((await supabase.from("league_seasons").update({ is_current: true }).eq("id", Number(str(form, "id")))).error)
+}
+
+export async function updateLeagueSeason(form: FormData) {
+  const supabase = await requireAdmin()
+  const name = str(form, "name")
+  if (!name) throw new Error("Bitte einen Namen eingeben")
+  done(
+    (await supabase.from("league_seasons").update({ name, points_scheme: parseScheme(str(form, "scheme")) }).eq("id", Number(str(form, "id"))))
+      .error,
+  )
+}
+
+/** Creator anlegen/ändern; optional per Twitch-Name mit einem Profil verknüpfen */
+export async function saveCreator(form: FormData) {
+  const supabase = await requireAdmin()
+  const name = str(form, "name").slice(0, 40)
+  if (!name) throw new Error("Bitte einen Namen eingeben")
+  const avatar = str(form, "avatar_url")
+  if (avatar && !safeUrl(avatar)) throw new Error("Bild-Link muss mit https:// beginnen")
+  const login = str(form, "twitch").replace(/^@/, "").toLowerCase()
+  let profileId: string | null = null
+  if (login) {
+    const { data } = await supabase.from("profiles").select("id, avatar_url").ilike("twitch_login", login.replace(/[%_\\]/g, "\\$&")).maybeSingle()
+    if (!data) throw new Error(`Kein Profil mit dem Twitch-Namen „${login}“ – die Person muss sich einmal eingeloggt haben`)
+    profileId = data.id
+  }
+  const row = { name, avatar_url: avatar || null, profile_id: profileId }
+  const id = Number(str(form, "id"))
+  const { error } = id ? await supabase.from("creators").update(row).eq("id", id) : await supabase.from("creators").insert(row)
+  if (error?.code === "23505") throw new Error(`„${name}“ gibt es schon`)
+  done(error)
+}
+
+/** Creator löschen – nur, solange er in keiner Liga-Challenge eingetragen ist */
+export async function deleteCreator(form: FormData) {
+  const supabase = await requireAdmin()
+  const id = Number(str(form, "id"))
+  const { count } = await supabase.from("league_results").select("creator_id", { count: "exact", head: true }).eq("creator_id", id)
+  if (count) throw new Error("Dieser Creator hat schon Ergebnisse – erst die Challenges löschen oder ändern")
+  done((await supabase.from("creators").delete().eq("id", id)).error)
+}
