@@ -72,7 +72,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
 
       <nav className="mb-6 flex gap-2">
         <Link href="/stats" className={clsx("btn px-4 py-2", ansicht === "spieler" ? "bg-accent text-black" : "btn-secondary")}>
-          👥 Spieler
+          👥 Creator
         </Link>
         <Link href="/stats?ansicht=alvi" className={clsx("btn px-4 py-2", ansicht === "alvi" ? "bg-accent text-black" : "btn-secondary")}>
           🎮 Alvi
@@ -127,7 +127,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
           )}
 
           <section id="spieler" className="panel mb-6">
-            <h2 className="mb-1 font-display text-2xl">{viewer ? "Zuschauer-Rangliste" : "Spieler"}</h2>
+            <h2 className="mb-1 font-display text-2xl">{viewer ? "Zuschauer-Rangliste" : "Creator-Rangliste"}</h2>
             <p className="mb-3 text-sm text-muted">
               {viewer
                 ? "Alle, die in Zuschauer-Runden mitgespielt haben. Punkte gibt es bei Bingo und Olympiade. Private Profile werden nicht angezeigt."
@@ -145,7 +145,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                   <thead>
                     <tr className="border-b border-line text-left text-xs uppercase text-muted">
                       <th className="w-10 py-2">#</th>
-                      <th className="py-2">Spieler</th>
+                      <th className="py-2">{viewer ? "Zuschauer" : "Creator"}</th>
                       <SortTh label="Teilnahmen" k="teilnahmen" sort={sort} href={filterLink} />
                       <SortTh label="Siege" k="siege" sort={sort} href={filterLink} />
                       <SortTh label="Siegquote" k="quote" sort={sort} href={filterLink} />
