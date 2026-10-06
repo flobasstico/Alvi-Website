@@ -1,10 +1,10 @@
 "use server"
 
 import { redirect } from "next/navigation"
-import { requireAdmin } from "@/lib/supabase/server"
+import { requireUser } from "@/lib/supabase/server"
 
 export async function createEscalation(_: unknown, form: FormData): Promise<{ error: string } | undefined> {
-  const supabase = await requireAdmin()
+  const supabase = await requireUser()
   const minutes = Number(form.get("minutes")) || 4
   const mode = form.get("mode") === "chat" ? "chat" : "zufall"
   const { data, error } = await supabase.rpc("escalation_create", {

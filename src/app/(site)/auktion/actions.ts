@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { RARITIES } from "@/lib/constants"
 import { getCurrentSeason } from "@/lib/season"
-import { requireAdmin } from "@/lib/supabase/server"
+import { getViewer } from "@/lib/supabase/server"
 
 const clampInt = (v: FormDataEntryValue | null, min: number, max: number, fallback: number) => {
   const n = Math.round(Number(v))
@@ -12,7 +12,8 @@ const clampInt = (v: FormDataEntryValue | null, min: number, max: number, fallba
 }
 
 export async function createAuction(form: FormData) {
-  const supabase = await requireAdmin()
+  const { supabase, user } = await getViewer()
+  if (!user) throw new Error("Bitte mit Twitch einloggen")
   const season = await getCurrentSeason(supabase)
   if (!season) throw new Error("Keine aktuelle Season – im Admin anlegen")
   const rarities = RARITIES.filter((r) => form.get(`rarity_${r}`) === "on")
@@ -21,6 +22,7 @@ export async function createAuction(form: FormData) {
   const { data, error } = await supabase
     .from("auctions")
     .insert({
+      host_id: user.id,
       title: String(form.get("title") ?? "").trim() || null,
       season_id: season.id,
       start_gold: Math.round(clampInt(form.get("start_gold"), 0, 100000, 500) / 10) * 10,

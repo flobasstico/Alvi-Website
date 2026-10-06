@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
+import { StaleNote } from "@/components/replay-button"
 import { RARITIES, RARITY_LABEL } from "@/lib/constants"
 import { getViewer } from "@/lib/supabase/server"
 import { createAuction } from "./actions"
@@ -9,8 +10,8 @@ export const metadata = { title: "Loot-Auktion" }
 const STATUS: Record<string, string> = { lobby: "Lobby", laeuft: "Läuft", beendet: "Beendet" }
 
 export default async function AuktionPage() {
-  const { supabase, isAdmin } = await getViewer()
-  const { data: auctions } = await supabase.from("auctions").select("*").order("created_at", { ascending: false }).limit(30)
+  const { supabase, user, isAdmin } = await getViewer()
+  const { data: auctions } = await supabase.from("auctions").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30)
   const ids = (auctions ?? []).map((a) => a.id)
   const { data: players } = ids.length
     ? await supabase.from("auction_players").select("auction_id, display_name, seat").in("auction_id", ids).order("seat")
@@ -24,7 +25,8 @@ export default async function AuktionPage() {
       />
       <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
         <section className="panel">
-          <h2 className="mb-3 font-display text-2xl">Auktionen</h2>
+          <h2 className="mb-1 font-display text-2xl">Auktionen</h2>
+          <StaleNote game="auktion" className="mb-3 text-xs text-muted" />
           <ul className="flex flex-col gap-2">
             {auctions?.map((a) => (
               <li key={a.id}>
@@ -41,9 +43,13 @@ export default async function AuktionPage() {
           </ul>
         </section>
 
-        {isAdmin && (
+        {!user && <aside className="panel h-fit text-muted">Mit Twitch einloggen, um eine eigene Auktion zu eröffnen.</aside>}
+        {user && (
           <aside className="panel h-fit">
             <h2 className="mb-3 font-display text-2xl">Neue Auktion</h2>
+            {!isAdmin && (
+              <p className="mb-3 text-xs text-muted">Auktionen ohne Admin erscheinen nicht in Übersichten und Stats und werden nach dem Ende nicht gespeichert.</p>
+            )}
             <form action={createAuction} className="flex flex-col gap-3">
               <div>
                 <label className="label" htmlFor="title">Titel (optional)</label>

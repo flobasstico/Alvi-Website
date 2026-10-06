@@ -23,6 +23,7 @@ import { celebrate } from "@/lib/confetti"
 import { ITEM_TYPE_LABEL, RARITY_CLASS, RARITY_LABEL, type Rarity } from "@/lib/constants"
 import { createClient } from "@/lib/supabase/client"
 import { JoinCodeBox, JoinCodeForm, joinResult, useJoinCode, WinnerPicker } from "@/components/session/players"
+import { GoneNote, UnofficialNote } from "@/components/replay-button"
 import { ExportButtons } from "./export-buttons"
 
 type State = { auction: Auction; players: Player[]; rounds: Round[]; bids: Bid[] }
@@ -53,16 +54,18 @@ export function AuctionRoom({
   // Erster Render mit der Server-Zeit, damit Countdown/Phase beim Hydrieren identisch sind
   const [now, setNow] = useState(serverNow)
   const [error, setError] = useState<string | null>(null)
+  const [gone, setGone] = useState(false)
   const auctionId = initial.auction.id
 
   const refetch = useCallback(async () => {
     const [a, p, r, b] = await Promise.all([
-      supabase.from("auctions").select("*").eq("id", auctionId).single(),
+      supabase.from("auctions").select("*").eq("id", auctionId).maybeSingle(),
       supabase.from("auction_players").select("*").eq("auction_id", auctionId).order("seat"),
       supabase.from("auction_rounds").select("*").eq("auction_id", auctionId).order("round_no"),
       supabase.from("auction_bids").select("*").eq("auction_id", auctionId),
     ])
     if (a.data) setState({ auction: a.data, players: p.data ?? [], rounds: r.data ?? [], bids: b.data ?? [] })
+    else if (!a.error) setGone(true)
   }, [supabase, auctionId])
 
   // Live-Sync: jede Änderung an der Auktion → kompletten (kleinen) Zustand neu laden
@@ -126,6 +129,8 @@ export function AuctionRoom({
     return !error
   }
 
+  if (gone) return <GoneNote back="/auktion" />
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
@@ -138,6 +143,7 @@ export function AuctionRoom({
         </span>
       </div>
       {error && <p className="rounded-xl border border-fail bg-fail/10 px-3 py-2 text-sm text-fail">{error}</p>}
+      {!auction.official && <UnofficialNote game="auktion" />}
 
       {phase.kind === "lobby" && (
         <Lobby

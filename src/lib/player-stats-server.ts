@@ -8,11 +8,11 @@ const ALVI_FALLBACK = "main-creator"
 /** Alle Teilnahmen an abgeschlossenen Mehrspieler-Runden und Alvis Solo-Challenges + Namen der Personen */
 export async function loadPlayerStats(supabase: Client) {
   const [esc, escPlayers, lo, loPlayers, auc, aucPlayers, bingo, cards, oly, olyPlayers, challenges, linked, setting] = await Promise.all([
-    supabase.from("escalation_sessions").select("id, winner_id").eq("status", "beendet"),
+    supabase.from("escalation_sessions").select("id, winner_id").eq("status", "beendet").eq("official", true),
     supabase.from("escalation_players").select("session_id, user_id"),
-    supabase.from("loadout_sessions").select("id, winner_id").eq("status", "beendet"),
+    supabase.from("loadout_sessions").select("id, winner_id").eq("status", "beendet").eq("official", true),
     supabase.from("loadout_players").select("session_id, user_id"),
-    supabase.from("auctions").select("id, winner_id").not("decided_at", "is", null),
+    supabase.from("auctions").select("id, winner_id").not("decided_at", "is", null).eq("official", true),
     supabase.from("auction_players").select("auction_id, user_id"),
     supabase.from("bingo_rounds").select("id").eq("status", "beendet").eq("official", true),
     supabase.from("bingo_round_players").select("round_id, user_id, points, won"),

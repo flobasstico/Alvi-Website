@@ -1,6 +1,7 @@
 import clsx from "clsx"
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
+import { StaleNote } from "@/components/replay-button"
 import { getCurrentSeason } from "@/lib/season"
 import { getViewer } from "@/lib/supabase/server"
 import { CreateLoadoutSession } from "./create-session"
@@ -13,7 +14,7 @@ const STATUS: Record<string, string> = { offen: "Würfeln läuft", laeuft: "Läu
 export default async function LoadoutPage({ searchParams }: { searchParams: Promise<{ modus?: string }> }) {
   const { modus } = await searchParams
   const multi = modus === "mehrspieler"
-  const { supabase, isAdmin, profile } = await getViewer()
+  const { supabase, user, isAdmin, profile } = await getViewer()
   const season = await getCurrentSeason(supabase)
 
   return (
@@ -32,7 +33,7 @@ export default async function LoadoutPage({ searchParams }: { searchParams: Prom
           👥 Mehrspieler
         </Link>
       </nav>
-      {multi ? <MultiplayerList isAdmin={isAdmin} supabase={supabase} /> : <Solo seasonId={season?.id ?? null} isAdmin={isAdmin} supabase={supabase} login={profile?.twitch_login ?? null} />}
+      {multi ? <MultiplayerList loggedIn={!!user} isAdmin={isAdmin} supabase={supabase} /> : <Solo seasonId={season?.id ?? null} isAdmin={isAdmin} supabase={supabase} login={profile?.twitch_login ?? null} />}
     </>
   )
 }
@@ -46,9 +47,9 @@ async function Solo({ seasonId, isAdmin, supabase, login }: { seasonId: number |
   return <LoadoutDice items={items ?? []} isAdmin={isAdmin} overlayLogin={login} />
 }
 
-async function MultiplayerList({ isAdmin, supabase }: { isAdmin: boolean; supabase: Client }) {
+async function MultiplayerList({ loggedIn, isAdmin, supabase }: { loggedIn: boolean; isAdmin: boolean; supabase: Client }) {
   const [{ data: sessions }, { data: players }] = await Promise.all([
-    supabase.from("loadout_sessions").select("*").order("created_at", { ascending: false }).limit(30),
+    supabase.from("loadout_sessions").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30),
     supabase.from("loadout_players").select("session_id"),
   ])
   const count = new Map<number, number>()
@@ -57,7 +58,8 @@ async function MultiplayerList({ isAdmin, supabase }: { isAdmin: boolean; supaba
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <section className="panel">
-        <h2 className="mb-3 font-display text-2xl">Runden</h2>
+        <h2 className="mb-1 font-display text-2xl">Runden</h2>
+        <StaleNote game="loadout" className="mb-3 text-xs text-muted" />
         <ul className="flex flex-col gap-2">
           {sessions?.map((s) => (
             <li key={s.id}>
@@ -74,11 +76,16 @@ async function MultiplayerList({ isAdmin, supabase }: { isAdmin: boolean; supaba
           {!sessions?.length && <li className="text-muted">Noch keine Runden.</li>}
         </ul>
       </section>
-      {isAdmin && (
+      {loggedIn ? (
         <aside className="panel h-fit">
           <h2 className="mb-3 font-display text-2xl">Neue Runde</h2>
           <CreateLoadoutSession />
+          {!isAdmin && (
+            <p className="mt-3 text-xs text-muted">Runden ohne Admin erscheinen nicht in Übersichten und Stats und werden nach dem Ende nicht gespeichert.</p>
+          )}
         </aside>
+      ) : (
+        <aside className="panel h-fit text-muted">Mit Twitch einloggen, um eine eigene Runde zu eröffnen.</aside>
       )}
     </div>
   )

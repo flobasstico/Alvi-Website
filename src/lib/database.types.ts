@@ -46,9 +46,9 @@ export type Database = {
         Relationships: Rel[]
       }
       loadout_sessions: {
-        Row: { max_players: number; challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; must_heal: boolean; rarities: string[]; result: string | null; season_id: number | null; slots: number; started_at: string | null; status: string; title: string | null; winner_id: string | null; winner_name: string | null }
-        Insert: { max_players?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; must_heal?: boolean; rarities: string[]; result?: string | null; season_id?: number | null; slots?: number; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null }
-        Update: { max_players?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; must_heal?: boolean; rarities?: string[]; result?: string | null; season_id?: number | null; slots?: number; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null }
+        Row: { official: boolean; max_players: number; challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; must_heal: boolean; rarities: string[]; result: string | null; season_id: number | null; slots: number; started_at: string | null; status: string; title: string | null; winner_id: string | null; winner_name: string | null }
+        Insert: { official?: boolean; max_players?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; must_heal?: boolean; rarities: string[]; result?: string | null; season_id?: number | null; slots?: number; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null }
+        Update: { official?: boolean; max_players?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; must_heal?: boolean; rarities?: string[]; result?: string | null; season_id?: number | null; slots?: number; started_at?: string | null; status?: string; title?: string | null; winner_id?: string | null; winner_name?: string | null }
         Relationships: Rel[]
       }
       loadout_players: {
@@ -106,9 +106,9 @@ export type Database = {
         Relationships: Rel[]
       }
       auctions: {
-        Row: { decided_at: string | null; result: string | null; winner_id: string | null; winner_name: string | null; bid_seconds: number; bid_step: number; challenge_id: number | null; created_at: string; ended_at: string | null; ended_reason: string | null; host_id: string; id: number; items_per_player: number; max_players: number; no_duplicates: boolean; rarities: string[]; season_id: number | null; start_gold: number; status: string; title: string | null }
-        Insert: { decided_at?: string | null; result?: string | null; winner_id?: string | null; winner_name?: string | null; bid_seconds?: number; bid_step?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; ended_reason?: string | null; host_id?: string; id?: never; items_per_player?: number; max_players?: number; no_duplicates?: boolean; rarities?: string[]; season_id?: number | null; start_gold?: number; status?: string; title?: string | null }
-        Update: { decided_at?: string | null; result?: string | null; winner_id?: string | null; winner_name?: string | null; bid_seconds?: number; bid_step?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; ended_reason?: string | null; host_id?: string; id?: never; items_per_player?: number; max_players?: number; no_duplicates?: boolean; rarities?: string[]; season_id?: number | null; start_gold?: number; status?: string; title?: string | null }
+        Row: { official: boolean; decided_at: string | null; result: string | null; winner_id: string | null; winner_name: string | null; bid_seconds: number; bid_step: number; challenge_id: number | null; created_at: string; ended_at: string | null; ended_reason: string | null; host_id: string; id: number; items_per_player: number; max_players: number; no_duplicates: boolean; rarities: string[]; season_id: number | null; start_gold: number; status: string; title: string | null }
+        Insert: { official?: boolean; decided_at?: string | null; result?: string | null; winner_id?: string | null; winner_name?: string | null; bid_seconds?: number; bid_step?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; ended_reason?: string | null; host_id?: string; id?: never; items_per_player?: number; max_players?: number; no_duplicates?: boolean; rarities?: string[]; season_id?: number | null; start_gold?: number; status?: string; title?: string | null }
+        Update: { official?: boolean; decided_at?: string | null; result?: string | null; winner_id?: string | null; winner_name?: string | null; bid_seconds?: number; bid_step?: number; challenge_id?: number | null; created_at?: string; ended_at?: string | null; ended_reason?: string | null; host_id?: string; id?: never; items_per_player?: number; max_players?: number; no_duplicates?: boolean; rarities?: string[]; season_id?: number | null; start_gold?: number; status?: string; title?: string | null }
         Relationships: Rel[]
       }
       auction_players: {
@@ -220,7 +220,7 @@ export type Database = {
       auction_leave: { Args: { p_auction: number; p_seat?: number | null }; Returns: undefined }
       auction_resolve_expired: { Args: { p_round: number }; Returns: undefined }
       auction_start: { Args: { p_auction: number }; Returns: undefined }
-      auction_set_winner: { Args: { p_auction: number; p_winner: string | null }; Returns: undefined }
+      auction_set_winner: { Args: { p_auction: number; p_winner: string | null }; Returns: string }
       escalation_create: { Args: { p_channel: string | null; p_interval_s: number; p_max_players: number; p_mode: string; p_title: string }; Returns: number }
       escalation_poll_mark: { Args: { p_kind: string; p_poll: number }; Returns: boolean }
       escalation_poll_vote: { Args: { p_option: number; p_poll: number; p_voter: string }; Returns: boolean }
@@ -231,7 +231,7 @@ export type Database = {
       escalation_leave: { Args: { p_session: number; p_user?: string | null }; Returns: undefined }
       escalation_tick: { Args: { p_session: number }; Returns: number }
       loadout_create: { Args: { p_max_players: number; p_must_heal: boolean; p_rarities: string[]; p_title: string }; Returns: number }
-      loadout_finish: { Args: { p_session: number; p_winner: string | null }; Returns: undefined }
+      loadout_finish: { Args: { p_session: number; p_winner: string | null }; Returns: string }
       loadout_join: { Args: { p_session: number; p_code?: string | null }; Returns: string | null }
       loadout_leave: { Args: { p_session: number; p_user?: string | null }; Returns: undefined }
       loadout_set_items: { Args: { p_items: (number | null)[]; p_session: number }; Returns: undefined }

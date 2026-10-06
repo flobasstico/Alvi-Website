@@ -34,6 +34,13 @@ export async function getViewer() {
   return { supabase, user, profile, isAdmin: profile?.role === "admin" }
 }
 
+/** Für Server Actions: wirft ohne Login. RLS und Datenbankfunktionen prüfen zusätzlich. */
+export async function requireUser() {
+  const viewer = await getViewer()
+  if (!viewer.user) throw new Error("Bitte mit Twitch einloggen")
+  return viewer.supabase
+}
+
 /** Für Server Actions: wirft, wenn kein Admin. RLS prüft zusätzlich. */
 export async function requireAdmin() {
   const viewer = await getViewer()

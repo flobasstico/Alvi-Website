@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useActionState, useState } from "react"
 import { createEscalation } from "./actions"
 
-export function CreateEscalation({ baseCount, extraCount }: { baseCount: number; extraCount: number }) {
+export function CreateEscalation({ baseCount, extraCount, isAdmin }: { baseCount: number; extraCount: number; isAdmin: boolean }) {
   const missing = baseCount === 0 ? "Grundregeln" : extraCount === 0 ? "Zusatzregeln" : null
   const [state, action, pending] = useActionState(createEscalation, undefined)
   const [mode, setMode] = useState<"zufall" | "chat">("zufall")
@@ -28,12 +28,14 @@ export function CreateEscalation({ baseCount, extraCount }: { baseCount: number;
           <input type="radio" name="mode" value="zufall" checked={mode === "zufall"} onChange={() => setMode("zufall")} className="mt-1" />
           <span><b>Zufall</b> – jede neue Regel wird zufällig gezogen.</span>
         </label>
+        {isAdmin && (
         <label className="flex items-start gap-2 text-sm">
           <input type="radio" name="mode" value="chat" checked={mode === "chat"} onChange={() => setMode("chat")} className="mt-1" />
           <span>
             <b>Chat-Abstimmung</b> – der Twitch-Chat stimmt mit !1/!2/!3 über die nächste Regel ab (3 Optionen).
           </span>
         </label>
+        )}
       </fieldset>
       {mode === "chat" && (
         <div>
@@ -43,9 +45,10 @@ export function CreateEscalation({ baseCount, extraCount }: { baseCount: number;
       )}
       <p className="text-sm text-muted">
         {baseCount} Grundregeln, {extraCount} Zusatzregeln.{" "}
-        <Link href="/admin?tab=eskalation" className="text-accent-2 underline">Regelpool bearbeiten</Link>
+        {isAdmin && <Link href="/admin?tab=eskalation" className="text-accent-2 underline">Regelpool bearbeiten</Link>}
       </p>
       <button className="btn-primary" disabled={pending || !!missing}>Runde eröffnen</button>
+      {!isAdmin && <p className="text-xs text-muted">Runden ohne Admin erscheinen nicht in Übersichten und Stats und werden nach dem Ende nicht gespeichert.</p>}
       {missing && <p className="text-sm text-fail">Noch keine aktiven {missing} – zuerst im Admin-Bereich anlegen.</p>}
       {state?.error && <p className="text-sm text-fail">{state.error}</p>}
     </form>

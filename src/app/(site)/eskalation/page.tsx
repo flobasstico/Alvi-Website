@@ -9,7 +9,7 @@ export const metadata = { title: "Regel-Eskalation" }
 const STATUS: Record<string, string> = { bereit: "Bereit", laeuft: "Läuft", beendet: "Beendet" }
 
 export default async function EskalationPage() {
-  const { supabase, isAdmin } = await getViewer()
+  const { supabase, user, isAdmin } = await getViewer()
   const [{ data: sessions }, { data: pool }] = await Promise.all([
     supabase.from("escalation_sessions").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30),
     supabase.from("escalation_rules").select("kind").eq("active", true),
@@ -43,14 +43,17 @@ export default async function EskalationPage() {
             {!sessions?.length && <li className="text-muted">Noch keine Runden.</li>}
           </ul>
         </section>
-        {isAdmin && (
+        {user ? (
           <aside className="panel h-fit">
             <h2 className="mb-3 font-display text-2xl">Neue Runde</h2>
             <CreateEscalation
+              isAdmin={isAdmin}
               baseCount={pool?.filter((r) => r.kind === "grund").length ?? 0}
               extraCount={pool?.filter((r) => r.kind !== "grund").length ?? 0}
             />
           </aside>
+        ) : (
+          <aside className="panel h-fit text-muted">Mit Twitch einloggen, um eine eigene Runde zu eröffnen.</aside>
         )}
       </div>
     </>

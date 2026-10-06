@@ -4,6 +4,7 @@ import clsx from "clsx"
 import Link from "next/link"
 import { useCallback, useEffect, useMemo, useState } from "react"
 import { LoadoutBar, type SlotItem } from "@/components/loadout-bar"
+import { GoneNote, UnofficialNote } from "@/components/replay-button"
 import { joinResult, PlayersPanel, WinnerPicker } from "@/components/session/players"
 import type { Tables } from "@/lib/database.types"
 import { LOADOUT_SLOTS, type LootItem } from "@/lib/loadout"
@@ -21,14 +22,16 @@ export function LoadoutRoom({ initial, items, userId, login }: { initial: State;
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [choosing, setChoosing] = useState(false)
+  const [gone, setGone] = useState(false)
   const id = session.id
 
   const refetch = useCallback(async () => {
     const [s, p] = await Promise.all([
-      supabase.from("loadout_sessions").select("*").eq("id", id).single(),
+      supabase.from("loadout_sessions").select("*").eq("id", id).maybeSingle(),
       supabase.from("loadout_players").select("*").eq("session_id", id).order("joined_at"),
     ])
     if (s.data) setState({ session: s.data, players: p.data ?? [] })
+    else if (!s.error) setGone(true)
   }, [supabase, id])
 
   // Realtime + Fallback-Polling
@@ -79,6 +82,8 @@ export function LoadoutRoom({ initial, items, userId, login }: { initial: State;
     await refetch()
   }
 
+  if (gone) return <GoneNote back="/loadout?modus=mehrspieler" />
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-wrap items-center gap-3">
@@ -89,6 +94,7 @@ export function LoadoutRoom({ initial, items, userId, login }: { initial: State;
         </span>
       </div>
       {error && <p className="rounded-xl border border-fail bg-fail/10 px-3 py-2 text-sm text-fail">{error}</p>}
+      {!session.official && <UnofficialNote game="loadout" />}
 
       {session.status === "offen" && me && (
         <section className="panel flex flex-col gap-3">
