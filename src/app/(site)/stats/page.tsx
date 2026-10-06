@@ -84,7 +84,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
 
       {ansicht !== "alvi" ? (
         <>
-          {viewer ? (
+          {viewer && (
             <section className="panel mb-6">
               <h2 className="mb-1 font-display text-2xl">Zuschauer-Runden</h2>
               <p className="mb-3 text-sm text-muted">
@@ -104,26 +104,6 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
                 {!frequency.length && <p className="text-muted">Noch keine Zuschauer-Runden gespielt.</p>}
               </div>
             </section>
-          ) : (
-          <section className="panel mb-6 flex flex-wrap items-center gap-x-6 gap-y-3">
-            <div>
-              <div className="text-xs font-bold uppercase text-muted">🎮 Alvi</div>
-              <div className={clsx("font-display text-5xl", rate >= 50 ? "text-win" : "text-accent")}>{rate} %</div>
-              <div className="text-xs text-muted">seiner Challenges geschafft</div>
-            </div>
-            <div className="grid flex-1 grid-cols-2 gap-2 sm:grid-cols-4">
-              <MiniStat label="Abgeschlossen" value={total?.finished ?? 0} />
-              <MiniStat label="Geschafft" value={total?.won ?? 0} className="text-win" />
-              <MiniStat label="Gescheitert" value={total?.lost ?? 0} className="text-fail" />
-              <MiniStat
-                label="Aktuelle Serie"
-                value={st.current ? `${st.current.count}× ${st.current.status === "geschafft" ? "✅" : "❌"}` : "–"}
-              />
-            </div>
-            <Link href="/stats?ansicht=alvi" className="text-sm text-accent-2 underline">
-              Alle Details →
-            </Link>
-          </section>
           )}
 
           <section id="spieler" className="panel mb-6">
@@ -290,15 +270,6 @@ function Stat({ label, value, className }: { label: string; value: string | numb
     <div className="panel p-4 text-center">
       <div className={clsx("font-display text-3xl", className)}>{value}</div>
       <div className="text-xs text-muted">{label}</div>
-    </div>
-  )
-}
-
-function MiniStat({ label, value, className }: { label: string; value: string | number; className?: string }) {
-  return (
-    <div className="rounded-xl bg-bg/40 px-3 py-2 text-center">
-      <div className={clsx("font-display text-2xl", className)}>{value}</div>
-      <div className="text-[11px] text-muted">{label}</div>
     </div>
   )
 }
