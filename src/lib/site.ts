@@ -9,6 +9,7 @@ export const CHANNELS = [
   { key: "link_instagram", label: "Instagram" },
   { key: "link_tiktok", label: "TikTok" },
   { key: "link_merch", label: "Merch" },
+  { key: "link_epic", label: "Epic Games" },
   { key: "link_x", label: "X" },
   { key: "link_discord", label: "Discord" },
 ] as const

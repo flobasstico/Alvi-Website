@@ -78,6 +78,20 @@ function BuiltInIcon({ platform, className }: { platform: string; className?: st
           <circle cx="14.2" cy="12.3" r="1.1" fill="#5865f2" />
         </svg>
       )
+    case "link_epic":
+      // Epic-Games-Schild mit Schriftzug
+      return (
+        <svg viewBox="0 0 24 24" className={className} aria-hidden>
+          <rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="#121212" stroke="#fff" strokeOpacity=".25" />
+          <path d="M6.8 3.8h10.4c.7 0 1.2.5 1.2 1.2v11.4L12 20.3l-6.4-3.9V5c0-.7.5-1.2 1.2-1.2z" fill="#121212" stroke="#fff" strokeWidth="1.1" />
+          <text x="12" y="11.3" textAnchor="middle" fill="#fff" fontSize="4.6" fontWeight="900" fontFamily="Arial, Helvetica, sans-serif" letterSpacing="-.2">
+            EPIC
+          </text>
+          <text x="12" y="14.6" textAnchor="middle" fill="#fff" fontSize="2.4" fontWeight="800" fontFamily="Arial, Helvetica, sans-serif" letterSpacing=".2">
+            GAMES
+          </text>
+        </svg>
+      )
     case "link_merch":
       return (
         <svg viewBox="0 0 24 24" className={className} aria-hidden>
