@@ -60,5 +60,6 @@ export const NAV = [
   { href: "/olympiade", label: "Olympiade" },
   { href: "/liga", label: "Creator-Liga" },
   { href: "/stats", label: "Stats" },
+  { href: "/ranglisten", label: "Ranglisten" },
   { href: "/vorschlaege", label: "Community-Vorschläge" },
 ] as const
