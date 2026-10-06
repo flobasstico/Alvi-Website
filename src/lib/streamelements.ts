@@ -76,11 +76,11 @@ const UNITS: [number, string][] = [
   [30 * 24 * 60, "M"],
   [7 * 24 * 60, "W"],
   [24 * 60, "T"],
-  [60, "S"],
+  [60, "h"],
   [1, "m"],
 ]
 
-/** Minuten lesbar: „2M 1W 3T 4S 5m“ (Monat, Woche, Tag, Stunde, Minute) – leere Einheiten entfallen */
+/** Minuten lesbar: „2M 1W 3T 4h 5m“ (Monat, Woche, Tag, Stunde, Minute) – leere Einheiten entfallen */
 export function formatWatchtime(minutes: number) {
   let rest = Math.max(0, Math.round(minutes))
   const parts: string[] = []
@@ -91,6 +91,3 @@ export function formatWatchtime(minutes: number) {
   }
   return parts.join(" ") || "0m"
 }
-
-/** Legende zu den Abkürzungen */
-export const WATCHTIME_LEGEND = "M = Monat (30 Tage) · W = Woche · T = Tag · S = Stunde · m = Minute"

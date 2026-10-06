@@ -1,7 +1,7 @@
 import clsx from "clsx"
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
-import { formatWatchtime, PAGE_SIZE, WATCHTIME_LEGEND, rankEntries, seChannelId, seLeaderboard, seUser, type SeBoard, type SeUser } from "@/lib/streamelements"
+import { formatWatchtime, PAGE_SIZE, rankEntries, seChannelId, seLeaderboard, seUser, type SeBoard, type SeUser } from "@/lib/streamelements"
 import { getViewer } from "@/lib/supabase/server"
 
 export const metadata = { title: "Community-Ranglisten" }
@@ -124,9 +124,7 @@ export default async function RanglistenPage({ searchParams }: { searchParams: P
               <p className="text-muted">Die Rangliste ist gerade nicht erreichbar. Bitte später nochmal versuchen.</p>
             )}
           </section>
-          <p className="mt-3 text-xs text-muted">
-            {WATCHTIME_LEGEND}. Daten von StreamElements, alle 15 Minuten aktualisiert. Bots werden ausgeblendet.
-          </p>
+          <p className="mt-3 text-xs text-muted">Daten von StreamElements, alle 15 Minuten aktualisiert. Bots werden ausgeblendet.</p>
         </>
       )}
     </>
