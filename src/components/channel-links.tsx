@@ -39,7 +39,7 @@ export function ChannelLinks({ channels }: { channels: Channel[] }) {
           aria-label={c.label}
           className="rounded-xl p-1 transition hover:-translate-y-0.5 hover:bg-white/10 active:scale-90"
         >
-          <PlatformIcon platform={c.key} src={c.icon} className="h-9 w-9" />
+          <PlatformIcon platform={c.key} src={c.icon} className="h-8 w-8 sm:h-9 sm:w-9" />
         </button>
       ))}
 

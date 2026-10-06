@@ -59,7 +59,7 @@ export default async function Home() {
           {"Stellt eure eigenen Fortnite-Challenges zusammen oder spielt die eures Lieblingscreators nach!\nDie Challenges der Creator werden sogar getrackt – wer ist der Beste?"}
         </p>
         {channels.length > 0 && (
-          <div className="mt-5 flex items-center justify-center gap-3">
+          <div className="mt-5 flex flex-wrap items-center justify-center gap-1 sm:gap-3">
             <ChannelLinks channels={channels} />
           </div>
         )}
@@ -72,7 +72,13 @@ export default async function Home() {
           finished={total?.finished ?? 0}
           players={topPlayers}
         />
-        <CreatorCode className="mt-5 hidden pr-1 text-right sm:block" />
+        {/* Unten: kleiner Link zu den Minispielen (links), Creator Code (rechts, ab Tablet) */}
+        <div className="mt-5 flex flex-col items-center gap-2 px-1 sm:flex-row sm:justify-between">
+          <Link href="/minispiele" className="rounded-full border border-line bg-bg/50 px-3 py-1 text-sm text-muted hover:border-accent hover:text-accent">
+            🕹️ Minispiele – schlag Alvis Highscore →
+          </Link>
+          <CreatorCode className="hidden sm:block" />
+        </div>
       </section>
 
       {active && active.length > 0 && (

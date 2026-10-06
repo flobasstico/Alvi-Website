@@ -23,10 +23,11 @@ export default async function MinispielePage() {
       <PageTitle title="Minispiele" subtitle="Kleine Spiele für zwischendurch – mit Twitch-Login landest du in der Bestenliste. Schaffst du es, Alvi zu schlagen?" />
       <div className="grid gap-4 md:grid-cols-2">
         {games.map((g) => (
-          <Link key={g.key} href={`/minispiele/${g.key}`} className="panel group transition hover:-translate-y-1 hover:border-accent">
+          <Link key={g.key} href={`/minispiele/${g.key}`} className="panel group flex flex-col transition hover:-translate-y-1 hover:border-accent">
             <div className="text-5xl">{g.emoji}</div>
             <h2 className="mt-2 font-display text-3xl group-hover:text-accent">{g.title}</h2>
-            <p className="text-sm text-muted">{g.text}</p>
+            {/* Text füllt den Platz, damit Punkteleiste und Button bei beiden Karten auf gleicher Höhe stehen */}
+            <p className="flex-1 text-sm text-muted">{g.text}</p>
             <dl className="mt-4 grid grid-cols-3 gap-2 text-center text-sm">
               <Highscore label="Heute" entry={g.today} />
               <Highscore label="Ewig" entry={g.ever} />
