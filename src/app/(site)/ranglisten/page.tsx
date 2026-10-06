@@ -1,7 +1,7 @@
 import clsx from "clsx"
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
-import { formatWatchtime, PAGE_SIZE, rankEntries, seChannelId, seLeaderboard, seUser, type SeBoard, type SeUser } from "@/lib/streamelements"
+import { formatWatchtime, PAGE_SIZE, WATCHTIME_LEGEND, rankEntries, seChannelId, seLeaderboard, seUser, type SeBoard, type SeUser } from "@/lib/streamelements"
 import { getViewer } from "@/lib/supabase/server"
 
 export const metadata = { title: "Community-Ranglisten" }
@@ -93,11 +93,8 @@ export default async function RanglistenPage({ searchParams }: { searchParams: P
                         className={clsx("-mx-2 flex items-center gap-3 rounded-lg px-2 py-2", rank <= 3 && "sm:text-lg", e.username.toLowerCase() === myLogin && "bg-accent/10")}
                       >
                         <span className="w-10 shrink-0 font-display tabular-nums text-muted sm:w-12">{["🥇", "🥈", "🥉"][rank - 1] ?? `${rank}.`}</span>
-                        {/* Handy: Wert unter dem Namen, sonst rechtsbündig daneben */}
-                        <span className="flex min-w-0 flex-1 flex-col sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-                          <span className="truncate font-semibold">{e.username}</span>
-                          <span className="text-sm font-bold tabular-nums text-accent sm:text-right sm:text-[length:inherit]">{value(e.value)}</span>
-                        </span>
+                        <span className="min-w-0 flex-1 truncate font-semibold">{e.username}</span>
+                        <span className="shrink-0 font-bold tabular-nums text-accent">{value(e.value)}</span>
                       </li>
                     )
                   })}
@@ -127,7 +124,9 @@ export default async function RanglistenPage({ searchParams }: { searchParams: P
               <p className="text-muted">Die Rangliste ist gerade nicht erreichbar. Bitte später nochmal versuchen.</p>
             )}
           </section>
-          <p className="mt-3 text-xs text-muted">Daten von StreamElements, alle 15 Minuten aktualisiert. Bots werden ausgeblendet.</p>
+          <p className="mt-3 text-xs text-muted">
+            {WATCHTIME_LEGEND}. Daten von StreamElements, alle 15 Minuten aktualisiert. Bots werden ausgeblendet.
+          </p>
         </>
       )}
     </>

@@ -71,23 +71,26 @@ export function rankEntries(entries: readonly SeEntry[], page: number, firstPage
   return entries.filter((e) => !isBot(e.username)).map((e) => ({ ...e, rank: ++rank }))
 }
 
-/** Einheiten für die Watchtime (1 Monat = 30 Tage) */
+/** Einheiten für die Watchtime (1 Monat = 30 Tage); großes M = Monat, kleines m = Minute */
 const UNITS: [number, string][] = [
-  [30 * 24 * 60, "Mon."],
-  [7 * 24 * 60, "Wo."],
-  [24 * 60, "Tg."],
-  [60, "Std."],
-  [1, "Min."],
+  [30 * 24 * 60, "M"],
+  [7 * 24 * 60, "W"],
+  [24 * 60, "T"],
+  [60, "S"],
+  [1, "m"],
 ]
 
-/** Minuten lesbar: „2 Mon. 1 Wo. 3 Tg. 4 Std. 5 Min.“ – leere Einheiten entfallen */
+/** Minuten lesbar: „2M 1W 3T 4S 5m“ (Monat, Woche, Tag, Stunde, Minute) – leere Einheiten entfallen */
 export function formatWatchtime(minutes: number) {
   let rest = Math.max(0, Math.round(minutes))
   const parts: string[] = []
   for (const [size, label] of UNITS) {
     const n = Math.floor(rest / size)
     rest -= n * size
-    if (n) parts.push(`${n} ${label}`)
+    if (n) parts.push(`${n}${label}`)
   }
-  return parts.join(" ") || "0 Min."
+  return parts.join(" ") || "0m"
 }
+
+/** Legende zu den Abkürzungen */
+export const WATCHTIME_LEGEND = "M = Monat (30 Tage) · W = Woche · T = Tag · S = Stunde · m = Minute"

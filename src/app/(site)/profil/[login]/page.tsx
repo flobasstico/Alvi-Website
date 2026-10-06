@@ -4,7 +4,7 @@ import { notFound } from "next/navigation"
 import { PLAYER_GAME_LABEL } from "@/lib/player-stats"
 import { loadPlayerStats } from "@/lib/player-stats-server"
 import { badges, gameLines, totals } from "@/lib/profile"
-import { formatWatchtime, seChannelId, seUser } from "@/lib/streamelements"
+import { formatWatchtime, seChannelId, seUser, WATCHTIME_LEGEND } from "@/lib/streamelements"
 import { getViewer } from "@/lib/supabase/server"
 import { VisibilityToggle } from "./visibility-toggle"
 
@@ -98,7 +98,9 @@ export default async function ProfilPage({ params }: { params: Promise<{ login: 
             <div className="flex flex-col gap-2">
               <div className="rounded-lg bg-panel-2 px-2 py-2 text-center">
                 <div className="font-display text-lg leading-tight text-accent">{formatWatchtime(se.watchtime)}</div>
-                <div className="text-[11px] text-muted">Watchtime</div>
+                <div className="text-[11px] text-muted" title={WATCHTIME_LEGEND}>
+                  Watchtime
+                </div>
               </div>
               <Numbers items={[["Punkte", se.points.toLocaleString("de-DE")], ["Punkte-Rang", se.rank ? `#${se.rank}` : "–"]]} />
             </div>
