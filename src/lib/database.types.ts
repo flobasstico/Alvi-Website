@@ -75,6 +75,18 @@ export type Database = {
         Update: { approved?: boolean; author_id?: string; author_name?: string | null; created_at?: string; folder?: string; id?: never; tasks?: string[]; title?: string }
         Relationships: Rel[]
       }
+      suggestions: {
+        Row: { author_id: string; body: string; created_at: string; id: number }
+        Insert: { author_id?: string; body: string; created_at?: string; id?: never }
+        Update: { author_id?: string; body?: string; created_at?: string; id?: never }
+        Relationships: Rel[]
+      }
+      suggestion_votes: {
+        Row: { suggestion_id: number; user_id: string; value: number }
+        Insert: { suggestion_id: number; user_id: string; value: number }
+        Update: { suggestion_id?: number; user_id?: string; value?: number }
+        Relationships: Rel[]
+      }
       bingo_rounds: {
         Row: { challenge_id: number | null; created_at: string; ended_at: string | null; host_id: string; id: number; max_players: number; official: boolean; result: string | null; started_at: string | null; status: string; tasks: string[]; template_id: number | null; title: string | null }
         Insert: { challenge_id?: number | null; created_at?: string; ended_at?: string | null; host_id?: string; id?: never; max_players?: number; official?: boolean; result?: string | null; started_at?: string | null; status?: string; tasks: string[]; template_id?: number | null; title?: string | null }
@@ -276,6 +288,8 @@ export type Database = {
       olympic_spin: { Args: { p_id: number }; Returns: number }
       olympic_decide: { Args: { p_game: number; p_winner: string }; Returns: undefined }
       olympic_finish: { Args: { p_id: number }; Returns: string }
+      suggestion_create: { Args: { p_body: string }; Returns: number }
+      suggestion_vote: { Args: { p_id: number; p_value: number }; Returns: undefined }
       bingo_card_create: { Args: { p_tasks: string[]; p_title: string }; Returns: number }
       bingo_finish: { Args: { p_round: number }; Returns: string }
       bingo_join: { Args: { p_round: number; p_code?: string | null }; Returns: string | null }
