@@ -6,7 +6,7 @@ import { LineChart } from "@/components/league/line-chart"
 import { PieChart } from "@/components/league/pie-chart"
 import { YoutubeButton } from "@/components/league/youtube-button"
 import { PageTitle } from "@/components/page-title"
-import { creatorColors, leaguePoints, leagueTable, pointsTimeline, winShare, type LeagueSort } from "@/lib/league"
+import { creatorColors, leagueTable, pointsByResult, pointsTimeline, winShare, type LeagueSort } from "@/lib/league"
 import { loadLeague } from "@/lib/league-server"
 import { getViewer } from "@/lib/supabase/server"
 
@@ -24,6 +24,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
   const colors = creatorColors(creators)
   const names = new Map(creators.map((c) => [c.id, c.name]))
   const timeline = pointsTimeline(challenges, results, rows)
+  const lp = pointsByResult(results)
 
   const link = (next: { sort?: string }) => (next.sort ? `/liga?sort=${next.sort}` : "/liga")
 
@@ -45,7 +46,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
       <section className="panel mb-6">
         <h2 className="mb-1 font-display text-2xl">Ewige Tabelle</h2>
         <p className="mb-3 text-sm text-muted">
-          Ligapunkte nach Platzierung je Challenge: 1. Platz 3, 2. Platz 2, 3. Platz 1. Bei Punkte-Challenges zählt die Rangfolge der Punkte.
+          Ligapunkte = geschlagene Gegner: Für jeden Teilnehmer, der in einer Challenge hinter dir landet, gibt es 1 Punkt (bei 8 Teilnehmern bekommt der Sieger 7, im Duell 1). Gleiche Plätze teilen sich die Punkte; bei Punkte-Challenges zählt die Rangfolge der Punkte.
         </p>
         {rows.length ? (
           <div className="-mx-2 overflow-x-auto px-2">
@@ -151,7 +152,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: colors.get(r.creator_id) }} />
                       <span className="font-semibold">{r.won ? "🏆 " : `${r.placement}. `}{names.get(r.creator_id) ?? "?"}</span>
                       {r.points != null && <span className="text-muted">{r.points} P.</span>}
-                      <span className="text-xs text-accent">+{leaguePoints(r.placement)}</span>
+                      <span className="text-xs text-accent">+{lp.get(`${c.id}-${r.creator_id}`) ?? 0}</span>
                     </li>
                   ))}
                 </ol>

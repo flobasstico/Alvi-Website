@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { headToHead, isYoutubeUrl, leaguePoints, leagueTable, pointsTimeline, winShare, type LeagueChallenge, type LeagueResult } from "./league"
+import { headToHead, isYoutubeUrl, leaguePoints, leagueTable, pointsByResult, pointsTimeline, winShare, type LeagueChallenge, type LeagueResult } from "./league"
 
 const creators = [
   { id: 1, name: "Alvi", avatar_url: null },
@@ -20,16 +20,24 @@ const results = [
 ]
 
 describe("Creator-Liga", () => {
-  it("vergibt Ligapunkte nach Platz", () => {
-    expect([1, 2, 3, 4].map((p) => leaguePoints(p))).toEqual([3, 2, 1, 0])
+  it("vergibt Ligapunkte für geschlagene Gegner", () => {
+    const eight = [1, 2, 3, 4, 5, 6, 7, 8]
+    expect(eight.map((p) => leaguePoints(p, eight))).toEqual([7, 6, 5, 4, 3, 2, 1, 0])
+    expect([1, 2].map((p) => leaguePoints(p, [1, 2]))).toEqual([1, 0])
+    // Gleichstand: zwei Zweite schlagen beide nur den Letzten
+    expect([1, 2, 2, 4].map((p) => leaguePoints(p, [1, 2, 2, 4]))).toEqual([3, 1, 1, 0])
+    const lp = pointsByResult(results)
+    expect([lp.get("1-1"), lp.get("1-2"), lp.get("1-3")]).toEqual([2, 1, 0])
+    expect([lp.get("2-2"), lp.get("2-1"), lp.get("2-3")]).toEqual([2, 0, 0])
+    expect([lp.get("3-1"), lp.get("3-2")]).toEqual([1, 0])
   })
 
   it("baut die Tabelle nach Ligapunkten", () => {
     const rows = leagueTable(challenges, results, creators)
     expect(rows.map((r) => [r.name, r.leaguePoints, r.wins, r.rounds, r.points])).toEqual([
-      ["Alvi", 8, 2, 3, 10],
-      ["Kevin", 7, 1, 3, 25],
-      ["Lisa", 3, 0, 2, 10],
+      ["Alvi", 3, 2, 3, 10],
+      ["Kevin", 3, 1, 3, 25],
+      ["Lisa", 0, 0, 2, 10],
     ])
     expect(leagueTable(challenges, results, creators, "punkte")[0].name).toBe("Kevin")
   })
@@ -39,8 +47,8 @@ describe("Creator-Liga", () => {
     expect(winShare(rows).map((s) => [s.label, s.value])).toEqual([["Alvi", 2], ["Kevin", 1]])
     expect(winShare(rows, 1).map((s) => s.label)).toEqual(["Alvi", "Andere"])
     const t = pointsTimeline(challenges, results, rows)
-    expect(t.series.find((s) => s.label === "Alvi")!.values).toEqual([3, 5, 8])
-    expect(t.series.find((s) => s.label === "Lisa")!.values).toEqual([1, 3, 3])
+    expect(t.series.find((s) => s.label === "Alvi")!.values).toEqual([2, 2, 3])
+    expect(t.series.find((s) => s.label === "Kevin")!.values).toEqual([1, 3, 3])
     expect(headToHead(results, 1, 2)).toEqual({ shared: 3, aBetter: 2, bBetter: 1, even: 0, aWins: 2, bWins: 1 })
     expect(headToHead(results, 1, 3)).toMatchObject({ shared: 2, aBetter: 1, even: 1 })
   })

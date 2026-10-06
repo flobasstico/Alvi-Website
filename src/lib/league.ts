@@ -11,11 +11,22 @@ export type LeagueChallenge = {
 }
 export type LeagueResult = { challenge_id: number; creator_id: number; placement: number; points: number | null; won: boolean }
 
-export const DEFAULT_SCHEME = [3, 2, 1]
 export const CREATOR_COLORS = ["#facc15", "#22d3ee", "#f472b6", "#4ade80", "#fb923c", "#a78bfa", "#f87171", "#60a5fa", "#e5e7eb", "#2dd4bf"]
 
-/** Ligapunkte für eine Platzierung: 1. Platz 3, 2. Platz 2, 3. Platz 1, danach 0 */
-export const leaguePoints = (placement: number) => DEFAULT_SCHEME[placement - 1] ?? 0
+/**
+ * Ligapunkte = geschlagene Gegner: 1 Punkt für jeden Teilnehmer, der schlechter platziert ist.
+ * Gleiche Plätze teilen sich die Punkte. Bei 8 Teilnehmern: Platz 1 = 7 … Platz 8 = 0; im Duell: Sieger 1.
+ */
+export function leaguePoints(placement: number, placements: readonly number[]) {
+  return placements.filter((p) => p > placement).length
+}
+
+/** Ligapunkte je Ergebnis (Schlüssel „challenge-creator“) */
+export function pointsByResult(results: readonly LeagueResult[]) {
+  const byChallenge = new Map<number, number[]>()
+  for (const r of results) byChallenge.set(r.challenge_id, [...(byChallenge.get(r.challenge_id) ?? []), r.placement])
+  return new Map(results.map((r) => [`${r.challenge_id}-${r.creator_id}`, leaguePoints(r.placement, byChallenge.get(r.challenge_id)!)]))
+}
 
 /** Feste Farbe je Creator (nach Anlage-Reihenfolge), überall gleich */
 export function creatorColors(creators: readonly Creator[]) {
@@ -43,6 +54,7 @@ export function leagueTable(
   sort: LeagueSort = "ligapunkte",
 ): LeagueRow[] {
   const colors = creatorColors(creators)
+  const lp = pointsByResult(results)
   const byId = new Map(creators.map((c) => [c.id, c]))
   const known = new Set(challenges.map((c) => c.id))
   const rows = new Map<number, LeagueRow>()
@@ -54,7 +66,7 @@ export function leagueTable(
       ({ creatorId: c.id, name: c.name, avatar: c.avatar_url, color: colors.get(c.id)!, youtube: c.youtube_url ?? null, leaguePoints: 0, wins: 0, rounds: 0, winRate: 0, points: null } as LeagueRow)
     row.rounds++
     if (r.won) row.wins++
-    row.leaguePoints += leaguePoints(r.placement)
+    row.leaguePoints += lp.get(`${r.challenge_id}-${r.creator_id}`) ?? 0
     if (r.points != null) row.points = (row.points ?? 0) + r.points
     rows.set(c.id, row)
   }
@@ -98,13 +110,14 @@ export function pointsTimeline(
 ): Timeline {
   const ordered = [...challenges].sort((a, b) => a.played_at.localeCompare(b.played_at) || a.id - b.id)
   const shown = [...rows].sort((a, b) => b.leaguePoints - a.leaguePoints).slice(0, top)
+  const lp = pointsByResult(results)
   const byChallenge = new Map<number, LeagueResult[]>()
   for (const r of results) byChallenge.set(r.challenge_id, [...(byChallenge.get(r.challenge_id) ?? []), r])
   const totals = new Map(shown.map((r) => [r.creatorId, 0]))
   const values = new Map(shown.map((r) => [r.creatorId, [] as number[]]))
   for (const ch of ordered) {
     for (const r of byChallenge.get(ch.id) ?? []) {
-      if (totals.has(r.creator_id)) totals.set(r.creator_id, totals.get(r.creator_id)! + leaguePoints(r.placement))
+      if (totals.has(r.creator_id)) totals.set(r.creator_id, totals.get(r.creator_id)! + (lp.get(`${r.challenge_id}-${r.creator_id}`) ?? 0))
     }
     for (const [id, list] of values) list.push(totals.get(id)!)
   }
