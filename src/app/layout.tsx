@@ -1,5 +1,6 @@
 import type { Metadata } from "next"
 import { Inter, Luckiest_Guy } from "next/font/google"
+import { TouchActive } from "@/components/touch-active"
 import "./globals.css"
 
 const body = Inter({ variable: "--font-body", subsets: ["latin"] })
@@ -14,6 +15,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
   return (
     <html lang="de">
       <body className={`${body.variable} ${display.variable} font-sans antialiased`}>
+        <TouchActive />
         {children}
       </body>
     </html>

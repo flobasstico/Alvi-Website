@@ -27,6 +27,36 @@ body {
   min-height: 100dvh;
 }
 
+/*
+ * Klick-Effekt für alles Anklickbare: kurz kleiner und etwas dunkler, solange gedrückt.
+ * Bewusst außerhalb der Tailwind-Layer, damit er auch über Hover-Effekten (z. B. hover:brightness) liegt.
+ * „scale“ statt „transform“, damit vorhandene Verschiebungen/Drehungen erhalten bleiben.
+ * Deaktivierte Elemente reagieren nicht.
+ */
+@layer base {
+  a,
+  button,
+  summary,
+  select,
+  label,
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"] {
+    transition-property: scale, filter, color, background-color, border-color, opacity, box-shadow;
+    transition-duration: 120ms;
+  }
+}
+:is(a, button, summary, select, [role="button"]):active:not(:disabled):not([aria-disabled="true"]),
+label:has(input:not(:disabled)):active,
+:is(input[type="checkbox"], input[type="radio"]):active:not(:disabled) {
+  scale: 0.96;
+  filter: brightness(0.82);
+  transition-duration: 40ms;
+}
+:is(button, input, select):disabled {
+  scale: none;
+}
+
 .font-display {
   font-family: var(--font-display), system-ui, sans-serif;
   letter-spacing: 0.02em;
@@ -36,7 +66,7 @@ body {
   @apply rounded-2xl border border-line bg-panel/80 p-5 shadow-xl shadow-black/30 backdrop-blur;
 }
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-primary {
   @apply btn bg-accent text-black hover:brightness-110;
