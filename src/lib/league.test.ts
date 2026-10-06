@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { headToHead, isYoutubeUrl, leaguePoints, leagueTable, pointsByResult, pointsTimeline, winShare, type LeagueChallenge, type LeagueResult } from "./league"
+import { creatorColors, headToHead, isDarkColor, isYoutubeUrl, leaguePoints, leagueTable, pointsByResult, pointsTimeline, winShare, type LeagueChallenge, type LeagueResult } from "./league"
 
 const creators = [
   { id: 1, name: "Alvi", avatar_url: null },
@@ -58,5 +58,28 @@ describe("Creator-Liga", () => {
     expect(isYoutubeUrl("https://www.youtube.com/watch?v=abc")).toBe(true)
     expect(isYoutubeUrl("https://twitch.tv/abc")).toBe(false)
     expect(isYoutubeUrl("http://youtube.com/abc")).toBe(false)
+  })
+})
+
+describe("Creator-Farben", () => {
+  it("nutzt feste Farben und verteilt die übrigen ohne Doppelung", () => {
+    const cs = [
+      { id: 1, name: "Alvi", avatar_url: null, color: "#1d4ed8" },
+      { id: 2, name: "Magican", avatar_url: null, color: "#facc15" },
+      { id: 3, name: "Lisa", avatar_url: null },
+      { id: 4, name: "Tom", avatar_url: null },
+    ]
+    const m = creatorColors(cs)
+    expect(m.get(1)).toBe("#1d4ed8")
+    expect(m.get(2)).toBe("#facc15")
+    expect(m.get(3)).toBe("#22d3ee")
+    expect(new Set(m.values()).size).toBe(4)
+  })
+
+  it("erkennt dunkle Farben", () => {
+    expect(isDarkColor("#000000")).toBe(true)
+    expect(isDarkColor("#1d4ed8")).toBe(true)
+    expect(isDarkColor("#22c55e")).toBe(false)
+    expect(isDarkColor("#f97316")).toBe(false)
   })
 })

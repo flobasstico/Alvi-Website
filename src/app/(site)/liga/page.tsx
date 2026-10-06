@@ -6,7 +6,7 @@ import { LineChart } from "@/components/league/line-chart"
 import { PieChart } from "@/components/league/pie-chart"
 import { YoutubeButton } from "@/components/league/youtube-button"
 import { PageTitle } from "@/components/page-title"
-import { creatorColors, leagueTable, pointsByResult, pointsTimeline, winShare, type LeagueSort } from "@/lib/league"
+import { creatorColors, leagueTable, pointsByResult, pointsTimeline, swatchStyle, winShare, type LeagueSort } from "@/lib/league"
 import { loadLeague } from "@/lib/league-server"
 import { getViewer } from "@/lib/supabase/server"
 
@@ -71,7 +71,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                           // eslint-disable-next-line @next/next/no-img-element
                           <img src={r.avatar} alt="" className="h-6 w-6 rounded-full object-cover" />
                         ) : (
-                          <span className="h-3 w-3 rounded-full" style={{ background: r.color }} />
+                          <span className="h-3 w-3 rounded-full" style={swatchStyle(r.color)} />
                         )}
                         {r.youtube ? (
                           <YoutubeButton url={r.youtube} title={r.name} kind="kanal">
@@ -146,7 +146,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                       key={r.creator_id}
                       className={clsx("flex items-center gap-1.5 rounded-full border px-2.5 py-0.5", r.won ? "border-accent bg-accent/10" : "border-line")}
                     >
-                      <span className="h-2.5 w-2.5 rounded-full" style={{ background: colors.get(r.creator_id) }} />
+                      <span className="h-2.5 w-2.5 rounded-full" style={swatchStyle(colors.get(r.creator_id) ?? "#6b7280")} />
                       <span className="font-semibold">{r.won ? "🏆 " : `${r.placement}. `}{names.get(r.creator_id) ?? "?"}</span>
                       <span className="text-xs text-accent">+{lp.get(`${c.id}-${r.creator_id}`) ?? 0}</span>
                     </li>

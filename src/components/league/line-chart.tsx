@@ -1,4 +1,4 @@
-import type { Timeline } from "@/lib/league"
+import { isDarkColor, swatchStyle, type Timeline } from "@/lib/league"
 
 const fmt = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })
 
@@ -34,6 +34,16 @@ export function LineChart({ data }: { data: Timeline }) {
         )}
         {data.series.map((s) => (
           <g key={s.key}>
+            {isDarkColor(s.color) && (
+              <polyline
+                points={s.values.map((v, i) => `${x(i)},${y(v)}`).join(" ")}
+                fill="none"
+                stroke="#e5e7eb"
+                strokeWidth="5.5"
+                strokeLinejoin="round"
+                strokeLinecap="round"
+              />
+            )}
             <polyline
               points={s.values.map((v, i) => `${x(i)},${y(v)}`).join(" ")}
               fill="none"
@@ -43,7 +53,7 @@ export function LineChart({ data }: { data: Timeline }) {
               strokeLinecap="round"
             />
             {s.values.map((v, i) => (
-              <circle key={i} cx={x(i)} cy={y(v)} r="3.5" fill={s.color}>
+              <circle key={i} cx={x(i)} cy={y(v)} r="3.5" fill={s.color} stroke={isDarkColor(s.color) ? "#e5e7eb" : "none"} strokeWidth="1.5">
                 <title>{`${s.label} · ${fmt(data.labels[i])}: ${v} Ligapunkte`}</title>
               </circle>
             ))}
@@ -53,7 +63,7 @@ export function LineChart({ data }: { data: Timeline }) {
       <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-sm">
         {data.series.map((s) => (
           <li key={s.key} className="flex items-center gap-1.5">
-            <span className="h-1 w-4 rounded" style={{ background: s.color }} />
+            <span className="h-1 w-4 rounded" style={swatchStyle(s.color)} />
             <span className="font-semibold">{s.label}</span>
             <span className="text-muted">{s.values[s.values.length - 1]}</span>
           </li>

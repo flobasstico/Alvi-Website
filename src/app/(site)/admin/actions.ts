@@ -326,7 +326,9 @@ export async function saveCreator(form: FormData) {
   }
   // Ohne eigenen Bild-Link: Profilbild automatisch vom YouTube-Kanal übernehmen
   const picture = avatar || (await fetchYoutubeAvatar(youtube))
-  const row = { name, avatar_url: picture || null, youtube_url: youtube, profile_id: profileId }
+  // Feste Farbe für die Liga; „automatisch“ (oder neu angelegt ohne Farbfeld) = null
+  const color = form.get("color_auto") || !/^#[0-9a-f]{6}$/i.test(str(form, "color")) ? null : str(form, "color").toLowerCase()
+  const row = { name, avatar_url: picture || null, youtube_url: youtube, profile_id: profileId, color }
   const id = Number(str(form, "id"))
   const { error } = id ? await supabase.from("creators").update(row).eq("id", id) : await supabase.from("creators").insert(row)
   if (error?.code === "23505") throw new Error(`„${name}“ gibt es schon`)

@@ -1,6 +1,6 @@
 /** Creator-Liga: Ligapunkte, Tabelle, Diagramm-Daten und Kopf-an-Kopf (rein, ohne Datenbank) */
 
-export type Creator = { id: number; name: string; avatar_url: string | null; youtube_url?: string | null }
+export type Creator = { id: number; name: string; avatar_url: string | null; youtube_url?: string | null; color?: string | null }
 export type LeagueChallenge = {
   id: number
   title: string
@@ -11,7 +11,11 @@ export type LeagueChallenge = {
 }
 export type LeagueResult = { challenge_id: number; creator_id: number; placement: number; points: number | null; won: boolean }
 
-export const CREATOR_COLORS = ["#facc15", "#22d3ee", "#f472b6", "#4ade80", "#fb923c", "#a78bfa", "#f87171", "#60a5fa", "#e5e7eb", "#2dd4bf"]
+/** Automatische Farben (gut unterscheidbar auf dunklem Hintergrund) */
+export const CREATOR_COLORS = [
+  "#facc15", "#22d3ee", "#f472b6", "#4ade80", "#fb923c", "#a78bfa", "#f87171", "#60a5fa", "#e5e7eb", "#2dd4bf",
+  "#c084fc", "#fde047", "#34d399", "#fca5a5", "#93c5fd", "#d9f99d", "#fdba74", "#f0abfc", "#67e8f9", "#bef264",
+]
 
 /**
  * Ligapunkte = geschlagene Gegner: 1 Punkt für jeden Teilnehmer, der schlechter platziert ist.
@@ -30,7 +34,11 @@ export function pointsByResult(results: readonly LeagueResult[]) {
 
 /** Feste Farbe je Creator (nach Anlage-Reihenfolge), überall gleich */
 export function creatorColors(creators: readonly Creator[]) {
-  return new Map([...creators].sort((a, b) => a.id - b.id).map((c, i) => [c.id, CREATOR_COLORS[i % CREATOR_COLORS.length]]))
+  // Feste Farben zuerst; die übrigen Creator bekommen der Reihe nach Farben, die noch niemand fest hat
+  const fixed = new Set(creators.map((c) => c.color?.toLowerCase()).filter(Boolean))
+  const free = CREATOR_COLORS.filter((c) => !fixed.has(c))
+  let i = 0
+  return new Map([...creators].sort((a, b) => a.id - b.id).map((c) => [c.id, c.color || free[i++ % free.length]]))
 }
 
 export type LeagueRow = {
@@ -151,3 +159,17 @@ export function headToHead(results: readonly LeagueResult[], a: number, b: numbe
 
 /** Prüft YouTube-Links (wie die Datenbank) */
 export const isYoutubeUrl = (url: string) => /^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\/\S+$/i.test(url.trim())
+
+/** Dunkle Farben (z. B. Schwarz) brauchen auf dem dunklen Hintergrund eine helle Kontur */
+export function isDarkColor(hex: string) {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex)
+  if (!m) return false
+  const n = parseInt(m[1], 16)
+  const [r, g, b] = [n >> 16, (n >> 8) & 255, n & 255]
+  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 90
+}
+
+/** Style für Farbpunkte/-balken: dunkle Farben bekommen eine helle Kontur */
+export const swatchStyle = (color: string) => ({ background: color, boxShadow: isDarkColor(color) ? "0 0 0 1.5px #e5e7eb" : undefined })
+/** Textfarbe: dunkle Farben würden auf dunklem Grund verschwinden */
+export const textColor = (color: string) => (isDarkColor(color) ? "#e5e7eb" : color)

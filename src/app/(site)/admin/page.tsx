@@ -12,6 +12,7 @@ import {
   type Rarity,
   type Source,
 } from "@/lib/constants"
+import { creatorColors } from "@/lib/league"
 import { getCurrentSeason } from "@/lib/season"
 import { loadSiteSettings } from "@/lib/site"
 import { getViewer } from "@/lib/supabase/server"
@@ -597,6 +598,8 @@ async function LeagueTab({ edit }: { edit: number | null }) {
   const categories = [...new Set((cats ?? []).map((c) => c.category!).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"))
   const editData = editing?.[0].data ? { challenge: editing[0].data, results: editing[1].data ?? [] } : null
 
+  const autoColors = creatorColors(creators ?? [])
+
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
       <section className="panel h-fit">
@@ -645,6 +648,13 @@ async function LeagueTab({ edit }: { edit: number | null }) {
                     <input name="avatar_url" defaultValue={c.avatar_url ?? ""} className="input py-1 text-sm" placeholder="Bild-Link (leer = Profilbild vom YouTube-Kanal)" />
                     <p className="text-xs text-muted">Bild-Link leeren und speichern lädt das Profilbild neu von YouTube.</p>
                     <input name="twitch" defaultValue={c.profile_id ? (loginOf.get(c.profile_id) ?? "") : ""} className="input py-1 text-sm" placeholder="Twitch-Name verknüpfen (optional)" />
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-muted">Farbe</span>
+                      <input type="color" name="color" defaultValue={c.color ?? autoColors.get(c.id) ?? "#facc15"} className="h-7 w-10 cursor-pointer rounded border border-line bg-transparent" />
+                      <label className="flex items-center gap-1 text-xs text-muted">
+                        <input type="checkbox" name="color_auto" defaultChecked={!c.color} /> automatisch
+                      </label>
+                    </div>
                     <div className="flex gap-2">
                       <button className="btn-secondary px-2 py-1 text-xs">Speichern</button>
                     </div>
