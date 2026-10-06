@@ -1,7 +1,13 @@
 import Link from "next/link"
 import { ChannelLinks } from "@/components/channel-links"
+import { HeroHighlights } from "@/components/hero-highlights"
 import { BingoIcon, GoldBarsIcon, LeagueIcon, MapIcon, WheelIcon } from "@/components/tile-icons"
+import { leagueTable } from "@/lib/league"
+import { loadLeague } from "@/lib/league-server"
+import { aggregatePlayers, sortPlayers } from "@/lib/player-stats"
+import { loadPlayerStats } from "@/lib/player-stats-server"
 import { getCurrentSeason } from "@/lib/season"
+import { successRate } from "@/lib/stats"
 import { channelsFromSettings, loadSiteSettings } from "@/lib/site"
 import { createClient } from "@/lib/supabase/server"
 
@@ -19,11 +25,22 @@ const TOOLS = [
 
 export default async function Home() {
   const supabase = await createClient()
-  const [{ data: active }, settings, season] = await Promise.all([
+  const [{ data: active }, settings, season, league, players, { data: total }] = await Promise.all([
     supabase.from("challenges").select("id, title").eq("status", "aktiv").order("played_at", { ascending: false }).limit(3),
     loadSiteSettings(supabase),
     getCurrentSeason(supabase),
+    loadLeague(supabase),
+    loadPlayerStats(supabase),
+    supabase.from("challenge_stats").select("won, finished").is("source", null).maybeSingle(),
   ])
+  // Vorschau in der großen Kachel: Liga-Podest und Stats
+  const podium = leagueTable(league.challenges, league.results, league.creators)
+    .slice(0, 3)
+    .map((r) => ({ id: r.creatorId, name: r.name, avatar: r.avatar, value: r.leaguePoints, color: r.color }))
+  const topPlayers = sortPlayers(aggregatePlayers(players.parts, players.names), "siege")
+    .filter((r) => r.wins > 0)
+    .slice(0, 3)
+    .map((r) => ({ id: r.userId, name: r.name, avatar: r.avatar, value: r.wins }))
   // Bild-Icons statt Emojis; Drop-Spot zeigt die hochgeladene Karte der aktuellen Season
   const icons: Record<string, React.ReactNode> = {
     "/rad": <WheelIcon />,
@@ -47,9 +64,15 @@ export default async function Home() {
           </div>
         )}
         {/* Fortnite-Creator-Code: am Handy unter den Icons, ab Tablet unten rechts in der Ecke */}
-        <p className="mt-5 text-sm text-muted sm:absolute sm:bottom-4 sm:right-5 sm:mt-0">
-          Creator Code: <span className="font-display text-base tracking-wide text-accent">Alvivb</span>
-        </p>
+        <CreatorCode className="mt-5 sm:hidden" />
+        <HeroHighlights
+          league={podium}
+          challenges={league.challenges.length}
+          rate={successRate(total?.won ?? 0, total?.finished ?? 0)}
+          finished={total?.finished ?? 0}
+          players={topPlayers}
+        />
+        <CreatorCode className="mt-5 hidden pr-1 text-right sm:block" />
       </section>
 
       {active && active.length > 0 && (
@@ -83,5 +106,13 @@ export default async function Home() {
         </div>
       </section>
     </div>
+  )
+}
+
+function CreatorCode({ className }: { className: string }) {
+  return (
+    <p className={`text-sm text-muted ${className}`}>
+      Creator Code: <span className="font-display text-base tracking-wide text-accent">Alvivb</span>
+    </p>
   )
 }
