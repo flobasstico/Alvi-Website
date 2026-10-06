@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest"
-import { creatorColors, headToHead, isDarkColor, isYoutubeUrl, leaguePoints, leagueTable, pointsByResult, pointsTimeline, winShare, type LeagueChallenge, type LeagueResult } from "./league"
+import { creatorColors, headToHead, isYoutubeUrl, leaguePoints, leagueTable, pointsByResult, pointsTimeline, winShare, type LeagueChallenge, type LeagueResult } from "./league"
 
 const creators = [
   { id: 1, name: "Alvi", avatar_url: null },
@@ -74,12 +74,5 @@ describe("Creator-Farben", () => {
     expect(m.get(2)).toBe("#facc15")
     expect(m.get(3)).toBe("#22d3ee")
     expect(new Set(m.values()).size).toBe(4)
-  })
-
-  it("erkennt dunkle Farben", () => {
-    expect(isDarkColor("#000000")).toBe(true)
-    expect(isDarkColor("#1d4ed8")).toBe(true)
-    expect(isDarkColor("#22c55e")).toBe(false)
-    expect(isDarkColor("#f97316")).toBe(false)
   })
 })

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { headToHead, swatchStyle, textColor, type LeagueResult } from "@/lib/league"
+import { headToHead, type LeagueResult } from "@/lib/league"
 
 type C = { id: number; name: string; color: string }
 
@@ -35,14 +35,14 @@ export function HeadToHeadBox({ creators, results }: { creators: C[]; results: L
       ) : (
         <>
           <div className="flex items-center justify-center gap-4 font-display text-5xl tabular-nums">
-            <span style={{ color: textColor(ca.color) }}>{h.aBetter}</span>
+            <span style={{ color: ca.color }}>{h.aBetter}</span>
             <span className="text-2xl text-muted">:</span>
-            <span style={{ color: textColor(cb.color) }}>{h.bBetter}</span>
+            <span style={{ color: cb.color }}>{h.bBetter}</span>
           </div>
           <div className="flex h-3 overflow-hidden rounded-full bg-line" aria-hidden>
-            <div style={{ width: `${(h.aBetter / total) * 100}%`, ...swatchStyle(ca.color) }} />
+            <div style={{ width: `${(h.aBetter / total) * 100}%`, background: ca.color }} />
             <div style={{ width: `${(h.even / total) * 100}%` }} className="bg-white/30" />
-            <div style={{ width: `${(h.bBetter / total) * 100}%`, ...swatchStyle(cb.color) }} />
+            <div style={{ width: `${(h.bBetter / total) * 100}%`, background: cb.color }} />
           </div>
           <p className="text-center text-sm text-muted">
             {h.shared} gemeinsame {h.shared === 1 ? "Challenge" : "Challenges"} – öfter besser platziert: {ca.name} {h.aBetter}×, {cb.name} {h.bBetter}×

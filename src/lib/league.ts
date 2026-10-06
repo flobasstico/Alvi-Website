@@ -159,17 +159,3 @@ export function headToHead(results: readonly LeagueResult[], a: number, b: numbe
 
 /** Prüft YouTube-Links (wie die Datenbank) */
 export const isYoutubeUrl = (url: string) => /^https:\/\/(www\.|m\.)?(youtube\.com|youtu\.be)\/\S+$/i.test(url.trim())
-
-/** Dunkle Farben (z. B. Schwarz) brauchen auf dem dunklen Hintergrund eine helle Kontur */
-export function isDarkColor(hex: string) {
-  const m = /^#?([0-9a-f]{6})$/i.exec(hex)
-  if (!m) return false
-  const n = parseInt(m[1], 16)
-  const [r, g, b] = [n >> 16, (n >> 8) & 255, n & 255]
-  return 0.2126 * r + 0.7152 * g + 0.0722 * b < 90
-}
-
-/** Style für Farbpunkte/-balken: dunkle Farben bekommen eine helle Kontur */
-export const swatchStyle = (color: string) => ({ background: color, boxShadow: isDarkColor(color) ? "0 0 0 1.5px #e5e7eb" : undefined })
-/** Textfarbe: dunkle Farben würden auf dunklem Grund verschwinden */
-export const textColor = (color: string) => (isDarkColor(color) ? "#e5e7eb" : color)
