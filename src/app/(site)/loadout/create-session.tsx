@@ -8,6 +8,7 @@ import { createLoadoutSession } from "./actions"
 export function CreateLoadoutSession() {
   const [state, action, pending] = useActionState(createLoadoutSession, undefined)
   const [rarities, setRarities] = useState<string[]>([...RARITIES])
+  const [maxPlayers, setMaxPlayers] = useState(8)
   return (
     <form action={action} className="flex flex-col gap-3">
       <div>
@@ -15,8 +16,21 @@ export function CreateLoadoutSession() {
         <input id="title" name="title" className="input" placeholder="z. B. Squad-Abend mit Kevin" />
       </div>
       <div>
-        <label className="label" htmlFor="max_players">Spieler (max.)</label>
-        <input id="max_players" name="max_players" type="number" min={2} max={8} defaultValue={4} className="input" />
+        <span className="label">Spieler (max.)</span>
+        <div className="flex flex-wrap gap-1" role="group" aria-label="Spieleranzahl">
+          {[2, 3, 4, 5, 6, 7, 8].map((n) => (
+            <button
+              key={n}
+              type="button"
+              aria-pressed={maxPlayers === n}
+              className={clsx("h-9 w-9 rounded-lg font-bold", maxPlayers === n ? "bg-accent text-black" : "bg-panel-2 text-muted hover:text-white")}
+              onClick={() => setMaxPlayers(n)}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
+        <input type="hidden" name="max_players" value={maxPlayers} />
       </div>
       <fieldset>
         <legend className="label">Seltenheiten</legend>
@@ -45,7 +59,7 @@ export function CreateLoadoutSession() {
         Mindestens eine Heilung garantieren
       </label>
       <button className="btn-primary" disabled={pending || rarities.length === 0}>Runde eröffnen</button>
-      <p className="text-xs text-muted">Danach den Seitenlink an die Mitspieler schicken. Jeder würfelt an seinem Gerät.</p>
+      <p className="text-xs text-muted">Bis zu 8 Spieler. Danach den Einladungslink (mit Join-Code) an die Mitspieler schicken. Jeder würfelt an seinem Gerät.</p>
       {state?.error && <p className="text-sm text-fail">{state.error}</p>}
     </form>
   )
