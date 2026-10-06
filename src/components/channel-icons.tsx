@@ -1,9 +1,24 @@
+"use client"
+
+import { useState } from "react"
+
 // Vereinfachte Plattform-Icons (eigene, schlichte Nachbauten – keine Original-Logos)
 export function PlatformIcon({ platform, className, src }: { platform: string; className?: string; src?: string | null }) {
-  if (src) {
-    // eslint-disable-next-line @next/next/no-img-element
-    return <img src={src} alt="" className={`${className ?? ""} rounded-md object-contain`} aria-hidden />
+  const [broken, setBroken] = useState(false)
+  if (src && !broken) {
+    // Hochgeladenes Logo: weißer Untergrund, damit auch dunkle Logos auf dem dunklen Hintergrund sichtbar sind.
+    // Lädt das Bild nicht, erscheint das eingebaute Icon.
+    return (
+      <span className={`${className ?? ""} inline-flex items-center justify-center overflow-hidden rounded-md bg-white p-0.5 shadow`} aria-hidden>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={src} alt="" className="h-full w-full object-contain" onError={() => setBroken(true)} />
+      </span>
+    )
   }
+  return <BuiltInIcon platform={platform} className={className} />
+}
+
+function BuiltInIcon({ platform, className }: { platform: string; className?: string }) {
   switch (platform) {
     case "link_youtube":
       return (
