@@ -6,9 +6,9 @@ import { channelsFromSettings, loadSiteSettings } from "@/lib/site"
 import { createClient } from "@/lib/supabase/server"
 
 const TOOLS = [
-  { href: "/eskalation", emoji: "🚨", title: "Regel-Eskalation", text: "1. Regel per Glücksrad, danach alle 4 Minuten per Zufall eine extra Regel!!\nOBS-Einbindung inklusive." },
+  { href: "/eskalation", emoji: "🚨", title: "Regel-Eskalation", text: "1. Regel per Glücksrad, danach alle 4 Minuten per Zufall eine extra Regel!!" },
   { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "Bietet, um euer Loadout zusammenzustellen! Wer geht am schlausten mit seinem Gold um?\nFür 2–8 Spieler." },
-  { href: "/bingo", emoji: "🔢", title: "Bingo", text: "Alle spielen dieselbe 3×3-Karte und haken für sich ab – mit eigenen Karten, Punkten und OBS-Overlay." },
+  { href: "/bingo", emoji: "🔢", title: "Bingo", text: "Alle spielen dieselbe 3×3-Karte und haken für sich ab – mit eigenen Karten und Punkten." },
   { href: "/loadout", emoji: "🎲", title: "Loadout-Würfel", text: "Stellt euer Loadout mit dem Zufallswürfel zusammen. Bis zu 3-mal neu würfeln – klug entscheiden, welche Items fix sein sollten!\nSolo oder mit bis zu 8 Spielern." },
   { href: "/rad", emoji: "🎡", title: "Challenge-Glücksrad", text: "Stellt euch eure individuellen Regeln mit dem Glücksrad zusammen!" },
   { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Per Zufall wird euer Landingspot entschieden! Wer holt sich den Sieg?\nExtraregeln inklusive!\nMax. 8 Spieler." },
@@ -36,8 +36,8 @@ export default async function Home() {
     <div className="flex flex-col gap-8">
       <section className="panel relative overflow-hidden py-10 text-center">
         <h1 className="font-display text-5xl text-accent drop-shadow-lg sm:text-7xl">ALVI CHALLENGES</h1>
-        <p className="mx-auto mt-3 max-w-xl text-lg text-muted">
-          Hier werden Fortnite-Challenges gebaut, ausgewürfelt und gnadenlos getrackt.
+        <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line text-lg text-muted">
+          {"Stellt eure eigenen Fortnite-Challenges zusammen oder spielt die eures Lieblingscreators nach!\nDie Challenges der Creator werden sogar getrackt – wer ist der Beste?"}
         </p>
         {channels.length > 0 && (
           <div className="mt-5 flex items-center justify-center gap-3">
