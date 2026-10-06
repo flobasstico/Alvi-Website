@@ -9,13 +9,13 @@ const creators = [
 const ch = (id: number, played_at: string): LeagueChallenge => ({
   id, played_at, title: `C${id}`, category: null, scoring: "sieg", youtube_url: "https://youtu.be/x",
 })
-const res = (challenge_id: number, creator_id: number, placement: number, points: number | null = null): LeagueResult => ({
-  challenge_id, creator_id, placement, points, won: placement === 1,
+const res = (challenge_id: number, creator_id: number, placement: number): LeagueResult => ({
+  challenge_id, creator_id, placement, points: null, won: placement === 1,
 })
 const challenges = [ch(1, "2026-10-01"), ch(2, "2026-10-02"), ch(3, "2026-10-03")]
 const results = [
   res(1, 1, 1), res(1, 2, 2), res(1, 3, 3),
-  res(2, 2, 1, 25), res(2, 1, 2, 10), res(2, 3, 2, 10),
+  res(2, 2, 1), res(2, 1, 2), res(2, 3, 2),
   res(3, 1, 1), res(3, 2, 2),
 ]
 
@@ -34,12 +34,12 @@ describe("Creator-Liga", () => {
 
   it("baut die Tabelle nach Ligapunkten", () => {
     const rows = leagueTable(challenges, results, creators)
-    expect(rows.map((r) => [r.name, r.leaguePoints, r.wins, r.rounds, r.points])).toEqual([
-      ["Alvi", 3, 2, 3, 10],
-      ["Kevin", 3, 1, 3, 25],
-      ["Lisa", 0, 0, 2, 10],
+    expect(rows.map((r) => [r.name, r.leaguePoints, r.wins, r.rounds])).toEqual([
+      ["Alvi", 3, 2, 3],
+      ["Kevin", 3, 1, 3],
+      ["Lisa", 0, 0, 2],
     ])
-    expect(leagueTable(challenges, results, creators, "punkte")[0].name).toBe("Kevin")
+    expect(leagueTable(challenges, results, creators, "teilnahmen").map((r) => r.name)).toEqual(["Alvi", "Kevin", "Lisa"])
   })
 
   it("liefert Kuchen, Verlauf und Kopf-an-Kopf", () => {

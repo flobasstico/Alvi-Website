@@ -15,7 +15,7 @@ export const CREATOR_COLORS = ["#facc15", "#22d3ee", "#f472b6", "#4ade80", "#fb9
 
 /**
  * Ligapunkte = geschlagene Gegner: 1 Punkt für jeden Teilnehmer, der schlechter platziert ist.
- * Gleiche Plätze teilen sich die Punkte. Bei 8 Teilnehmern: Platz 1 = 7 … Platz 8 = 0; im Duell: Sieger 1.
+ * Gleiche Plätze teilen sich den Platz. Bei 8 Teilnehmern: Platz 1 = 7 … Platz 8 = 0; im Duell: Sieger 1.
  */
 export function leaguePoints(placement: number, placements: readonly number[]) {
   return placements.filter((p) => p > placement).length
@@ -43,9 +43,8 @@ export type LeagueRow = {
   wins: number
   rounds: number
   winRate: number
-  points: number | null
 }
-export type LeagueSort = "ligapunkte" | "siege" | "teilnahmen" | "quote" | "punkte"
+export type LeagueSort = "ligapunkte" | "siege" | "teilnahmen" | "quote"
 
 export function leagueTable(
   challenges: readonly LeagueChallenge[],
@@ -63,11 +62,10 @@ export function leagueTable(
     if (!known.has(r.challenge_id) || !c) continue
     const row =
       rows.get(c.id) ??
-      ({ creatorId: c.id, name: c.name, avatar: c.avatar_url, color: colors.get(c.id)!, youtube: c.youtube_url ?? null, leaguePoints: 0, wins: 0, rounds: 0, winRate: 0, points: null } as LeagueRow)
+      ({ creatorId: c.id, name: c.name, avatar: c.avatar_url, color: colors.get(c.id)!, youtube: c.youtube_url ?? null, leaguePoints: 0, wins: 0, rounds: 0, winRate: 0 } as LeagueRow)
     row.rounds++
     if (r.won) row.wins++
     row.leaguePoints += lp.get(`${r.challenge_id}-${r.creator_id}`) ?? 0
-    if (r.points != null) row.points = (row.points ?? 0) + r.points
     rows.set(c.id, row)
   }
   for (const row of rows.values()) row.winRate = Math.round((row.wins / row.rounds) * 100)
@@ -76,7 +74,6 @@ export function leagueTable(
     siege: (r) => r.wins,
     teilnahmen: (r) => r.rounds,
     quote: (r) => r.winRate,
-    punkte: (r) => r.points ?? -1,
   }
   return [...rows.values()].sort(
     (a, b) =>

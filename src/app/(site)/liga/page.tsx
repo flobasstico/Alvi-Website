@@ -12,7 +12,7 @@ import { getViewer } from "@/lib/supabase/server"
 
 export const metadata = { title: "Creator-Liga" }
 
-const SORTS: LeagueSort[] = ["ligapunkte", "siege", "teilnahmen", "quote", "punkte"]
+const SORTS: LeagueSort[] = ["ligapunkte", "siege", "teilnahmen", "quote"]
 
 export default async function LigaPage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
   const params = await searchParams
@@ -46,7 +46,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
       <section className="panel mb-6">
         <h2 className="mb-1 font-display text-2xl">Ewige Tabelle</h2>
         <p className="mb-3 text-sm text-muted">
-          Ligapunkte = geschlagene Gegner: Für jeden Teilnehmer, der in einer Challenge hinter dir landet, gibt es 1 Punkt (bei 8 Teilnehmern bekommt der Sieger 7, im Duell 1). Gleiche Plätze teilen sich die Punkte; bei Punkte-Challenges zählt die Rangfolge der Punkte.
+          Ligapunkte = geschlagene Gegner: Für jeden Teilnehmer, der in einer Challenge hinter dir landet, gibt es 1 Punkt (bei 8 Teilnehmern bekommt der Sieger 7, im Duell 1). Gleiche Plätze teilen sich den Platz.
         </p>
         {rows.length ? (
           <div className="-mx-2 overflow-x-auto px-2">
@@ -59,7 +59,6 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                   <SortTh label="Siege" k="siege" sort={sort} href={link} />
                   <SortTh label="Teilnahmen" k="teilnahmen" sort={sort} href={link} />
                   <SortTh label="Siegquote" k="quote" sort={sort} href={link} />
-                  <SortTh label="Punkte" k="punkte" sort={sort} href={link} />
                 </tr>
               </thead>
               <tbody>
@@ -87,7 +86,6 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                     <td className="py-2 text-right tabular-nums">{r.wins}</td>
                     <td className="py-2 text-right tabular-nums">{r.rounds}</td>
                     <td className="py-2 text-right tabular-nums">{r.winRate} %</td>
-                    <td className="py-2 text-right tabular-nums">{r.points ?? "–"}</td>
                   </tr>
                 ))}
               </tbody>
@@ -125,7 +123,6 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-display text-xl">{c.title}</span>
                   {c.category && <span className="chip">{c.category}</span>}
-                  <span className="chip">{c.scoring === "punkte" ? "Punkte" : "Sieg"}</span>
                   <span className="text-xs text-muted">
                     {new Date(c.played_at + "T12:00:00").toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}
                   </span>
@@ -151,7 +148,6 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                     >
                       <span className="h-2.5 w-2.5 rounded-full" style={{ background: colors.get(r.creator_id) }} />
                       <span className="font-semibold">{r.won ? "🏆 " : `${r.placement}. `}{names.get(r.creator_id) ?? "?"}</span>
-                      {r.points != null && <span className="text-muted">{r.points} P.</span>}
                       <span className="text-xs text-accent">+{lp.get(`${c.id}-${r.creator_id}`) ?? 0}</span>
                     </li>
                   ))}

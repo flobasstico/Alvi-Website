@@ -6,10 +6,10 @@ import { useState } from "react"
 import { isYoutubeUrl, type Creator, type LeagueChallenge, type LeagueResult } from "@/lib/league"
 import { createClient } from "@/lib/supabase/client"
 
-type Entry = { on: boolean; won: boolean; points: string; placement: string }
-const EMPTY: Entry = { on: false, won: false, points: "", placement: "" }
+type Entry = { on: boolean; won: boolean; placement: string }
+const EMPTY: Entry = { on: false, won: false, placement: "" }
 
-/** Liga-Challenge eintragen oder bearbeiten: Teilnehmer ankreuzen, dann Sieger bzw. Punkte */
+/** Liga-Challenge eintragen oder bearbeiten: Teilnehmer ankreuzen, Sieger und optional Plätze */
 export function LeagueEntry({
   creators,
   categories,
@@ -24,12 +24,11 @@ export function LeagueEntry({
   const [video, setVideo] = useState(edit?.challenge.youtube_url ?? "")
   const [category, setCategory] = useState(edit?.challenge.category ?? "")
   const [date, setDate] = useState(edit?.challenge.played_at ?? new Date().toISOString().slice(0, 10))
-  const [scoring, setScoring] = useState<"sieg" | "punkte">((edit?.challenge.scoring as "sieg" | "punkte") ?? "sieg")
   const [entries, setEntries] = useState<Record<number, Entry>>(() =>
     Object.fromEntries(
       creators.map((c) => {
         const r = edit?.results.find((x) => x.creator_id === c.id)
-        return [c.id, { on: !!r, won: !!r?.won, points: r?.points != null ? String(r.points) : "", placement: r && !r.won ? String(r.placement) : "" }]
+        return [c.id, { on: !!r, won: !!r?.won, placement: r && !r.won ? String(r.placement) : "" }]
       }),
     ),
   )
@@ -46,16 +45,14 @@ export function LeagueEntry({
     setError(null)
     const results = players.map((c) => {
       const e = get(c.id)
-      return scoring === "punkte"
-        ? { creator_id: c.id, points: e.points === "" ? null : Number(e.points) }
-        : { creator_id: c.id, won: e.won, placement: e.won || e.placement === "" ? null : Number(e.placement) }
+      return { creator_id: c.id, won: e.won, placement: e.won || e.placement === "" ? null : Number(e.placement) }
     })
     const { error } = await createClient().rpc("league_save_challenge", {
       p_id: edit?.challenge.id ?? null,
       p_title: title,
       p_category: category || null,
       p_played_at: date || null,
-      p_scoring: scoring,
+      p_scoring: "sieg",
       p_video: video.trim(),
       p_results: results,
     })
@@ -101,26 +98,10 @@ export function LeagueEntry({
         </div>
       </div>
 
-      <fieldset>
-        <legend className="label">Wertung</legend>
-        <div className="flex gap-1 text-sm">
-          {(["sieg", "punkte"] as const).map((s) => (
-            <button
-              key={s}
-              type="button"
-              className={clsx("rounded-lg px-3 py-1.5 font-semibold", scoring === s ? "bg-accent text-black" : "bg-panel-2 text-muted hover:text-white")}
-              onClick={() => setScoring(s)}
-            >
-              {s === "sieg" ? "🏆 Sieger" : "🔢 Punkte"}
-            </button>
-          ))}
-        </div>
-        <p className="mt-1 text-xs text-muted">
-          {scoring === "sieg"
-            ? "Sieger markieren (Gleichstand: mehrere). Optional Platz 2, 3 … eintragen, alle anderen landen auf dem letzten Platz."
-            : "Punkte je Teilnehmer eintragen – die Rangfolge ergibt die Plätze und damit die Ligapunkte."}
-        </p>
-      </fieldset>
+      <p className="text-xs text-muted">
+        Teilnehmer ankreuzen, Sieger markieren (Gleichstand: mehrere). Optional Platz 2, 3 … eintragen, alle anderen landen auf dem letzten Platz. Die
+        Ligapunkte ergeben sich aus den Plätzen.
+      </p>
 
       <div>
         <span className="label">Teilnehmer ({players.length})</span>
@@ -133,8 +114,7 @@ export function LeagueEntry({
                   <input type="checkbox" checked={e.on} onChange={(ev) => set(c.id, { on: ev.target.checked })} />
                   {c.name}
                 </label>
-                {e.on &&
-                  (scoring === "sieg" ? (
+                {e.on && (
                     <>
                       <button
                         type="button"
@@ -156,16 +136,7 @@ export function LeagueEntry({
                         />
                       )}
                     </>
-                  ) : (
-                    <input
-                      type="number"
-                      value={e.points}
-                      onChange={(ev) => set(c.id, { points: ev.target.value })}
-                      className="input w-24 py-1 text-sm"
-                      placeholder="Punkte"
-                      aria-label={`Punkte ${c.name}`}
-                    />
-                  ))}
+                  )}
               </li>
             )
           })}
