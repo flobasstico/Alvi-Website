@@ -646,7 +646,8 @@ async function LeagueTab({ edit }: { edit: number | null }) {
                       required
                       pattern="https://(www\.|m\.)?(youtube\.com|youtu\.be)/.+"
                     />
-                    <input name="avatar_url" defaultValue={c.avatar_url ?? ""} className="input py-1 text-sm" placeholder="Bild-Link (optional)" />
+                    <input name="avatar_url" defaultValue={c.avatar_url ?? ""} className="input py-1 text-sm" placeholder="Bild-Link (leer = Profilbild vom YouTube-Kanal)" />
+                    <p className="text-xs text-muted">Bild-Link leeren und speichern lädt das Profilbild neu von YouTube.</p>
                     <input name="twitch" defaultValue={c.profile_id ? (loginOf.get(c.profile_id) ?? "") : ""} className="input py-1 text-sm" placeholder="Twitch-Name verknüpfen (optional)" />
                     <div className="flex gap-2">
                       <button className="btn-secondary px-2 py-1 text-xs">Speichern</button>
@@ -671,7 +672,7 @@ async function LeagueTab({ edit }: { edit: number | null }) {
               pattern="https://(www\.|m\.)?(youtube\.com|youtu\.be)/.+"
               title="Link zum YouTube-Kanal, z. B. https://youtube.com/@alvivb"
             />
-            <input name="avatar_url" className="input" placeholder="Bild-Link (optional)" />
+            <input name="avatar_url" className="input" placeholder="Bild-Link (leer = Profilbild vom YouTube-Kanal)" />
             <input name="twitch" className="input" placeholder="Twitch-Name verknüpfen (optional)" />
             <button className="btn-primary">+ Creator anlegen</button>
           </form>

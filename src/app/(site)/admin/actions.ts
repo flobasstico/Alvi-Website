@@ -5,6 +5,7 @@ import { ITEM_TYPES, RARITIES, STATUSES, type Status } from "@/lib/constants"
 import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
 import { isYoutubeUrl } from "@/lib/league"
+import { fetchYoutubeAvatar } from "@/lib/youtube"
 import { CHANNELS, iconKey, invalidChannelLine, PAGE_KEYS, safeUrl } from "@/lib/site"
 import { requireAdmin } from "@/lib/supabase/server"
 
@@ -360,7 +361,9 @@ export async function saveCreator(form: FormData) {
     if (!data) throw new Error(`Kein Profil mit dem Twitch-Namen „${login}“ – die Person muss sich einmal eingeloggt haben`)
     profileId = data.id
   }
-  const row = { name, avatar_url: avatar || null, youtube_url: youtube, profile_id: profileId }
+  // Ohne eigenen Bild-Link: Profilbild automatisch vom YouTube-Kanal übernehmen
+  const picture = avatar || (await fetchYoutubeAvatar(youtube))
+  const row = { name, avatar_url: picture || null, youtube_url: youtube, profile_id: profileId }
   const id = Number(str(form, "id"))
   const { error } = id ? await supabase.from("creators").update(row).eq("id", id) : await supabase.from("creators").insert(row)
   if (error?.code === "23505") throw new Error(`„${name}“ gibt es schon`)
