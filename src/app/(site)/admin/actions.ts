@@ -192,36 +192,6 @@ export async function addBingoTask(form: FormData) {
   done((await supabase.from("bingo_tasks").insert(lines.map((text) => ({ text })))).error)
 }
 
-export async function addSeason(form: FormData) {
-  const supabase = await requireAdmin()
-  const name = str(form, "name")
-  if (!name) return
-  const copy = form.get("copy") === "on"
-  const old = await getCurrentSeason(supabase)
-  await supabase.from("seasons").update({ is_current: false }).eq("is_current", true)
-  const { data: season, error } = await supabase
-    .from("seasons")
-    .insert({ name, is_current: true, map_image_url: copy ? old?.map_image_url : null })
-    .select("id")
-    .single()
-  if (error) throw new Error(error.message)
-  if (copy && old) {
-    const [{ data: loot }, { data: spots }] = await Promise.all([
-      supabase.from("loot_items").select("name, rarity, type, icon_url, active").eq("season_id", old.id),
-      supabase.from("drop_spots").select("name, x, y, active").eq("season_id", old.id),
-    ])
-    if (loot?.length) await supabase.from("loot_items").insert(loot.map((l) => ({ ...l, season_id: season.id })))
-    if (spots?.length) await supabase.from("drop_spots").insert(spots.map((s) => ({ ...s, season_id: season.id })))
-  }
-  done(null)
-}
-
-export async function setCurrentSeason(form: FormData) {
-  const supabase = await requireAdmin()
-  await supabase.from("seasons").update({ is_current: false }).eq("is_current", true)
-  done((await supabase.from("seasons").update({ is_current: true }).eq("id", Number(str(form, "id")))).error)
-}
-
 export async function setSeasonMap(seasonId: number, url: string | null) {
   const supabase = await requireAdmin()
   done((await supabase.from("seasons").update({ map_image_url: url }).eq("id", seasonId)).error)

@@ -23,13 +23,11 @@ import {
   addLoot,
   addManualChallenge,
   addRule,
-  addSeason,
   deleteCreator,
   deleteRow,
   saveCreator,
   setBanned,
   moveEscalationRule,
-  setCurrentSeason,
   toggleActive,
   updateChallenge,
   updateEscalationRule,
@@ -52,7 +50,7 @@ const TABS = {
   spots: "Drop-Spots",
   bingo: "Bingo-Aufgaben",
   eskalation: "Eskalations-Regeln",
-  seasons: "Seasons & Map",
+  dropregeln: "Drop-Regeln",
   seite: "Seite & Kanäle",
   liga: "Creator-Liga",
   nutzer: "Nutzer",
@@ -90,12 +88,12 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
         ))}
       </nav>
       {tab === "challenges" && <ChallengesTab />}
-      {tab === "regeln" && <RulesTab />}
+      {tab === "regeln" && <RulesTab category="rad" />}
       {tab === "loot" && <LootTab seasonId={season?.id ?? null} />}
       {tab === "spots" && <SpotsTab seasonId={season?.id ?? null} mapUrl={season?.map_image_url ?? null} />}
       {tab === "bingo" && <BingoTab />}
       {tab === "eskalation" && <EscalationTab />}
-      {tab === "seasons" && <SeasonsTab />}
+      {tab === "dropregeln" && <RulesTab category="drop" />}
       {tab === "seite" && <SiteTab />}
       {tab === "liga" && <LeagueTab edit={Number(bearbeiten) || null} />}
       {tab === "nutzer" && <UsersTab q={q ?? ""} />}
@@ -173,37 +171,34 @@ async function ChallengesTab() {
   )
 }
 
-async function RulesTab() {
+/** Regeln einer Kategorie: Glücksrad (rad) oder Drop-Zusatzregeln (drop) – je ein eigener Reiter */
+async function RulesTab({ category }: { category: "rad" | "drop" }) {
   const { supabase } = await getViewer()
-  const { data } = await supabase.from("rules").select("*").order("category").order("id")
+  const { data } = await supabase.from("rules").select("*").eq("category", category).order("id")
+  const rad = category === "rad"
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       <section className="panel">
-        {(["rad", "drop"] as const).map((cat) => (
-          <div key={cat} className="mb-6">
-            <h2 className="mb-2 font-display text-2xl">{cat === "rad" ? "Glücksrad-Regeln" : "Drop-Zusatzregeln"}</h2>
-            <ul className="divide-y divide-line">
-              {data
-                ?.filter((r) => r.category === cat)
-                .map((r) => (
-                  <Row key={r.id} inactive={!r.active}>
-                    <span className="flex-1 font-semibold">{r.text}</span>
-                    <ToggleButton table="rules" id={r.id} active={r.active} />
-                    <DeleteButton table="rules" id={r.id} />
-                  </Row>
-                ))}
-            </ul>
-          </div>
-        ))}
+        <h2 className="mb-1 font-display text-2xl">{rad ? "Glücksrad-Regeln" : "Drop-Zusatzregeln"}</h2>
+        <p className="mb-3 text-sm text-muted">
+          {rad ? "Diese Regeln landen auf dem Challenge-Glücksrad." : "Extraregeln, die beim Drop-Spot-Roulette zusätzlich zum Landepunkt gezogen werden."}
+        </p>
+        <ul className="divide-y divide-line">
+          {data?.map((r) => (
+            <Row key={r.id} inactive={!r.active}>
+              <span className="flex-1 font-semibold">{r.text}</span>
+              <ToggleButton table="rules" id={r.id} active={r.active} />
+              <DeleteButton table="rules" id={r.id} />
+            </Row>
+          ))}
+          {!data?.length && <li className="py-2 text-muted">Noch keine Regeln – rechts hinzufügen.</li>}
+        </ul>
       </section>
       <aside className="panel h-fit">
-        <h2 className="mb-3 font-display text-xl">Neue Regel</h2>
+        <h2 className="mb-3 font-display text-xl">{rad ? "Neue Glücksrad-Regel" : "Neue Drop-Regel"}</h2>
         <form action={addRule} className="flex flex-col gap-3">
-          <input name="text" className="input" placeholder="z. B. Nur graue Waffen" required />
-          <select name="category" className="input">
-            <option value="rad">Glücksrad</option>
-            <option value="drop">Drop-Zusatzregel</option>
-          </select>
+          <input name="text" className="input" placeholder={rad ? "z. B. Nur graue Waffen" : "z. B. Nur mit Heilung aus Truhen"} required />
+          <input type="hidden" name="category" value={category} />
           <button className="btn-primary">Hinzufügen</button>
         </form>
       </aside>
@@ -232,7 +227,7 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
       <section className="panel">
-        <h2 className="mb-1 font-display text-2xl">Lootpool der aktuellen Season</h2>
+        <h2 className="mb-1 font-display text-2xl">Lootpool</h2>
         <p className="mb-4 text-sm text-muted">
           {items.length} Items ({items.filter((i) => i.active).length} aktiv)
           {missingIcons > 0 && ` · ${missingIcons} Varianten ohne Bild – jede Seltenheit hat ihr eigenes Bild, zum Hochladen auf das Feld klicken`}
@@ -333,7 +328,7 @@ async function SpotsTab({ seasonId, mapUrl }: { seasonId: number | null; mapUrl:
     <div className="flex flex-col gap-6">
       {seasonId && (
         <section className="panel flex flex-col gap-3">
-          <h2 className="font-display text-2xl">Karte der aktuellen Season</h2>
+          <h2 className="font-display text-2xl">Karte</h2>
           <p className="text-sm text-muted">
             Quadratisches Bild (PNG, JPG oder WebP), z. B. ein Screenshot der Fortnite-Map. Die Karte erscheint sofort beim
             Drop-Spot-Roulette. Spots sind in Prozent der Karte gespeichert – passt die neue Karte nicht mehr zu den alten
@@ -480,46 +475,6 @@ async function BingoTab() {
         <form action={addBingoTask} className="flex flex-col gap-3">
           <textarea name="text" className="input min-h-32" placeholder={"Eine Aufgabe pro Zeile\nz. B. Kill mit Pickaxe"} required />
           <button className="btn-primary">Hinzufügen</button>
-        </form>
-      </aside>
-    </div>
-  )
-}
-
-async function SeasonsTab() {
-  const { supabase } = await getViewer()
-  const { data } = await supabase.from("seasons").select("*").order("created_at", { ascending: false })
-  return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
-      <section className="panel">
-        <h2 className="mb-2 font-display text-2xl">Seasons</h2>
-        <ul className="divide-y divide-line">
-          {data?.map((s) => (
-            <li key={s.id} className="flex flex-col gap-2 py-3">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="flex-1 font-semibold">{s.name}</span>
-                {s.is_current ? (
-                  <span className="chip border-win text-win">Aktuell</span>
-                ) : (
-                  <form action={setCurrentSeason}>
-                    <input type="hidden" name="id" value={s.id} />
-                    <button className="btn-secondary px-2 py-1 text-xs">Als aktuell setzen</button>
-                  </form>
-                )}
-              </div>
-              <MapUpload seasonId={s.id} current={s.map_image_url} />
-            </li>
-          ))}
-        </ul>
-      </section>
-      <aside className="panel h-fit">
-        <h2 className="mb-3 font-display text-xl">Neue Season</h2>
-        <form action={addSeason} className="flex flex-col gap-3">
-          <input name="name" className="input" placeholder="z. B. Kapitel 7 – Season 2" required />
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" name="copy" defaultChecked /> Loot-Pool, Spots & Map übernehmen
-          </label>
-          <button className="btn-primary">Anlegen & aktivieren</button>
         </form>
       </aside>
     </div>
