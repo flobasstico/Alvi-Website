@@ -47,7 +47,7 @@ export const metadata = { title: "Admin" }
 
 const TABS = {
   challenges: "Challenges",
-  regeln: "Regeln",
+  regeln: "Glücksrad",
   loot: "Loot-Pool",
   spots: "Drop-Spots",
   bingo: "Bingo-Aufgaben",
