@@ -25,6 +25,9 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
   const names = new Map(creators.map((c) => [c.id, c.name]))
   const timeline = pointsTimeline(challenges, results, rows)
   const lp = pointsByResult(results)
+  // Zeitraum der eingetragenen Videos (ältestes bis neuestes Spieldatum)
+  const dates = challenges.map((c) => c.played_at).sort()
+  const fmt = (d: string) => new Date(d + "T12:00:00").toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })
 
   const link = (next: { sort?: string }) => (next.sort ? `/liga?sort=${next.sort}` : "/liga")
 
@@ -45,6 +48,21 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
 
       <section className="panel mb-6">
         <h2 className="mb-1 font-display text-2xl">Ewige Tabelle</h2>
+        {dates.length > 0 && (
+          <p className="mb-2 inline-flex flex-wrap items-center gap-x-1.5 rounded-lg bg-panel-2 px-2.5 py-1 text-sm">
+            <span>📅 Erfasst sind Videos</span>
+            {dates[0] === dates[dates.length - 1] ? (
+              <span>
+                vom <b>{fmt(dates[0])}</b>
+              </span>
+            ) : (
+              <span>
+                vom <b>{fmt(dates[0])}</b> bis <b>{fmt(dates[dates.length - 1])}</b>
+              </span>
+            )}
+            <span className="text-muted">· {challenges.length} Challenges</span>
+          </p>
+        )}
         <p className="mb-3 text-sm text-muted">
           Ligapunkte = geschlagene Gegner: Für jeden Teilnehmer, der in einer Challenge hinter dir landet, gibt es 1 Punkt (bei 8 Teilnehmern bekommt der Sieger 7, im Duell 1). Gleiche Plätze teilen sich den Platz.
         </p>
