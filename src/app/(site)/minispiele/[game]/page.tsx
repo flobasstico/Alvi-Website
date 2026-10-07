@@ -41,11 +41,6 @@ export default async function MinigamePage({ params }: { params: Promise<{ game:
           ← Alle Minispiele
         </Link>
         <ShareButton path={`/minispiele/${game}`} text={`${info.title} bei Alvi Challenges – schaffst du den Highscore?`} className="ml-auto" />
-        {isAdmin && (
-          <span className="text-muted">
-            OBS-Overlay (Tages-Highscore): <code className="select-all rounded bg-panel-2 px-1.5 py-0.5">/overlay/minispiel/{game}</code>
-          </span>
-        )}
       </div>
       <GameShell game={game} myId={user?.id ?? null} myLogin={profile?.twitch_login ?? null} isAdmin={isAdmin} alviBest={alviBest ?? null} myBest={mine?.[0]?.score ?? null} />
     </>
