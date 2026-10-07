@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic"
 export default async function Page({ params }: { params: Promise<{ id: string }> }) {
   const id = Number((await params).id)
   if (!Number.isInteger(id)) notFound()
-  const initial = await fetchOlympic(await createClient(), id)
+  const initial = await fetchOlympic(await createClient(), id).catch(() => null)
   if (!initial) notFound()
   return (
     <>

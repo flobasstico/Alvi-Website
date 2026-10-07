@@ -9,17 +9,20 @@ export type BingoState = { round: BingoRound; players: BingoPlayer[]; streamerId
 /** Eine Bingo-Runde; ohne id die neueste offizielle (für die festen OBS-Links) */
 export async function fetchRound(supabase: SupabaseClient<Database>, id: number | null): Promise<BingoState | null> {
   const query = supabase.from("bingo_rounds").select("*")
-  const [{ data: round }, { data: setting }] = await Promise.all([
+  // Fehler werfen statt „gibt es nicht“ melden – sonst gilt eine laufende Runde nach einem Netzfehler als gelöscht
+  const [{ data: round, error }, { data: setting }] = await Promise.all([
     id ? query.eq("id", id).maybeSingle() : query.eq("official", true).order("created_at", { ascending: false }).limit(1).maybeSingle(),
     supabase.from("site_settings").select("value").eq("key", "main_creator_login").maybeSingle(),
   ])
+  if (error) throw error
   if (!round) return null
-  const [{ data: players }, { data: streamer }] = await Promise.all([
+  const [{ data: players, error: playersError }, { data: streamer }] = await Promise.all([
     supabase.from("bingo_round_players").select("*").eq("round_id", round.id).order("joined_at"),
     setting?.value
-      ? supabase.from("profiles").select("id").ilike("twitch_login", setting.value).limit(1).maybeSingle()
+      ? supabase.from("profiles").select("id").ilike("twitch_login", setting.value.replace(/[%_\\]/g, "\\$&")).limit(1).maybeSingle()
       : Promise.resolve({ data: null }),
   ])
+  if (playersError) throw playersError
   return { round, players: players ?? [], streamerId: streamer?.id ?? null }
 }
 

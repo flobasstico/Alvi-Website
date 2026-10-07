@@ -1,3 +1,4 @@
+import { privateIds, PRIVATE_NAME } from "@/lib/privacy"
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
 import { StaleNote } from "@/components/replay-button"
@@ -10,15 +11,17 @@ const STATUS: Record<string, string> = { lobby: "Lobby", laeuft: "Läuft", beend
 
 export default async function BingoPage() {
   const { supabase, user } = await getViewer()
-  const [{ data: rounds }, { data: players }] = await Promise.all([
-    supabase.from("bingo_rounds").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30),
-    supabase.from("bingo_round_players").select("round_id, display_name, won"),
-  ])
+  const { data: rounds } = await supabase.from("bingo_rounds").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30)
+  const ids = (rounds ?? []).map((r) => r.id)
+  const { data: players } = ids.length
+    ? await supabase.from("bingo_round_players").select("round_id, user_id, display_name, won").in("round_id", ids)
+    : { data: [] }
+  const hidden = await privateIds(supabase, (players ?? []).filter((p) => p.won).map((p) => p.user_id))
   const byRound = new Map<number, { count: number; winners: string[] }>()
   for (const p of players ?? []) {
     const e = byRound.get(p.round_id) ?? { count: 0, winners: [] }
     e.count++
-    if (p.won && p.display_name) e.winners.push(p.display_name)
+    if (p.won && p.display_name) e.winners.push(hidden.has(p.user_id) ? PRIVATE_NAME : p.display_name)
     byRound.set(p.round_id, e)
   }
 

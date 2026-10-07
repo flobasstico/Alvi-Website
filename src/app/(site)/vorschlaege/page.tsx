@@ -1,6 +1,7 @@
 import clsx from "clsx"
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
+import { selectAll } from "@/lib/supabase/select-all"
 import { getViewer } from "@/lib/supabase/server"
 import { SuggestionForm, SuggestionItem } from "./suggestions"
 
@@ -13,7 +14,7 @@ export default async function VorschlaegePage({ searchParams }: { searchParams: 
   const { supabase, user, isAdmin } = await getViewer()
   const [{ data: suggestions }, { data: votes }] = await Promise.all([
     supabase.from("suggestions").select("*").order("created_at", { ascending: false }).limit(500),
-    supabase.from("suggestion_votes").select("*"),
+    selectAll((a, b) => supabase.from("suggestion_votes").select("*").order("suggestion_id").order("user_id").range(a, b)),
   ])
   const authorIds = [...new Set((suggestions ?? []).map((s) => s.author_id))]
   const { data: authors } = authorIds.length
@@ -21,8 +22,10 @@ export default async function VorschlaegePage({ searchParams }: { searchParams: 
     : { data: [] }
   const authorOf = new Map((authors ?? []).map((a) => [a.id, a]))
 
+  const votesBy = new Map<number, typeof votes>()
+  for (const v of votes) votesBy.set(v.suggestion_id, [...(votesBy.get(v.suggestion_id) ?? []), v])
   const rows = (suggestions ?? []).map((s) => {
-    const own = (votes ?? []).filter((v) => v.suggestion_id === s.id)
+    const own = votesBy.get(s.id) ?? []
     const likes = own.filter((v) => v.value === 1).length
     const dislikes = own.filter((v) => v.value === -1).length
     const author = authorOf.get(s.author_id)

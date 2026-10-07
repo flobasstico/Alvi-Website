@@ -107,7 +107,7 @@ export function SuggestionItem({ s, loggedIn, canDelete }: { s: Suggestion; logg
             <span>👤</span>
           )}
           <span className="font-semibold text-white/80">{s.authorName}</span>
-          <span>· {new Date(s.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}</span>
+          <span>· {new Date(s.created_at).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" })}</span>
           {canDelete && (
             <button type="button" onClick={remove} disabled={busy} className="ml-auto underline hover:text-fail">
               Löschen

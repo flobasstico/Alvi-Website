@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { isTyping } from "./keys"
 import { rollRarity, runScore, runSpeed } from "@/lib/minigames"
 
 const W = 480
@@ -245,6 +246,7 @@ export function StormRun({ onFinish }: { onFinish: (score: number) => void }) {
     raf = requestAnimationFrame(loop)
 
     const kd = (e: KeyboardEvent) => {
+      if (isTyping(e)) return
       if (e.key === " " || e.key === "ArrowUp" || e.key === "w" || e.key === "W") {
         e.preventDefault()
         jump()
@@ -260,5 +262,5 @@ export function StormRun({ onFinish }: { onFinish: (score: number) => void }) {
     }
   }, [])
 
-  return <canvas ref={canvas} className="block aspect-[16/9] w-full touch-none select-none rounded-xl" />
+  return <canvas ref={canvas} role="img" aria-label="Sturm-Lauf Spielfeld" className="block aspect-[16/9] w-full touch-none select-none rounded-xl" />
 }

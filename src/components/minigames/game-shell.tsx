@@ -34,8 +34,11 @@ export function GameShell({
   const [result, setResult] = useState<Result | null>(null)
   const [myBest, setMyBest] = useState(initialBest)
   const [reload, setReload] = useState(0)
+  const [starting, setStarting] = useState(false)
 
   async function start() {
+    if (starting) return
+    setStarting(true)
     setStartError(null)
     setRunId(null)
     if (myId) {
@@ -45,6 +48,7 @@ export function GameShell({
     }
     setRound((r) => r + 1)
     setPhase("play")
+    setStarting(false)
   }
 
   async function finish(score: number) {
@@ -97,7 +101,7 @@ export function GameShell({
                   </>
                 )
               )}
-              <button className="btn-primary mt-2 px-8 text-lg" onClick={start}>
+              <button className="btn-primary mt-2 px-8 text-lg" onClick={start} disabled={starting}>
                 {phase === "start" ? "▶ Spielen" : "↻ Nochmal"}
               </button>
             </div>

@@ -2,7 +2,7 @@
 
 import clsx from "clsx"
 import Link from "next/link"
-import { useCallback, useEffect, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { PERIODS, type MinigameKey, type Period } from "@/lib/minigames"
 import { createClient } from "@/lib/supabase/client"
 
@@ -26,8 +26,11 @@ export function Leaderboard({
   const [rows, setRows] = useState<BoardRow[] | null>(null)
   const [error, setError] = useState<string | null>(null)
 
+  const latest = useRef(0)
   const load = useCallback(async () => {
+    const ticket = ++latest.current // ältere Antworten (z. B. nach schnellem Zeitraum-Wechsel) verwerfen
     const { data, error } = await createClient().rpc("minigame_board", { p_game: game, p_period: period, p_limit: 50 })
+    if (ticket !== latest.current) return
     if (error) return setError(error.message)
     setError(null)
     setRows(data ?? [])
@@ -84,7 +87,7 @@ export function Leaderboard({
               </span>
               <span className="font-bold tabular-nums text-accent">{r.score.toLocaleString("de-DE")}</span>
               {isAdmin && (
-                <button type="button" onClick={() => remove(r)} className="text-muted hover:text-fail" title="Einträge löschen">
+                <button type="button" onClick={() => remove(r)} className="text-muted hover:text-fail" title="Einträge löschen" aria-label={`Einträge von ${r.name} löschen`}>
                   🗑
                 </button>
               )}

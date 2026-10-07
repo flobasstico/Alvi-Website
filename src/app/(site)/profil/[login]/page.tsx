@@ -30,9 +30,9 @@ export default async function ProfilPage({ params }: { params: Promise<{ login: 
   if (!profile.is_public && !own) {
     return (
       <section className="panel mx-auto mt-6 max-w-md text-center">
-        <Avatar url={profile.avatar_url} size="h-20 w-20" className="mx-auto" />
-        <h1 className="mt-3 font-display text-3xl">{name}</h1>
-        <p className="mt-2 text-muted">🔒 Dieses Profil ist privat.</p>
+        {/* Privat: kein Bild, kein Anzeigename – nur der Hinweis */}
+        <div className="text-5xl">🔒</div>
+        <p className="mt-3 text-muted">Dieses Profil ist privat.</p>
       </section>
     )
   }
@@ -81,7 +81,7 @@ export default async function ProfilPage({ params }: { params: Promise<{ login: 
             <a href={`https://www.twitch.tv/${profile.twitch_login}`} target="_blank" rel="noreferrer" className="hover:text-white hover:underline">
               @{profile.twitch_login}
             </a>
-            <span>· dabei seit {new Date(profile.created_at).toLocaleDateString("de-DE", { month: "long", year: "numeric" })}</span>
+            <span>· dabei seit {new Date(profile.created_at).toLocaleDateString("de-DE", { month: "long", year: "numeric", timeZone: "Europe/Berlin" })}</span>
             {profile.role === "admin" && <span className="chip">Admin</span>}
             {!profile.is_public && <span className="chip">🔒 Privat</span>}
           </div>

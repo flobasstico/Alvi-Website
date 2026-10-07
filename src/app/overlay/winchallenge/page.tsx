@@ -6,7 +6,7 @@ export const metadata = { title: "Winchallenge (Overlay)" }
 export const dynamic = "force-dynamic"
 
 export default async function Page() {
-  const initial = await fetchWin(await createClient(), null)
+  const initial = await fetchWin(await createClient(), null).catch(() => null)
   return (
     <>
       {/* Transparenter Hintergrund für OBS */}

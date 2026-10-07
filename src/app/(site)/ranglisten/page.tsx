@@ -78,7 +78,7 @@ export default async function RanglistenPage({ searchParams }: { searchParams: P
             <h2 className="mb-2 font-display text-xl">Zuschauer suchen</h2>
             <form action="/ranglisten" className="flex gap-2">
               {(mini || board.key !== "watchtime") && <input type="hidden" name="tab" value={mini ?? board.key} />}
-              <input name="suche" defaultValue={search} className="input" placeholder="Twitch-Name" maxLength={30} />
+              <input name="suche" defaultValue={search} className="input" placeholder="Twitch-Name" aria-label="Twitch-Name suchen" maxLength={30} />
               <button className="btn-primary px-4">Suchen</button>
             </form>
             {search &&

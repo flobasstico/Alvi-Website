@@ -1,3 +1,4 @@
+import { privateIds, PRIVATE_NAME } from "@/lib/privacy"
 import clsx from "clsx"
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
@@ -48,9 +49,11 @@ async function Solo({ seasonId, isAdmin, supabase, login }: { seasonId: number |
 }
 
 async function MultiplayerList({ loggedIn, isAdmin, supabase }: { loggedIn: boolean; isAdmin: boolean; supabase: Client }) {
-  const [{ data: sessions }, { data: players }] = await Promise.all([
-    supabase.from("loadout_sessions").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30),
-    supabase.from("loadout_players").select("session_id"),
+  const { data: sessions } = await supabase.from("loadout_sessions").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30)
+  const ids = (sessions ?? []).map((s) => s.id)
+  const [{ data: players }, hidden] = await Promise.all([
+    ids.length ? supabase.from("loadout_players").select("session_id").in("session_id", ids) : Promise.resolve({ data: [] as { session_id: number }[] }),
+    privateIds(supabase, (sessions ?? []).map((s) => s.winner_id)),
   ])
   const count = new Map<number, number>()
   for (const p of players ?? []) count.set(p.session_id, (count.get(p.session_id) ?? 0) + 1)
@@ -68,7 +71,7 @@ async function MultiplayerList({ loggedIn, isAdmin, supabase }: { loggedIn: bool
                 <span className="text-sm text-muted">👥 {count.get(s.id) ?? 0}</span>
                 <span className="chip ml-auto">
                   {STATUS[s.status]}
-                  {s.winner_name && ` · 🏆 ${s.winner_name}`}
+                  {s.winner_name && ` · 🏆 ${s.winner_id && hidden.has(s.winner_id) ? PRIVATE_NAME : s.winner_name}`}
                 </span>
               </Link>
             </li>

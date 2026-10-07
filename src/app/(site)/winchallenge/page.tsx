@@ -10,10 +10,11 @@ const STATUS: Record<string, string> = { bereit: "Bereit", laeuft: "Läuft", pau
 
 export default async function WinPage() {
   const { supabase, isAdmin } = await getViewer()
-  const [{ data: list }, { data: games }] = await Promise.all([
-    supabase.from("win_challenges").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30),
-    supabase.from("win_challenge_games").select("challenge_id, wins, target"),
-  ])
+  const { data: list } = await supabase.from("win_challenges").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30)
+  const ids = (list ?? []).map((w) => w.id)
+  const { data: games } = ids.length
+    ? await supabase.from("win_challenge_games").select("challenge_id, wins, target").in("challenge_id", ids)
+    : { data: [] }
   const sum = (id: number) => {
     const g = (games ?? []).filter((x) => x.challenge_id === id)
     return `${g.reduce((s, x) => s + Math.min(x.wins, x.target), 0)}/${g.reduce((s, x) => s + x.target, 0)} Siege`

@@ -15,6 +15,7 @@ import {
 import { loadPlayerStats } from "@/lib/player-stats-server"
 import { replayHref } from "@/lib/replay"
 import { rateQuip, streaks, successRate } from "@/lib/stats"
+import { selectAll } from "@/lib/supabase/select-all"
 import { getViewer } from "@/lib/supabase/server"
 
 export const metadata = { title: "Challenge-Stats" }
@@ -41,7 +42,7 @@ export default async function StatsPage({ searchParams }: { searchParams: Promis
   const { supabase, isAdmin } = await getViewer()
   const [{ data: stats }, { data: all }, players] = await Promise.all([
     supabase.from("challenge_stats").select("*"),
-    supabase.from("challenges").select("*").order("created_at", { ascending: false }),
+    selectAll((a, b) => supabase.from("challenges").select("*").order("created_at", { ascending: false }).order("id").range(a, b)),
     loadPlayerStats(supabase),
   ])
   const viewer = ansicht === "zuschauer"

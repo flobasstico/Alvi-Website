@@ -1,3 +1,4 @@
+import { privateIds, PRIVATE_NAME } from "@/lib/privacy"
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
 import { StaleNote } from "@/components/replay-button"
@@ -14,8 +15,9 @@ export default async function AuktionPage() {
   const { data: auctions } = await supabase.from("auctions").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30)
   const ids = (auctions ?? []).map((a) => a.id)
   const { data: players } = ids.length
-    ? await supabase.from("auction_players").select("auction_id, display_name, seat").in("auction_id", ids).order("seat")
+    ? await supabase.from("auction_players").select("auction_id, user_id, display_name, seat").in("auction_id", ids).order("seat")
     : { data: [] }
+  const hidden = await privateIds(supabase, (players ?? []).map((p) => p.user_id))
 
   return (
     <>
@@ -33,7 +35,7 @@ export default async function AuktionPage() {
                 <Link href={`/auktion/${a.id}`} className="flex flex-wrap items-center gap-3 rounded-xl border border-line bg-bg/40 p-3 hover:border-accent">
                   <span className="font-display text-xl">{a.title ?? `Auktion #${a.id}`}</span>
                   <span className="text-sm text-muted">
-                    {(players ?? []).filter((p) => p.auction_id === a.id).map((p) => p.display_name).join(" · ") || "noch leer"}
+                    {(players ?? []).filter((p) => p.auction_id === a.id).map((p) => (p.user_id && hidden.has(p.user_id) ? PRIVATE_NAME : p.display_name)).join(" · ") || "noch leer"}
                   </span>
                   <span className="chip ml-auto">{STATUS[a.status]}</span>
                 </Link>

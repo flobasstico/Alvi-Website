@@ -1,6 +1,7 @@
 "use client"
 
 import { useEffect, useRef } from "react"
+import { isTyping } from "./keys"
 import { DROP_JUMPS, DROP_PERFECT, DROP_RADIUS, landingPoints } from "@/lib/minigames"
 
 const W = 360
@@ -262,6 +263,7 @@ export function DropZone({ onFinish }: { onFinish: (score: number) => void }) {
 
     // Tastatur
     const key = (down: boolean) => (e: KeyboardEvent) => {
+      if (isTyping(e)) return
       if (["ArrowLeft", "a", "A"].includes(e.key)) input.left = down
       else if (["ArrowRight", "d", "D"].includes(e.key)) input.right = down
       else if ((e.key === " " || e.key === "ArrowUp" || e.key === "Enter") && down) input.action = true
@@ -298,5 +300,5 @@ export function DropZone({ onFinish }: { onFinish: (score: number) => void }) {
     }
   }, [])
 
-  return <canvas ref={canvas} className="block aspect-[2/3] w-full touch-none select-none rounded-xl" style={{ maxWidth: W * 1.25 }} />
+  return <canvas ref={canvas} role="img" aria-label="Drop-Zone Spielfeld" className="block aspect-[2/3] w-full touch-none select-none rounded-xl" style={{ maxWidth: W * 1.25 }} />
 }

@@ -31,12 +31,3 @@ export async function saveChallenge(input: {
   return data.id
 }
 
-export async function setChallengeStatus(id: number, status: Status, videoUrl?: string | null) {
-  const supabase = await requireAdmin()
-  const patch: { status: Status; played_at?: string; video_url?: string | null } = { status }
-  if (status !== "geplant") patch.played_at = new Date().toISOString()
-  if (videoUrl !== undefined) patch.video_url = videoUrl || null
-  const { error } = await supabase.from("challenges").update(patch).eq("id", id)
-  if (error) throw new Error(error.message)
-  revalidatePath("/", "layout")
-}

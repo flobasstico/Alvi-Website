@@ -23,7 +23,7 @@ export function LeagueEntry({
   const [title, setTitle] = useState(edit?.challenge.title ?? "")
   const [video, setVideo] = useState(edit?.challenge.youtube_url ?? "")
   const [category, setCategory] = useState(edit?.challenge.category ?? "")
-  const [date, setDate] = useState(edit?.challenge.played_at ?? new Date().toISOString().slice(0, 10))
+  const [date, setDate] = useState(edit?.challenge.played_at ?? new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))
   const [entries, setEntries] = useState<Record<number, Entry>>(() =>
     Object.fromEntries(
       creators.map((c) => {

@@ -254,7 +254,7 @@ export async function updateChallenge(form: FormData) {
         .from("challenges")
         .update({
           status,
-          video_url: str(form, "video_url") || null,
+          video_url: safeUrl(str(form, "video_url")),
           played_at: status === "geplant" ? null : (current?.played_at ?? new Date().toISOString()),
         })
         .eq("id", id)

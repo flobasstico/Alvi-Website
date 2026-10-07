@@ -1,3 +1,4 @@
+import { privateIds, PRIVATE_NAME } from "@/lib/privacy"
 import Link from "next/link"
 import { PageTitle } from "@/components/page-title"
 import { StaleNote } from "@/components/replay-button"
@@ -9,15 +10,19 @@ export const metadata = { title: "Olympiade" }
 
 export default async function OlympiadePage() {
   const { supabase, user } = await getViewer()
-  const [{ data: list }, { data: players }, { data: games }] = await Promise.all([
-    supabase.from("olympics").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30),
-    supabase.from("olympic_players").select("olympic_id, display_name, won"),
-    supabase.from("olympic_games").select("olympic_id, position"),
-  ])
+  const { data: list } = await supabase.from("olympics").select("*").eq("official", true).order("created_at", { ascending: false }).limit(30)
+  const ids = (list ?? []).map((o) => o.id)
+  const [{ data: players }, { data: games }] = ids.length
+    ? await Promise.all([
+        supabase.from("olympic_players").select("olympic_id, user_id, display_name, won").in("olympic_id", ids),
+        supabase.from("olympic_games").select("olympic_id, position").in("olympic_id", ids),
+      ])
+    : [{ data: [] }, { data: [] }]
+  const hidden = await privateIds(supabase, (players ?? []).filter((p) => p.won).map((p) => p.user_id))
   const info = (id: number) => {
     const p = (players ?? []).filter((x) => x.olympic_id === id)
     const g = (games ?? []).filter((x) => x.olympic_id === id)
-    return { count: p.length, winners: p.filter((x) => x.won).map((x) => x.display_name), drawn: g.filter((x) => x.position != null).length, games: g.length }
+    return { count: p.length, winners: p.filter((x) => x.won).map((x) => (hidden.has(x.user_id) ? PRIVATE_NAME : x.display_name)), drawn: g.filter((x) => x.position != null).length, games: g.length }
   }
 
   return (
