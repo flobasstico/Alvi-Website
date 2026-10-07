@@ -1,5 +1,6 @@
 import Link from "next/link"
 import clsx from "clsx"
+import type { ReactNode } from "react"
 
 export type PodiumEntry = {
   id: string | number
@@ -9,14 +10,30 @@ export type PodiumEntry = {
   color?: string
 }
 
-/** Zwei Vorschau-Karten in der großen Kachel: Creator-Liga (Podest) und Stats (Alvis Quote + Top-Spieler) */
+/**
+ * Aufbau der großen Kachel: ab Desktop Liga links, Titel/Text/Icons in der Mitte, Stats rechts.
+ * Am Handy steht die Mitte oben, darunter die beiden Karten (Tablet: nebeneinander).
+ */
+export function HeroLayout({ center, left, right }: { center: ReactNode; left: ReactNode; right: ReactNode }) {
+  return (
+    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.2fr)_minmax(0,1fr)]">
+      <div className="flex flex-col justify-center sm:col-span-2 lg:order-2 lg:col-span-1">{center}</div>
+      <div className="text-left lg:order-1 [&>*]:h-full">{left}</div>
+      <div className="text-left lg:order-3 [&>*]:h-full">{right}</div>
+    </div>
+  )
+}
+
+/** Große Kachel mit Vorschau-Karten: Creator-Liga (Podest) und Stats (Alvis Quote + Top-Spieler) */
 export function HeroHighlights({
+  center,
   league,
   challenges,
   rate,
   finished,
   players,
 }: {
+  center: ReactNode
   league: PodiumEntry[]
   challenges: number
   rate: number
@@ -24,46 +41,56 @@ export function HeroHighlights({
   players: PodiumEntry[]
 }) {
   return (
-    <div className="mx-auto mt-8 grid max-w-4xl gap-4 text-left sm:grid-cols-2">
-      <Link href="/liga" className="group rounded-2xl border border-line bg-bg/50 p-4 transition hover:-translate-y-1 hover:border-accent">
-        <div className="flex items-baseline justify-between gap-2">
-          <h2 className="font-display text-xl group-hover:text-accent">🏆 Creator-Liga</h2>
-          <span className="text-xs text-muted">{challenges} Challenges</span>
-        </div>
-        {league.length ? (
-          <Podium entries={league} unit="Pkt." />
-        ) : (
-          <p className="mt-6 text-sm text-muted">Noch keine Challenges eingetragen.</p>
-        )}
-        <p className="mt-3 text-right text-sm text-accent-2 group-hover:underline">Zur ewigen Tabelle →</p>
-      </Link>
-
-      <Link href="/stats" className="group rounded-2xl border border-line bg-bg/50 p-4 transition hover:-translate-y-1 hover:border-accent">
-        <h2 className="font-display text-xl group-hover:text-accent">📊 Stats</h2>
-        <div className="mt-3 flex items-center gap-4">
-          <RateRing rate={rate} />
-          <div className="min-w-0 flex-1">
-            <div className="text-xs font-bold uppercase text-muted">Alvis Challenges</div>
-            <div className="text-sm">
-              <span className="font-bold">{rate} %</span> von {finished} geschafft
-            </div>
-            <div className="mt-2 text-xs font-bold uppercase text-muted">Meiste Siege</div>
-            <ol className="mt-1 flex flex-col gap-1">
-              {players.map((p, i) => (
-                <li key={p.id} className="flex items-center gap-2 text-sm">
-                  <span className="w-5 text-center">{["🥇", "🥈", "🥉"][i]}</span>
-                  <Avatar entry={p} size="h-5 w-5" />
-                  <span className="flex-1 truncate font-semibold">{p.name}</span>
-                  <span className="tabular-nums text-accent">{p.value}</span>
-                </li>
-              ))}
-              {!players.length && <li className="text-sm text-muted">Noch keine Runden gespielt.</li>}
-            </ol>
+    <HeroLayout
+      center={center}
+      left={
+        <Link
+          href="/liga"
+          className="group flex flex-col rounded-2xl border border-line bg-bg/50 p-4 transition hover:-translate-y-1 hover:border-accent"
+        >
+          <div className="flex items-baseline justify-between gap-2">
+            <h2 className="font-display text-xl group-hover:text-accent">🏆 Creator-Liga</h2>
+            <span className="text-xs text-muted">{challenges} Challenges</span>
           </div>
-        </div>
-        <p className="mt-3 text-right text-sm text-accent-2 group-hover:underline">Alle Stats →</p>
-      </Link>
-    </div>
+          {league.length ? (
+            <Podium entries={league} unit="Pkt." />
+          ) : (
+            <p className="mt-6 text-sm text-muted">Noch keine Challenges eingetragen.</p>
+          )}
+          <p className="mt-auto pt-3 text-right text-sm text-accent-2 group-hover:underline">Zur ewigen Tabelle →</p>
+        </Link>
+      }
+      right={
+        <Link
+          href="/stats"
+          className="group flex flex-col rounded-2xl border border-line bg-bg/50 p-4 transition hover:-translate-y-1 hover:border-accent"
+        >
+          <h2 className="font-display text-xl group-hover:text-accent">📊 Stats</h2>
+          <div className="mt-3 flex items-center gap-3">
+            <RateRing rate={rate} />
+            <div className="min-w-0 flex-1">
+              <div className="text-xs font-bold uppercase text-muted">Alvis Challenges</div>
+              <div className="text-sm">
+                <span className="font-bold">{rate} %</span> von {finished} geschafft
+              </div>
+              <div className="mt-2 text-xs font-bold uppercase text-muted">Meiste Siege</div>
+              <ol className="mt-1 flex flex-col gap-1">
+                {players.map((p, i) => (
+                  <li key={p.id} className="flex items-center gap-2 text-sm">
+                    <span className="w-5 text-center">{["🥇", "🥈", "🥉"][i]}</span>
+                    <Avatar entry={p} size="h-5 w-5" />
+                    <span className="flex-1 truncate font-semibold">{p.name}</span>
+                    <span className="tabular-nums text-accent">{p.value}</span>
+                  </li>
+                ))}
+                {!players.length && <li className="text-sm text-muted">Noch keine Runden gespielt.</li>}
+              </ol>
+            </div>
+          </div>
+          <p className="mt-auto pt-3 text-right text-sm text-accent-2 group-hover:underline">Alle Stats →</p>
+        </Link>
+      }
+    />
   )
 }
 
@@ -115,7 +142,7 @@ function RateRing({ rate }: { rate: number }) {
   const R = 30
   const C = 2 * Math.PI * R
   return (
-    <svg viewBox="0 0 80 80" className="h-24 w-24 shrink-0 -rotate-90" aria-label={`${rate} % geschafft`}>
+    <svg viewBox="0 0 80 80" className="h-24 w-24 shrink-0 -rotate-90 lg:h-20 lg:w-20 xl:h-24 xl:w-24" aria-label={`${rate} % geschafft`}>
       <circle cx="40" cy="40" r={R} fill="none" stroke="var(--color-line)" strokeWidth="9" />
       {rate > 0 && (
         <circle
@@ -145,12 +172,7 @@ function RateRing({ rate }: { rate: number }) {
 }
 
 /** Platzhalter, solange Liga und Stats laden (gleiche Größe wie die Karten) */
-export function HeroHighlightsSkeleton() {
-  return (
-    <div className="mx-auto mt-8 grid max-w-4xl gap-4 sm:grid-cols-2" aria-hidden>
-      {[0, 1].map((i) => (
-        <div key={i} className="h-[280px] animate-pulse rounded-2xl border border-line bg-bg/50" />
-      ))}
-    </div>
-  )
+export function HeroHighlightsSkeleton({ center }: { center: ReactNode }) {
+  const box = <div className="h-[280px] animate-pulse rounded-2xl border border-line bg-bg/50" aria-hidden />
+  return <HeroLayout center={center} left={box} right={box} />
 }

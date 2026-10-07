@@ -40,24 +40,28 @@ export default async function Home() {
     "/liga": <LeagueIcon />,
   }
   const channels = channelsFromSettings(settings)
+  // Mitte der großen Kachel: Titel, Text, Kanal-Icons (am Handy darunter der Creator Code)
+  const center = (
+    <>
+      <h1 className="font-display text-5xl text-accent drop-shadow-lg sm:text-6xl lg:text-5xl xl:text-6xl">ALVI CHALLENGES</h1>
+      <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line text-base text-muted sm:text-lg lg:text-base">
+        {"Stellt eure eigenen Fortnite-Challenges zusammen oder spielt die eures Lieblingscreators nach!\nDie Challenges der Creator werden sogar getrackt – wer ist der Beste?"}
+      </p>
+      {channels.length > 0 && (
+        <div className="mt-5 flex flex-wrap items-center justify-center gap-1 sm:gap-2">
+          <ChannelLinks channels={channels} />
+        </div>
+      )}
+      <CreatorCode className="mt-5 sm:hidden" />
+    </>
+  )
 
   return (
     <div className="flex flex-col gap-8">
-      <section className="panel relative overflow-hidden py-10 text-center">
-        <h1 className="font-display text-5xl text-accent drop-shadow-lg sm:text-7xl">ALVI CHALLENGES</h1>
-        <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line text-lg text-muted">
-          {"Stellt eure eigenen Fortnite-Challenges zusammen oder spielt die eures Lieblingscreators nach!\nDie Challenges der Creator werden sogar getrackt – wer ist der Beste?"}
-        </p>
-        {channels.length > 0 && (
-          <div className="mt-5 flex flex-wrap items-center justify-center gap-1 sm:gap-3">
-            <ChannelLinks channels={channels} />
-          </div>
-        )}
-        {/* Fortnite-Creator-Code: am Handy unter den Icons, ab Tablet unten rechts in der Ecke */}
-        <CreatorCode className="mt-5 sm:hidden" />
-        {/* Liga und Stats laden nach, damit die Startseite sofort erscheint */}
-        <Suspense fallback={<HeroHighlightsSkeleton />}>
-          <Highlights />
+      <section className="panel relative overflow-hidden py-8 text-center lg:py-6">
+        {/* Liga und Stats laden nach, damit die Startseite sofort erscheint; die Mitte steht sofort */}
+        <Suspense fallback={<HeroHighlightsSkeleton center={center} />}>
+          <Highlights center={center} />
         </Suspense>
         {/* Unten: kleiner Link zu den Minispielen (links), Creator Code (rechts, ab Tablet) */}
         <div className="mt-5 flex flex-col items-center gap-2 px-1 sm:flex-row sm:justify-between">
@@ -101,7 +105,7 @@ function CreatorCode({ className }: { className: string }) {
 }
 
 /** Vorschau in der großen Kachel: Liga-Podest und Stats (aufwendigere Abfragen, darum gestreamt) */
-async function Highlights() {
+async function Highlights({ center }: { center: React.ReactNode }) {
   const supabase = await createClient()
   const [league, players, { data: total }] = await Promise.all([
     loadLeague(supabase),
@@ -117,6 +121,7 @@ async function Highlights() {
     .map((r) => ({ id: r.userId, name: r.name, avatar: r.avatar, value: r.wins }))
   return (
     <HeroHighlights
+      center={center}
       league={podium}
       challenges={league.challenges.length}
       rate={successRate(total?.won ?? 0, total?.finished ?? 0)}
