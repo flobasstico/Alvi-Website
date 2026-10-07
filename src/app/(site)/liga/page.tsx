@@ -1,4 +1,5 @@
 import clsx from "clsx"
+import { ShareButton } from "@/components/share-button"
 import Link from "next/link"
 import { AdminDeleteRound } from "@/components/admin-delete-round"
 import { HeadToHeadBox } from "@/components/league/head-to-head"
@@ -8,9 +9,10 @@ import { YoutubeButton } from "@/components/league/youtube-button"
 import { PageTitle } from "@/components/page-title"
 import { creatorColors, leagueTable, pointsByResult, pointsTimeline, winShare, type LeagueSort } from "@/lib/league"
 import { loadLeague } from "@/lib/league-server"
+import { ogMeta } from "@/lib/og"
 import { getViewer } from "@/lib/supabase/server"
 
-export const metadata = { title: "Creator-Liga" }
+export const metadata = ogMeta("Creator-Liga", "Die ewige Tabelle der Creator-Challenges – mit Ligapunkten, Siegen und Videos.", "/og/liga")
 
 const SORTS: LeagueSort[] = ["ligapunkte", "siege", "teilnahmen", "quote"]
 
@@ -38,13 +40,14 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
         subtitle="Challenges, die Alvi und seine Kollegen außerhalb der Website spielen – mit Ligapunkten, Siegen und Videos. Wer ist der Beste?"
       />
 
-      {isAdmin && (
-        <div className="mb-6 flex justify-end">
+      <div className="mb-6 flex justify-end gap-2">
+        <ShareButton path="/liga" text="Die ewige Tabelle der Creator-Liga – wer ist der beste Creator?" />
+        {isAdmin && (
           <Link href="/admin?tab=liga" className="btn-secondary px-3 py-1.5 text-sm">
             + Challenge eintragen
           </Link>
-        </div>
-      )}
+        )}
+      </div>
 
       <section className="panel mb-6">
         <h2 className="mb-1 font-display text-2xl">Ewige Tabelle</h2>

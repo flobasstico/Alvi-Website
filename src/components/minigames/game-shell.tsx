@@ -3,6 +3,7 @@
 import { useState } from "react"
 import { minigame, type MinigameKey } from "@/lib/minigames"
 import { createClient } from "@/lib/supabase/client"
+import { ShareButton } from "@/components/share-button"
 import { DropZone } from "./drop-zone"
 import { Leaderboard } from "./leaderboard"
 import { StormRun } from "./storm-run"
@@ -16,12 +17,14 @@ type Result = { score: number; saved: boolean; record: boolean; error: string | 
 export function GameShell({
   game,
   myId,
+  myLogin = null,
   isAdmin,
   alviBest,
   myBest: initialBest,
 }: {
   game: MinigameKey
   myId: string | null
+  myLogin?: string | null
   isAdmin: boolean
   alviBest: number | null
   myBest: number | null
@@ -98,6 +101,16 @@ export function GameShell({
                     {alviBest !== null && !beatAlvi && <div className="text-sm text-white/80">Alvis Bestwert: {alviBest.toLocaleString("de-DE")}</div>}
                     {!myId && <p className="text-sm text-white/80">Mit Twitch einloggen, um in die Bestenliste zu kommen.</p>}
                     {result.error && <p className="text-sm text-fail">Nicht gespeichert: {result.error}</p>}
+                    {/* Geteilt wird der Bestwert aus der Datenbank (Vorschaubild über ?von=) */}
+                    <ShareButton
+                      path={result.saved && myLogin ? `/minispiele/${game}?von=${myLogin}` : `/minispiele/${game}`}
+                      text={
+                        result.saved && myLogin
+                          ? `Mein Rekord bei ${info.title}: ${(myBest ?? result.score).toLocaleString("de-DE")} Punkte – schlägst du mich?`
+                          : `Ich habe ${result.score.toLocaleString("de-DE")} Punkte bei ${info.title} geschafft – schaffst du mehr?`
+                      }
+                      label="Ergebnis teilen"
+                    />
                   </>
                 )
               )}

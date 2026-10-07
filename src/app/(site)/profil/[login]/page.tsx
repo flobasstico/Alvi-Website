@@ -1,7 +1,9 @@
 import clsx from "clsx"
+import { ShareButton } from "@/components/share-button"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { MINIGAMES } from "@/lib/minigames"
+import { ogMeta } from "@/lib/og"
 import { PLAYER_GAME_LABEL } from "@/lib/player-stats"
 import { loadPlayerStats } from "@/lib/player-stats-server"
 import { badges, gameLines, totals } from "@/lib/profile"
@@ -10,7 +12,8 @@ import { getViewer } from "@/lib/supabase/server"
 import { VisibilityToggle } from "./visibility-toggle"
 
 export async function generateMetadata({ params }: { params: Promise<{ login: string }> }) {
-  return { title: `Profil von ${(await params).login}` }
+  const login = decodeURIComponent((await params).login).toLowerCase()
+  return ogMeta(`Profil von ${login}`, `Runden, Siege, Minispiel-Rekorde und Abzeichen von ${login} bei Alvi Challenges.`, `/og/profil/${encodeURIComponent(login)}`)
 }
 
 export default async function ProfilPage({ params }: { params: Promise<{ login: string }> }) {
@@ -86,7 +89,16 @@ export default async function ProfilPage({ params }: { params: Promise<{ login: 
             {!profile.is_public && <span className="chip">🔒 Privat</span>}
           </div>
         </div>
-        {own && <VisibilityToggle isPublic={profile.is_public} />}
+        <div className="flex flex-col items-end gap-3">
+          {profile.is_public && (
+            <ShareButton
+              path={`/profil/${profile.twitch_login}`}
+              text={own ? "Mein Profil bei Alvi Challenges – Runden, Siege und Abzeichen:" : `Das Profil von ${name} bei Alvi Challenges:`}
+              label={own ? "Profil teilen" : "Teilen"}
+            />
+          )}
+          {own && <VisibilityToggle isPublic={profile.is_public} />}
+        </div>
       </section>
 
       <div className="mb-6 grid gap-4 md:grid-cols-3">
