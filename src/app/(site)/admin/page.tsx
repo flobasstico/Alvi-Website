@@ -13,6 +13,7 @@ import {
   type Source,
 } from "@/lib/constants"
 import { creatorColors } from "@/lib/league"
+import { checkTwitch } from "@/lib/twitch-live"
 import { getCurrentSeason } from "@/lib/season"
 import { loadSiteSettings } from "@/lib/site"
 import { getViewer } from "@/lib/supabase/server"
@@ -528,7 +529,26 @@ async function SeasonsTab() {
 async function SiteTab() {
   const { supabase } = await getViewer()
   const settings = await loadSiteSettings(supabase)
-  return <SiteSettingsForm values={Object.fromEntries(settings)} />
+  const channel = settings.get("main_creator_login")?.trim() || "alvivb"
+  const twitch = await checkTwitch(channel)
+  return (
+    <div className="flex flex-col gap-6">
+      {/* Prüft die Twitch-Zugangsdaten für den Live-Status auf der Startseite */}
+      <section className={clsx("panel", twitch.ok ? "border-win/60" : "border-fail/60")}>
+        <h2 className="mb-1 font-display text-xl">Twitch-Live-Status</h2>
+        <p className={clsx("text-sm", twitch.ok ? "text-win" : "text-fail")}>
+          {twitch.ok ? "✅" : "⚠️"} {twitch.message}
+        </p>
+        {twitch.live && (
+          <p className="mt-1 text-sm text-muted">
+            „{twitch.live.title}“ · {twitch.live.viewers.toLocaleString("de-DE")} Zuschauer – der Live-Hinweis ist auf der Startseite sichtbar.
+          </p>
+        )}
+        <p className="mt-1 text-xs text-muted">Geprüfter Kanal: {channel} (Hauptkanal unten). Die Startseite fragt höchstens jede Minute neu.</p>
+      </section>
+      <SiteSettingsForm values={Object.fromEntries(settings)} />
+    </div>
+  )
 }
 
 async function UsersTab({ q }: { q: string }) {

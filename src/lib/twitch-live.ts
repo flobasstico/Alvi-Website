@@ -65,3 +65,29 @@ export function liveSince(startedAt: string, now = Date.now()) {
   const h = Math.floor(min / 60)
   return h ? `seit ${h} h ${min % 60} min` : `seit ${min} min`
 }
+
+export type TwitchCheck = { ok: boolean; message: string; live: LiveStream | null }
+
+/** Für den Admin-Bereich: Sind die Zugangsdaten gesetzt und gültig? Ist der Kanal gerade live? */
+export async function checkTwitch(login: string): Promise<TwitchCheck> {
+  const id = process.env.TWITCH_CLIENT_ID
+  const secret = process.env.TWITCH_CLIENT_SECRET
+  if (!id || !secret) return { ok: false, message: "TWITCH_CLIENT_ID / TWITCH_CLIENT_SECRET sind in Vercel nicht gesetzt (danach neu deployen).", live: null }
+  try {
+    token = null // frisch prüfen
+    const access = await appToken(id, secret)
+    if (!access) return { ok: false, message: "Twitch lehnt die Zugangsdaten ab – Client-ID oder Secret falsch (Leerzeichen?).", live: null }
+    const res = await fetch(`${API}/users?login=${encodeURIComponent(login.toLowerCase())}`, {
+      headers: { "Client-Id": id, Authorization: `Bearer ${access}` },
+      cache: "no-store",
+      signal: AbortSignal.timeout(3000),
+    })
+    if (!res.ok) return { ok: false, message: `Twitch-Abfrage fehlgeschlagen (HTTP ${res.status}).`, live: null }
+    const user = ((await res.json()) as { data?: { login: string }[] }).data?.[0]
+    if (!user) return { ok: false, message: `Verbindung ok, aber den Kanal „${login}“ gibt es bei Twitch nicht.`, live: null }
+    const live = await liveStream(login)
+    return { ok: true, message: live ? `Verbindung ok – ${user.login} ist gerade live.` : `Verbindung ok – ${user.login} ist gerade offline.`, live }
+  } catch {
+    return { ok: false, message: "Twitch ist gerade nicht erreichbar.", live: null }
+  }
+}
