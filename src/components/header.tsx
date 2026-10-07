@@ -1,7 +1,9 @@
 import Link from "next/link"
 import { NAV } from "@/lib/constants"
 import { getViewer } from "@/lib/supabase/server"
+import { Suspense } from "react"
 import { AuthButton } from "./auth-button"
+import { LoginError } from "./login-error"
 import { NavLinks } from "./nav-links"
 
 export async function Header() {
@@ -26,6 +28,9 @@ export async function Header() {
           <AuthButton name={profile?.display_name ?? null} avatar={profile?.avatar_url ?? null} login={profile?.twitch_login ?? null} />
         </div>
       </div>
+      <Suspense fallback={null}>
+        <LoginError />
+      </Suspense>
       {profile?.banned && (
         <div className="bg-fail px-4 py-1.5 text-center text-sm font-bold text-white">
           Dein Account ist gesperrt – du kannst zuschauen, aber nichts erstellen oder mitspielen.

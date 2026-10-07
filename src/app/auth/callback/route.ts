@@ -7,9 +7,11 @@ export async function GET(request: Request) {
   const next = searchParams.get("next") ?? "/"
   const safeNext = next.startsWith("/") && !next.startsWith("//") ? next : "/"
 
+  let failure: string | null = null
   if (code) {
     const supabase = await createClient()
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    failure = error?.message ?? null
     if (!error) {
       const res = NextResponse.redirect(`${origin}${safeNext}`)
       // Chat-Schreibrechte für die Chat-Brücke der Regel-Eskalation (Twitch-Token gilt ca. 4 Stunden)
@@ -24,5 +26,10 @@ export async function GET(request: Request) {
       return res
     }
   }
-  return NextResponse.redirect(`${origin}/?login=fehler`)
+  // Login fehlgeschlagen (z. B. Twitch lehnt die App ab): zurück zur Seite, dort erscheint ein Hinweis
+  const reason = searchParams.get("error_description") ?? searchParams.get("error") ?? failure ?? "unbekannt"
+  const back = new URL(`${origin}${safeNext}`)
+  back.searchParams.set("login", "fehler")
+  back.searchParams.set("grund", reason.slice(0, 200))
+  return NextResponse.redirect(back)
 }
