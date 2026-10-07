@@ -2,6 +2,7 @@ import Link from "next/link"
 import { ChannelLinks } from "@/components/channel-links"
 import { Suspense } from "react"
 import { HeroHighlights, HeroHighlightsSkeleton } from "@/components/hero-highlights"
+import { LiveBanner } from "@/components/live-banner"
 import { BingoIcon, GoldBarsIcon, LeagueIcon, MapIcon, WheelIcon } from "@/components/tile-icons"
 import { leagueTable } from "@/lib/league"
 import { loadLeague } from "@/lib/league-server"
@@ -63,12 +64,20 @@ export default async function Home() {
         <Suspense fallback={<HeroHighlightsSkeleton center={center} />}>
           <Highlights center={center} />
         </Suspense>
-        {/* Unten: kleiner Link zu den Minispielen (links), Creator Code (rechts, ab Tablet) */}
-        <div className="mt-5 flex flex-col items-center gap-2 px-1 sm:flex-row sm:justify-between">
-          <Link href="/minispiele" className="rounded-full border border-line bg-bg/50 px-3 py-1 text-sm text-muted hover:border-accent hover:text-accent">
+        {/* Unten: Minispiele (links), Live-Hinweis (Mitte, nur wenn Alvi live ist), Creator Code (rechts) */}
+        <div className="mt-5 grid grid-cols-[minmax(0,1fr)] items-center gap-3 px-1 lg:grid-cols-[1fr_auto_1fr]">
+          <div className="flex min-w-0 justify-center empty:hidden lg:col-start-2 lg:row-start-1">
+            <Suspense fallback={null}>
+              <LiveBanner login={settings.get("main_creator_login")?.trim() || "alvivb"} />
+            </Suspense>
+          </div>
+          <Link
+            href="/minispiele"
+            className="justify-self-center whitespace-nowrap rounded-full border border-line bg-bg/50 px-3 py-1 text-sm text-muted hover:border-accent hover:text-accent lg:col-start-1 lg:row-start-1 lg:justify-self-start"
+          >
             🕹️ Minispiele – schlag Alvis Highscore →
           </Link>
-          <CreatorCode className="hidden sm:block" />
+          <CreatorCode className="hidden justify-self-center sm:block lg:col-start-3 lg:row-start-1 lg:justify-self-end" />
         </div>
       </section>
 
