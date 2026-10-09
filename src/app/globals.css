@@ -33,6 +33,11 @@ body {
   min-height: 100dvh;
 }
 
+/* Auf der Lobby liegt das Hintergrundbild (.lobby-bg) hinter allem – dafür den Body-Verlauf ausblenden */
+body:has(.lobby-bg) {
+  background: transparent;
+}
+
 /*
  * Klick-Effekt für alles Anklickbare: kurz kleiner und etwas dunkler, solange gedrückt.
  * Bewusst außerhalb der Tailwind-Layer, damit er auch über Hover-Effekten (z. B. hover:brightness) liegt.
