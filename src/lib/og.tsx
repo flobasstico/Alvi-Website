@@ -65,7 +65,7 @@ export async function ogImage({
           flexDirection: "column",
           padding: "56px 64px",
           color: "#fff",
-          background: "linear-gradient(135deg, #0b0a1f 0%, #1e1b4b 55%, #0c4a6e 100%)",
+          background: "linear-gradient(135deg, #071640 0%, #0f3a96 55%, #1d6fe0 100%)",
           fontFamily: "Noto Sans",
         }}
       >

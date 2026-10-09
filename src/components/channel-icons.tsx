@@ -95,7 +95,7 @@ function BuiltInIcon({ platform, className }: { platform: string; className?: st
     case "link_merch":
       return (
         <svg viewBox="0 0 24 24" className={className} aria-hidden>
-          <rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="#ffd60a" />
+          <rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="#ffe03d" />
           <path d="M7 9h10l-.8 9.2a1 1 0 0 1-1 .8H8.8a1 1 0 0 1-1-.8z" fill="#111" />
           <path d="M9.5 10.5V8a2.5 2.5 0 0 1 5 0v2.5" fill="none" stroke="#111" strokeWidth="1.6" strokeLinecap="round" />
         </svg>

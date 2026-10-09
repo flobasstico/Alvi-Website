@@ -81,7 +81,7 @@ export function GameShell({
           ) : (
             <div
               className={
-                "flex flex-col items-center justify-center gap-3 rounded-xl bg-gradient-to-b from-indigo-900 to-sky-700 p-6 text-center " +
+                "flex flex-col items-center justify-center gap-3 rounded-xl bg-gradient-to-b from-[#0f3a96] to-[#3d8bff] p-6 text-center " +
                 (game === "dropzone" ? "aspect-[2/3]" : "aspect-[16/9]")
               }
             >

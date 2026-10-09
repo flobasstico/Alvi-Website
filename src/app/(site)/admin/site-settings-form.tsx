@@ -11,7 +11,7 @@ export function SiteSettingsForm({ values }: { values: Record<string, string> })
     <form action={action} className="grid gap-6 lg:grid-cols-[360px_1fr]">
       <section className="panel flex h-fit flex-col gap-3">
         <h2 className="font-display text-2xl">Alvis Kanäle</h2>
-        <p className="text-sm text-muted">Erscheinen als Icons in der großen Kachel auf der Startseite. Leere Felder werden nicht angezeigt.</p>
+        <p className="text-sm text-muted">Erscheinen als Icons im Kasten „Kanäle“ in der Lobby (Startseite). Leere Felder werden nicht angezeigt.</p>
         {CHANNELS.map((c) => (
           <div key={c.key}>
             <label className="label" htmlFor={c.key}>{c.label}</label>

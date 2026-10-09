@@ -16,7 +16,9 @@ import {
 import { creatorColors } from "@/lib/league"
 import { checkTwitch } from "@/lib/twitch-live"
 import { getCurrentSeason } from "@/lib/season"
-import { loadSiteSettings } from "@/lib/site"
+import { loadSiteSettings, safeUrl } from "@/lib/site"
+import { GAMES, gameThumbs } from "@/lib/games"
+import { GameThumb } from "@/components/game-thumb"
 import { getViewer } from "@/lib/supabase/server"
 import {
   addBingoTask,
@@ -28,6 +30,8 @@ import {
   deleteRow,
   saveCreator,
   setBanned,
+  setCreatorSkin,
+  setGameThumb,
   setLootActiveAll,
   moveEscalationRule,
   toggleActive,
@@ -35,6 +39,7 @@ import {
   updateEscalationRule,
   updateLootItem,
 } from "./actions"
+import { ImageUpload } from "./image-upload"
 import { ItemIconUpload, ItemIconUploadAll } from "./item-icon-upload"
 import { LeagueEntry } from "./league-entry"
 import { LootImport } from "./loot-import"
@@ -499,7 +504,8 @@ async function BingoTab() {
 
 async function SiteTab() {
   const { supabase } = await getViewer()
-  const settings = await loadSiteSettings(supabase)
+  const [settings, season] = await Promise.all([loadSiteSettings(supabase), getCurrentSeason(supabase)])
+  const thumbs = gameThumbs(settings, safeUrl)
   const channel = settings.get("main_creator_login")?.trim() || "alvivb"
   const twitch = await checkTwitch(channel)
   return (
@@ -518,6 +524,31 @@ async function SiteTab() {
         <p className="mt-1 text-xs text-muted">Geprüfter Kanal: {channel} (Hauptkanal unten). Die Startseite fragt höchstens jede Minute neu.</p>
       </section>
       <SiteSettingsForm values={Object.fromEntries(settings)} />
+      <section className="panel">
+        <h2 className="mb-1 font-display text-xl">Vorschaubilder der Modi</h2>
+        <p className="mb-4 text-sm text-muted">
+          Für Lobby und Entdecken. Ohne eigenes Bild wird das gezeichnete Bild gezeigt. Am besten im Format 16:9 (z. B. 1280 × 720).
+        </p>
+        <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {GAMES.map((g) => (
+            <li key={g.slug}>
+              <ImageUpload
+                folder="thumbs"
+                name={g.slug}
+                current={thumbs[g.slug] ?? null}
+                save={setGameThumb.bind(null, g.slug)}
+                label={thumbs[g.slug] ? "Bild ersetzen" : "Eigenes Bild hochladen"}
+                resetLabel="Gezeichnetes Bild verwenden"
+                preview={
+                  <div className="overflow-hidden rounded-md border border-line">
+                    <GameThumb game={g} image={thumbs[g.slug]} mapUrl={season?.map_image_url} showTitle />
+                  </div>
+                }
+              />
+            </li>
+          ))}
+        </ul>
+      </section>
     </div>
   )
 }
@@ -650,6 +681,25 @@ async function LeagueTab({ edit }: { edit: number | null }) {
                       <button className="btn-secondary px-2 py-1 text-xs">Speichern</button>
                     </div>
                   </form>
+                  <div className="mt-2 border-t border-line pt-2">
+                    <div className="mb-1 text-xs font-semibold">Skin-Bild für die Lobby</div>
+                    <ImageUpload
+                      folder="skins"
+                      name={`creator-${c.id}`}
+                      current={c.skin_url}
+                      save={setCreatorSkin.bind(null, c.id)}
+                      label={c.skin_url ? "Skin ersetzen" : "Skin hochladen"}
+                      resetLabel="Profilbild verwenden"
+                      preview={
+                        c.skin_url ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img src={c.skin_url} alt="" className="h-24 w-auto self-start object-contain" />
+                        ) : (
+                          <p className="text-muted">Freigestelltes PNG (transparenter Hintergrund) im Hochformat sieht am besten aus. Ohne Skin wird das Profilbild gezeigt.</p>
+                        )
+                      }
+                    />
+                  </div>
                   <form action={deleteCreator} className="mt-1">
                     <input type="hidden" name="id" value={c.id} />
                     <button className="text-xs text-muted underline hover:text-fail">Löschen (nur ohne Ergebnisse)</button>

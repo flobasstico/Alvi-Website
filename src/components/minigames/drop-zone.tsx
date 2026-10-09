@@ -220,7 +220,7 @@ export function DropZone({ onFinish }: { onFinish: (score: number) => void }) {
       ctx.fillStyle = "#fff"
       ctx.font = "bold 14px sans-serif"
       ctx.fillText(`Sprung ${Math.min(jump + 1, DROP_JUMPS)}/${DROP_JUMPS}`, 16, 26)
-      ctx.fillStyle = "#ffd60a"
+      ctx.fillStyle = "#ffe03d"
       ctx.fillText(`${total} Punkte`, 16, 44)
       // Wind
       const w = wind + Math.sin(t * 1.3 + windPhase) * 25
@@ -244,7 +244,7 @@ export function DropZone({ onFinish }: { onFinish: (score: number) => void }) {
         ctx.lineWidth = 4
         ctx.strokeStyle = "rgba(0,0,0,.7)"
         ctx.strokeText(message, W / 2, H / 2 - 40)
-        ctx.fillStyle = lastPoints ? "#ffd60a" : "#fca5a5"
+        ctx.fillStyle = lastPoints ? "#ffe03d" : "#fca5a5"
         ctx.fillText(message, W / 2, H / 2 - 40)
       }
     }

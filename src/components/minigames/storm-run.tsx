@@ -227,7 +227,7 @@ export function StormRun({ onFinish }: { onFinish: (score: number) => void }) {
       ctx.fillStyle = "rgba(0,0,0,.45)"
       ctx.fillRect(W - 128, 8, 120, 44)
       ctx.font = "bold 15px sans-serif"
-      ctx.fillStyle = "#ffd60a"
+      ctx.fillStyle = "#ffe03d"
       ctx.fillText(`${runScore(distance, loot)} Punkte`, W - 16, 26)
       ctx.font = "12px sans-serif"
       ctx.fillStyle = "#fff"

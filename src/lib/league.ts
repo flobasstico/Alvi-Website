@@ -1,6 +1,14 @@
 /** Creator-Liga: Ligapunkte, Tabelle, Diagramm-Daten und Kopf-an-Kopf (rein, ohne Datenbank) */
 
-export type Creator = { id: number; name: string; avatar_url: string | null; youtube_url?: string | null; color?: string | null }
+export type Creator = {
+  id: number
+  name: string
+  avatar_url: string | null
+  youtube_url?: string | null
+  color?: string | null
+  profile_id?: string | null
+  skin_url?: string | null
+}
 export type LeagueChallenge = {
   id: number
   title: string

@@ -10,7 +10,7 @@ export function PieChart({ slices, unit = "Siege" }: { slices: Slice[]; unit?: s
   return (
     <div className="flex flex-wrap items-center gap-5">
       <svg viewBox="0 0 120 120" className="h-44 w-44 shrink-0 -rotate-90" role="img" aria-label={`Anteil an allen ${unit}`}>
-        <circle cx="60" cy="60" r={R} fill="none" stroke="#2a2650" strokeWidth="22" />
+        <circle cx="60" cy="60" r={R} fill="none" stroke="#1b3a80" strokeWidth="22" />
         {slices.map((s) => {
           const len = (s.value / total) * C
           const el = (

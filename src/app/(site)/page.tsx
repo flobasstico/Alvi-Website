@@ -1,141 +1,94 @@
 import Link from "next/link"
-import { ChannelLinks } from "@/components/channel-links"
 import { Suspense } from "react"
-import { HeroHighlights, HeroHighlightsSkeleton } from "@/components/hero-highlights"
+import { ChannelLinks } from "@/components/channel-links"
 import { LiveBanner } from "@/components/live-banner"
-import { BingoIcon, GoldBarsIcon, LeagueIcon, MapIcon, WheelIcon } from "@/components/tile-icons"
-import { leagueTable } from "@/lib/league"
-import { loadLeague } from "@/lib/league-server"
-import { aggregatePlayers, sortPlayers } from "@/lib/player-stats"
-import { loadPlayerStats } from "@/lib/player-stats-server"
+import { Party, PartySkeleton } from "@/components/lobby/party"
+import { Quests, QuestsSkeleton } from "@/components/lobby/quests"
+import { SelectedMode } from "@/components/lobby/selected-mode"
+import { gameThumbs } from "@/lib/games"
 import { getCurrentSeason } from "@/lib/season"
-import { successRate } from "@/lib/stats"
-import { channelsFromSettings, loadSiteSettings } from "@/lib/site"
-import { createClient } from "@/lib/supabase/server"
+import { channelsFromSettings, loadSiteSettings, safeUrl } from "@/lib/site"
+import { getViewer } from "@/lib/supabase/server"
 
-const TOOLS = [
-  { href: "/eskalation", emoji: "🚨", title: "Regel-Eskalation", text: "1. Regel per Glücksrad, danach alle 4 Minuten per Zufall eine extra Regel!!" },
-  { href: "/auktion", emoji: "🪙", title: "Loot-Auktion", text: "Bietet, um euer Loadout zusammenzustellen! Wer geht am schlausten mit seinem Gold um?\nFür 2–8 Spieler." },
-  { href: "/bingo", emoji: "🔢", title: "Bingo", text: "Alle spielen dieselbe 3×3-Karte und haken für sich ab – mit eigenen Karten und Punkten." },
-  { href: "/loadout", emoji: "🎲", title: "Loadout-Würfel", text: "Stellt euer Loadout mit dem Zufallswürfel zusammen. Bis zu 3-mal neu würfeln – klug entscheiden, welche Items fix sein sollten!\nSolo oder mit bis zu 8 Spielern." },
-  { href: "/rad", emoji: "🎡", title: "Challenge-Glücksrad", text: "Stellt euch eure individuellen Regeln mit dem Glücksrad zusammen!" },
-  { href: "/drop", emoji: "🪂", title: "Drop-Spot-Roulette", text: "Per Zufall wird euer Landingspot entschieden! Wer holt sich den Sieg?\nExtraregeln inklusive!\nMax. 8 Spieler." },
-  { href: "/winchallenge", emoji: "🏆", title: "Winchallenge", text: "Stellt euch eure eigene Winchallenge zusammen oder spielt die der Jungs nach!" },
-  { href: "/olympiade", emoji: "🥇", title: "Olympiade", text: "Spiele aufs Glücksrad, drehen, extern spielen, Sieger markieren – jedes Spiel ist einen Punkt mehr wert." },
-  { href: "/liga", emoji: "🏆", title: "Creator-Liga", text: "Die Challenges der Creator außerhalb der Website – mit Ligapunkten, Siegen, Videos und Kopf-an-Kopf-Duellen." },
-]
-
-export default async function Home() {
-  const supabase = await createClient()
+/**
+ * Startseite als Fortnite-Lobby: links Titel, Kanäle und Aufträge (Stats), in der Mitte die Party
+ * (Alvi + Top-Creator der Liga), rechts der ausgewählte Modus mit SPIELEN. Am Handy untereinander.
+ */
+export default async function Lobby() {
+  const { supabase, profile } = await getViewer()
   const [{ data: active }, settings, season] = await Promise.all([
     supabase.from("challenges").select("id, title").eq("status", "aktiv").order("played_at", { ascending: false }).limit(3),
     loadSiteSettings(supabase),
     getCurrentSeason(supabase),
   ])
-  // Bild-Icons statt Emojis; Drop-Spot zeigt die hochgeladene Karte der aktuellen Season
-  const icons: Record<string, React.ReactNode> = {
-    "/rad": <WheelIcon />,
-    "/drop": <MapIcon url={season?.map_image_url} />,
-    "/bingo": <BingoIcon />,
-    "/auktion": <GoldBarsIcon />,
-    "/liga": <LeagueIcon />,
-  }
   const channels = channelsFromSettings(settings)
-  // Mitte der großen Kachel: Titel, Text, Kanal-Icons (am Handy darunter der Creator Code)
-  const center = (
-    <>
-      <h1 className="font-display text-5xl text-accent drop-shadow-lg sm:text-6xl lg:text-5xl xl:text-6xl">ALVI CHALLENGES</h1>
-      <p className="mx-auto mt-3 max-w-2xl whitespace-pre-line text-base text-muted sm:text-lg lg:text-base">
-        {"Stellt eure eigenen Fortnite-Challenges zusammen oder spielt die eures Lieblingscreators nach!\nDie Challenges der Creator werden sogar getrackt – wer ist der Beste?"}
-      </p>
-      {channels.length > 0 && (
-        <div className="mt-5 flex flex-wrap items-center justify-center gap-1 sm:gap-2">
-          <ChannelLinks channels={channels} />
-        </div>
-      )}
-      <CreatorCode className="mt-5 sm:hidden" />
-    </>
-  )
+  const mainLogin = settings.get("main_creator_login")?.trim() || "alvivb"
+  const viewer = profile ? { name: profile.display_name ?? profile.twitch_login ?? "Du", avatar: profile.avatar_url, login: profile.twitch_login } : null
 
+  // Desktop wie das Fortnite-HUD: Titel oben mittig, Party unten mittig, Aufträge/Kanäle links, Event/Modus rechts.
+  // Am Handy der Reihe nach: Titel, Party, Modus, Event, Aufträge, Kanäle.
   return (
-    <div className="flex flex-col gap-8">
-      <section className="panel relative overflow-hidden py-8 text-center lg:py-6">
-        {/* Liga und Stats laden nach, damit die Startseite sofort erscheint; die Mitte steht sofort */}
-        <Suspense fallback={<HeroHighlightsSkeleton center={center} />}>
-          <Highlights center={center} />
+    <div className="grid grid-cols-[minmax(0,1fr)] gap-5 lg:relative lg:left-1/2 lg:min-h-[calc(100dvh-10rem)] lg:w-[min(100vw-2rem,1400px)] lg:-translate-x-1/2 lg:grid-cols-[260px_minmax(0,1fr)_280px] lg:grid-rows-[auto_1fr_auto] xl:grid-cols-[280px_minmax(0,1fr)_300px]">
+      <section className="text-center lg:col-start-2 lg:row-start-1">
+        <h1 className="font-logo text-5xl leading-none text-accent drop-shadow-[0_4px_0_#0009] sm:text-6xl">
+          ALVI <span className="text-white">CHALLENGES</span>
+        </h1>
+        <p className="mx-auto mt-3 max-w-xl text-sm text-white/85 sm:text-base">
+          Stellt eure eigenen Fortnite-Challenges zusammen oder spielt die eures Lieblingscreators nach! Die Challenges der Creator werden sogar getrackt – wer ist der Beste?
+        </p>
+      </section>
+
+      <section className="flex flex-col items-center gap-4 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:justify-end">
+        <Suspense fallback={<PartySkeleton />}>
+          <Party mainLogin={mainLogin} viewer={viewer} />
         </Suspense>
-        {/* Unten: Minispiele (links), Live-Hinweis (Mitte, nur wenn Alvi live ist), Creator Code (rechts) */}
-        <div className="mt-5 grid grid-cols-[minmax(0,1fr)] items-center gap-3 px-1 lg:grid-cols-[1fr_auto_1fr]">
-          <div className="flex min-w-0 justify-center empty:hidden lg:col-start-2 lg:row-start-1">
-            <Suspense fallback={null}>
-              <LiveBanner login={settings.get("main_creator_login")?.trim() || "alvivb"} />
-            </Suspense>
-          </div>
-          <Link
-            href="/minispiele"
-            className="justify-self-center whitespace-nowrap rounded-full border border-line bg-bg/50 px-3 py-1 text-sm text-muted hover:border-accent hover:text-accent lg:col-start-1 lg:row-start-1 lg:justify-self-start"
-          >
-            🕹️ Minispiele – schlag Alvis Highscore →
-          </Link>
-          <CreatorCode className="hidden justify-self-center sm:block lg:col-start-3 lg:row-start-1 lg:justify-self-end" />
+        <div className="flex w-full min-w-0 justify-center empty:hidden">
+          <Suspense fallback={null}>
+            <LiveBanner login={mainLogin} />
+          </Suspense>
         </div>
       </section>
 
-      {active && active.length > 0 && (
-        <section className="panel border-accent-2/60">
-          <h2 className="mb-2 font-display text-xl text-accent-2">Läuft gerade</h2>
-          <ul className="flex flex-col gap-1">
-            {active.map((c) => (
-              <li key={c.id} className="font-semibold">▶ {c.title}</li>
-            ))}
-          </ul>
-        </section>
-      )}
+      <section className="mx-auto w-full max-w-md lg:col-start-3 lg:row-span-2 lg:row-start-2 lg:max-w-none lg:self-end">
+        <SelectedMode thumbs={gameThumbs(settings, safeUrl)} mapUrl={season?.map_image_url ?? null} />
+      </section>
 
-      <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {TOOLS.map((t) => (
-          <Link key={t.href} href={t.href} className="panel group transition hover:-translate-y-1 hover:border-accent">
-            <div className="flex h-12 items-center text-4xl">{icons[t.href] ?? t.emoji}</div>
-            <h2 className="mt-2 font-display text-2xl group-hover:text-accent">{t.title}</h2>
-            <p className="whitespace-pre-line text-sm text-muted">{t.text}</p>
-          </Link>
-        ))}
+      <Link
+        href="/minispiele"
+        className="flex items-center gap-3 self-start rounded-md border-2 border-[#ff5ccf]/70 bg-gradient-to-r from-[#7a1fa2] to-[#3b1a8f] px-3 py-2 shadow-lg hover:border-accent lg:col-start-3 lg:row-start-1"
+      >
+        <span className="text-3xl">🕹️</span>
+        <span className="min-w-0">
+          <span className="block text-[10px] font-bold uppercase tracking-wider text-[#ffc2f0]">Event</span>
+          <span className="block font-display text-lg leading-tight">Schlag Alvis Highscore</span>
+          <span className="block truncate text-xs text-white/80">Minispiele: Drop-Zone & Sturm-Lauf</span>
+        </span>
+      </Link>
+
+      <section className="lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start">
+        <Suspense fallback={<QuestsSkeleton />}>
+          <Quests active={active ?? []} />
+        </Suspense>
+      </section>
+
+      <section className="flex flex-col gap-3 lg:col-start-1 lg:row-start-3 lg:self-end">
+        {channels.length > 0 && (
+          <div className="panel p-3">
+            <div className="mb-2 text-[11px] font-bold uppercase tracking-wider text-muted">Kanäle</div>
+            <div className="flex flex-wrap items-center gap-1">
+              <ChannelLinks channels={channels} />
+            </div>
+          </div>
+        )}
+        <div className="panel flex items-center justify-between gap-3 p-3">
+          <span className="text-[11px] font-bold uppercase leading-tight tracking-wider text-muted">
+            Support-a-
+            <br />
+            Creator
+          </span>
+          <span className="font-display text-2xl tracking-wider text-accent">Alvivb</span>
+        </div>
       </section>
     </div>
-  )
-}
-
-function CreatorCode({ className }: { className: string }) {
-  return (
-    <p className={`text-sm text-muted ${className}`}>
-      Creator Code: <span className="font-display text-base tracking-wide text-accent">Alvivb</span>
-    </p>
-  )
-}
-
-/** Vorschau in der großen Kachel: Liga-Podest und Stats (aufwendigere Abfragen, darum gestreamt) */
-async function Highlights({ center }: { center: React.ReactNode }) {
-  const supabase = await createClient()
-  const [league, players, { data: total }] = await Promise.all([
-    loadLeague(supabase),
-    loadPlayerStats(supabase),
-    supabase.from("challenge_stats").select("won, finished").is("source", null).maybeSingle(),
-  ])
-  const podium = leagueTable(league.challenges, league.results, league.creators)
-    .slice(0, 3)
-    .map((r) => ({ id: r.creatorId, name: r.name, avatar: r.avatar, value: r.leaguePoints, color: r.color }))
-  const topPlayers = sortPlayers(aggregatePlayers(players.parts, players.names), "siege")
-    .filter((r) => r.wins > 0)
-    .slice(0, 3)
-    .map((r) => ({ id: r.userId, name: r.name, avatar: r.avatar, value: r.wins }))
-  return (
-    <HeroHighlights
-      center={center}
-      league={podium}
-      challenges={league.challenges.length}
-      rate={successRate(total?.won ?? 0, total?.finished ?? 0)}
-      finished={total?.finished ?? 0}
-      players={topPlayers}
-    />
   )
 }

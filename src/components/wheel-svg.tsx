@@ -48,14 +48,14 @@ export function WheelSvg<T extends WheelItem>({ slices, rotation }: { slices: Sl
     <div className="relative w-full max-w-[520px]">
       <div className="absolute left-1/2 top-[-6px] z-10 -translate-x-1/2 text-5xl text-accent drop-shadow-[0_2px_4px_rgba(0,0,0,.8)]">▼</div>
       <motion.svg viewBox={`0 0 ${SIZE} ${SIZE}`} className="w-full drop-shadow-2xl" style={{ rotate: rotation }}>
-        <circle cx={R} cy={R} r={R - 1} fill="#0b0a1f" stroke="#ffd60a" strokeWidth="4" />
+        <circle cx={R} cy={R} r={R - 1} fill="#071640" stroke="#ffe03d" strokeWidth="4" />
         {slices.map(({ item, start, end, color }) => {
           const mid = (start + end) / 2
           const [tx, ty] = polar(mid, R * 0.6)
           const label = item.text.length > 26 ? item.text.slice(0, 25) + "…" : item.text
           return (
             <g key={item.id}>
-              <path d={slicePath(start, end)} fill={color} stroke="#0b0a1f" strokeWidth="3" />
+              <path d={slicePath(start, end)} fill={color} stroke="#071640" strokeWidth="3" />
               {slices.length === 1 && <circle cx={R} cy={R} r={R - 4} fill={color} />}
               <text
                 x={tx}
@@ -73,7 +73,7 @@ export function WheelSvg<T extends WheelItem>({ slices, rotation }: { slices: Sl
             </g>
           )
         })}
-        <circle cx={R} cy={R} r={34} fill="#ffd60a" stroke="#0b0a1f" strokeWidth="4" />
+        <circle cx={R} cy={R} r={34} fill="#ffe03d" stroke="#071640" strokeWidth="4" />
       </motion.svg>
     </div>
   )

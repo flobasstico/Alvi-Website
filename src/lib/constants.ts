@@ -50,6 +50,7 @@ export const STATUS_LABEL: Record<Status, string> = {
 }
 
 export const NAV = [
+  { href: "/entdecken", label: "Entdecken (alle Modi)" },
   { href: "/eskalation", label: "Eskalation" },
   { href: "/auktion", label: "Auktion" },
   { href: "/bingo", label: "Bingo" },
@@ -63,4 +64,14 @@ export const NAV = [
   { href: "/stats", label: "Stats" },
   { href: "/ranglisten", label: "Ranglisten" },
   { href: "/vorschlaege", label: "Community-Vorschläge" },
+] as const
+
+/** Reiter oben in der Kopfleiste (wie die Lobby-Leiste in Fortnite), ab Desktop-Breite */
+export const TOP_NAV = [
+  { href: "/", label: "Lobby" },
+  { href: "/entdecken", label: "Entdecken" },
+  { href: "/liga", label: "Liga" },
+  { href: "/stats", label: "Stats" },
+  { href: "/ranglisten", label: "Ranglisten" },
+  { href: "/minispiele", label: "Minispiele" },
 ] as const

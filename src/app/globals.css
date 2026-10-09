@@ -3,27 +3,33 @@
 @theme inline {
   --font-sans: var(--font-body);
   --font-display: var(--font-display);
-  --color-bg: #0b0a1f;
-  --color-panel: #17143a;
-  --color-panel-2: #221d52;
-  --color-line: #3a3380;
-  --color-accent: #ffd60a;
-  --color-accent-2: #00c2ff;
-  --color-win: #22c55e;
-  --color-fail: #ef4444;
-  --color-muted: #a5a1d6;
+  --font-logo: var(--font-logo);
+  /* Fortnite-Lobby: Blau, Navy-Panels, Gelb */
+  --color-bg: #071640;
+  --color-panel: #0c1f52;
+  --color-panel-2: #15307a;
+  --color-line: #2b56b8;
+  --color-accent: #ffe03d;
+  --color-accent-2: #3fd0ff;
+  --color-win: #3ee06b;
+  --color-fail: #ff4d5e;
+  --color-muted: #a9c1ee;
 }
 
 html {
   color-scheme: dark;
+  background: var(--color-bg);
 }
 
+/* Lobby-Himmel: heller Lichtkegel oben, dunkles Blau zu den Rändern, feine Diagonalstreifen */
 body {
   background:
-    radial-gradient(1200px 600px at 10% -10%, #3b1d8f55, transparent),
-    radial-gradient(900px 500px at 110% 10%, #0077ff33, transparent),
-    var(--color-bg);
-  color: #f5f3ff;
+    repeating-linear-gradient(115deg, #ffffff06 0 2px, transparent 2px 22px),
+    radial-gradient(1100px 620px at 50% -12%, #3d8bffaa, transparent 70%),
+    radial-gradient(800px 500px at 100% 0%, #3fd0ff33, transparent 70%),
+    linear-gradient(180deg, #0f3a96 0%, #0a2564 38%, var(--color-bg) 100%);
+  background-attachment: fixed;
+  color: #f4f8ff;
   min-height: 100dvh;
 }
 
@@ -57,22 +63,31 @@ label:has(input:not(:disabled)):active,
   scale: none;
 }
 
+/* Überschriften wie im Fortnite-Menü: schmal, fett, GROSS */
 .font-display {
   font-family: var(--font-display), system-ui, sans-serif;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.font-logo {
+  font-family: var(--font-logo), system-ui, sans-serif;
   letter-spacing: 0.02em;
 }
 
+/* Fortnite-Panel: kantig, dunkles Navy, helle Innenkante oben */
 @utility panel {
-  @apply rounded-2xl border border-line bg-panel/80 p-5 shadow-xl shadow-black/30 backdrop-blur;
+  @apply rounded-md border border-line/80 bg-gradient-to-b from-panel-2/85 to-panel/90 p-5 shadow-[inset_0_1px_0_#ffffff22,0_10px_30px_#0006] backdrop-blur;
 }
+/* Buttons: GROSS, Display-Schrift, schräge Kanten wie im Spielmenü */
 @utility btn {
-  @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 font-semibold transition disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex items-center justify-center gap-2 rounded-sm px-4 py-2 font-display tracking-wide uppercase transition disabled:cursor-not-allowed disabled:opacity-50;
+  clip-path: polygon(0.45em 0, 100% 0, calc(100% - 0.45em) 100%, 0 100%);
 }
 @utility btn-primary {
-  @apply btn bg-accent text-black hover:brightness-110;
+  @apply btn bg-gradient-to-b from-[#fff27a] to-accent text-[#14112b] shadow-[inset_0_-3px_0_#0003] hover:brightness-110;
 }
 @utility btn-secondary {
-  @apply btn border border-line bg-panel-2 text-white hover:bg-line;
+  @apply btn bg-gradient-to-b from-[#2a5cc9] to-panel-2 text-white shadow-[inset_0_1px_0_#ffffff33,inset_0_-3px_0_#0003] hover:from-[#3a6fe0];
 }
 @utility btn-danger {
   @apply btn bg-fail text-white hover:brightness-110;
@@ -81,11 +96,11 @@ label:has(input:not(:disabled)):active,
   @apply btn bg-win text-black hover:brightness-110;
 }
 @utility input {
-  @apply w-full rounded-xl border border-line bg-bg/60 px-3 py-2 text-white placeholder:text-muted/60 focus:border-accent focus:outline-none;
+  @apply w-full rounded-md border border-line bg-bg/70 px-3 py-2 text-white placeholder:text-muted/60 focus:border-accent focus:outline-none;
 }
 @utility label {
   @apply mb-1 block text-sm text-muted;
 }
 @utility chip {
-  @apply inline-flex items-center rounded-full border border-line bg-panel-2 px-2.5 py-0.5 text-xs font-medium;
+  @apply inline-flex items-center rounded-sm border border-line bg-panel-2 px-2.5 py-0.5 text-xs font-semibold;
 }

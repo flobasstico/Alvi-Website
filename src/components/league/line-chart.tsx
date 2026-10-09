@@ -19,7 +19,7 @@ export function LineChart({ data }: { data: Timeline }) {
       <svg viewBox={`0 0 ${W} ${H}`} className="w-full" role="img" aria-label="Ligapunkte über die Zeit">
         {ticks.map((t) => (
           <g key={t}>
-            <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="#2a2650" strokeDasharray={t ? "4 4" : undefined} />
+            <line x1={pad.l} x2={W - pad.r} y1={y(t)} y2={y(t)} stroke="#1b3a80" strokeDasharray={t ? "4 4" : undefined} />
             <text x={pad.l - 6} y={y(t)} textAnchor="end" dominantBaseline="central" fontSize="11" className="fill-[#9b97c4]">
               {t}
             </text>

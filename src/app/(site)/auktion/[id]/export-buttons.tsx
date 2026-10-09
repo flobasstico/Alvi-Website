@@ -4,7 +4,7 @@ import { toPng } from "html-to-image"
 import { useState, type RefObject } from "react"
 
 async function render(node: HTMLElement) {
-  return toPng(node, { pixelRatio: 2, backgroundColor: "#0b0a1f", cacheBust: true })
+  return toPng(node, { pixelRatio: 2, backgroundColor: "#071640", cacheBust: true })
 }
 
 export function ExportButtons({ target, filename }: { target: RefObject<HTMLDivElement | null>; filename: string }) {

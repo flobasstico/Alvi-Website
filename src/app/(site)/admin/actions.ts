@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { ITEM_TYPES, RARITIES, STATUSES, type Status } from "@/lib/constants"
+import { gameBySlug, thumbKey } from "@/lib/games"
 import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
 import { isYoutubeUrl } from "@/lib/league"
@@ -287,6 +288,25 @@ export async function setChannelIcon(channelKey: string, url: string | null) {
   const safe = safeUrl(url)
   if (!safe) throw new Error("Ungültige Bild-Adresse")
   done((await supabase.from("site_settings").upsert({ key, value: safe })).error)
+}
+
+/** Eigenes Vorschaubild eines Modus (Lobby/Entdecken); null = gezeichnetes Bild */
+export async function setGameThumb(slug: string, url: string | null) {
+  const supabase = await requireAdmin()
+  if (!gameBySlug(slug)) throw new Error("Unbekannter Modus")
+  const key = thumbKey(slug)
+  if (!url) return done((await supabase.from("site_settings").delete().eq("key", key)).error)
+  const safe = safeUrl(url)
+  if (!safe) throw new Error("Ungültige Bild-Adresse")
+  done((await supabase.from("site_settings").upsert({ key, value: safe })).error)
+}
+
+/** Skin-Bild eines Creators für die Lobby; null = Profilbild */
+export async function setCreatorSkin(id: number, url: string | null) {
+  const supabase = await requireAdmin()
+  const safe = url ? safeUrl(url) : null
+  if (url && !safe) throw new Error("Ungültige Bild-Adresse")
+  done((await supabase.from("creators").update({ skin_url: safe }).eq("id", id)).error)
 }
 
 /** Twitch-Account sperren/entsperren (Admins nicht) */

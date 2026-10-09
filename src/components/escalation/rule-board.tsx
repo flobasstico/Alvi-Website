@@ -51,7 +51,7 @@ export function RuleBoard({
     <div
       className={clsx(
         "flex flex-col overflow-hidden rounded-3xl border-2 border-white/15 text-white shadow-2xl",
-        overlay ? "bg-[#0b0a1f]/85" : "bg-[#0b0a1f]",
+        overlay ? "bg-[#071640]/85" : "bg-[#071640]",
       )}
     >
       <div

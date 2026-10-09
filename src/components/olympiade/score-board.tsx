@@ -8,7 +8,7 @@ export function ScoreBoard({ state, overlay = false }: { state: OlympicState; ov
   const drawn = drawnGames(state.games).length
   const ended = state.olympic.status === "beendet"
   return (
-    <div className={clsx("overflow-hidden rounded-2xl border-2 border-white/15 text-white", overlay ? "bg-[#0b0a1f]/85" : "bg-[#0b0a1f]")}>
+    <div className={clsx("overflow-hidden rounded-2xl border-2 border-white/15 text-white", overlay ? "bg-[#071640]/85" : "bg-[#071640]")}>
       <div className="flex items-baseline justify-between gap-3 bg-gradient-to-r from-[#f59e0b] to-[#ec4899] px-4 py-2">
         <span className="font-display text-2xl tracking-wide drop-shadow">OLYMPIADE</span>
         <span className="text-xs font-bold uppercase text-white/90">

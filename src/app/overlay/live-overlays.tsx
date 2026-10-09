@@ -20,7 +20,7 @@ export function LoadoutOverlayView({ userId, initial }: { userId: string; initia
       key={stamp}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="m-2 inline-flex gap-2 rounded-2xl border-2 border-white/15 bg-[#0b0a1f]/80 p-2"
+      className="m-2 inline-flex gap-2 rounded-2xl border-2 border-white/15 bg-[#071640]/80 p-2"
     >
       {data.items.map((item, i) => (
         <div key={i} className="flex w-24 flex-col items-center gap-1">
@@ -43,7 +43,7 @@ export function DropOverlayView({ userId, initial }: { userId: string; initial: 
       key={stamp}
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="m-2 inline-flex min-w-[260px] max-w-[440px] flex-col overflow-hidden rounded-2xl border-2 border-white/15 bg-[#0b0a1f]/85 text-white"
+      className="m-2 inline-flex min-w-[260px] max-w-[440px] flex-col overflow-hidden rounded-2xl border-2 border-white/15 bg-[#071640]/85 text-white"
     >
       <div className="bg-gradient-to-r from-[#0ea5e9] to-[#7c3aed] px-4 py-1.5 font-display text-xl tracking-wide drop-shadow">🪂 LANDESPOT</div>
       <ul className="flex flex-col gap-1 px-4 py-2">
