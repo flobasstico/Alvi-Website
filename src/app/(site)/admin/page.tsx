@@ -1,5 +1,6 @@
 import clsx from "clsx"
 import Link from "next/link"
+import { ClosePopovers } from "@/components/close-popovers"
 import { PageTitle } from "@/components/page-title"
 import {
   ITEM_TYPE_LABEL,
@@ -75,7 +76,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageTitle title="Admin" subtitle={season ? `Aktuelle Season: ${season.name}` : "Keine aktuelle Season – unter „Seasons & Map“ anlegen."} />
+      <PageTitle title="Admin" subtitle={season ? `Aktuelle Season: ${season.name}` : "Keine aktuelle Season angelegt."} />
       <nav className="mb-6 flex flex-wrap gap-1">
         {Object.entries(TABS).map(([key, label]) => (
           <Link
@@ -225,8 +226,10 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
   const missingIcons = items.filter((i) => !i.icon_url).length
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[1fr_380px]">
-      <section className="panel">
+    // Ab xl reicht der rechte Kasten bis an den Bildschirmrand, damit die Bearbeiten-Fenster links Platz haben
+    <div className="grid gap-6 lg:grid-cols-[1fr_380px] xl:-mr-[calc((100vw-72rem)/2-10px)]">
+      <section className="panel relative z-10">
+        <ClosePopovers />
         <h2 className="mb-1 font-display text-2xl">Lootpool</h2>
         <p className="mb-4 text-sm text-muted">
           {items.length} Items ({items.filter((i) => i.active).length} aktiv)
@@ -249,7 +252,7 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
                           {variants.map((v) => (
                             <div key={v.id} className={clsx("flex w-24 flex-col items-center gap-1", !v.active && "opacity-40")}>
                               <ItemIconUpload itemId={v.id} current={v.icon_url} rarity={v.rarity} type={v.type} name={v.name} size="md" />
-                              <details className="relative">
+                              <details data-popover className="relative">
                                 <summary
                                   className={clsx("cursor-pointer list-none select-none whitespace-nowrap text-center text-xs font-semibold", !v.active && "line-through")}
                                   title="Variante bearbeiten"
