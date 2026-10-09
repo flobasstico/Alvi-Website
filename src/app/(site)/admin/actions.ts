@@ -80,6 +80,25 @@ export async function setLootIcon(id: number, url: string | null) {
   done((await supabase.from("loot_items").update({ icon_url: url }).eq("id", id)).error)
 }
 
+/** Ändert alle Seltenheiten eines Items (gleicher Name in derselben Season wie das Item mit `id`). */
+async function updateAllRarities(id: number, values: { icon_url?: string; active?: boolean }) {
+  const supabase = await requireAdmin()
+  const { data: item, error } = await supabase.from("loot_items").select("name, season_id").eq("id", id).single()
+  if (error) return done(error)
+  const query = supabase.from("loot_items").update(values).eq("name", item.name)
+  done((await (item.season_id === null ? query.is("season_id", null) : query.eq("season_id", item.season_id))).error)
+}
+
+/** Dasselbe Bild für alle Seltenheiten eines Items */
+export async function setLootIconAll(id: number, url: string) {
+  await updateAllRarities(id, { icon_url: url })
+}
+
+/** Alle Seltenheiten eines Items aktivieren bzw. deaktivieren */
+export async function setLootActiveAll(form: FormData) {
+  await updateAllRarities(Number(str(form, "id")), { active: str(form, "active") === "true" })
+}
+
 /**
  * Lootpool aus einer eingefügten Liste übernehmen. „ersetzen“ löscht den bisherigen Pool der
  * aktuellen Season (laufende/alte Auktionen behalten ihre Item-Kopien). Vorhandene Icons werden

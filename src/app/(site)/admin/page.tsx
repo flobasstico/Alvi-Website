@@ -28,13 +28,14 @@ import {
   deleteRow,
   saveCreator,
   setBanned,
+  setLootActiveAll,
   moveEscalationRule,
   toggleActive,
   updateChallenge,
   updateEscalationRule,
   updateLootItem,
 } from "./actions"
-import { ItemIconUpload } from "./item-icon-upload"
+import { ItemIconUpload, ItemIconUploadAll } from "./item-icon-upload"
 import { LeagueEntry } from "./league-entry"
 import { LootImport } from "./loot-import"
 import { DeleteAllSpots } from "./delete-all-spots"
@@ -247,6 +248,18 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
                       <li key={first.name} className="py-3">
                         <div className="mb-2 flex flex-wrap items-baseline gap-2">
                           <span className="font-semibold">{first.name}</span>
+                          {variants.length > 1 && (
+                            <>
+                              <ItemIconUploadAll itemId={first.id} />
+                              <form action={setLootActiveAll}>
+                                <input type="hidden" name="id" value={first.id} />
+                                <input type="hidden" name="active" value={String(!variants.every((v) => v.active))} />
+                                <button className="rounded-md bg-panel-2 px-2 py-0.5 text-xs font-semibold text-muted hover:text-white">
+                                  {variants.every((v) => v.active) ? "Alle Seltenheiten deaktivieren" : "Alle Seltenheiten aktivieren"}
+                                </button>
+                              </form>
+                            </>
+                          )}
                         </div>
                         <div className="flex flex-wrap gap-3">
                           {variants.map((v) => (
