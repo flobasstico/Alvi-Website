@@ -9,7 +9,7 @@ type Member = { key: string; name: string; image: string | null; skin: boolean; 
 type Viewer = { name: string; avatar: string | null; login: string | null } | null
 
 /**
- * Lobby-Mitte wie bei Fortnite: Alvi steht vorne in der Mitte, daneben die Top-3 der Creator-Liga als Party.
+ * Lobby-Mitte wie bei Fortnite: Platz 1 der Creator-Liga steht vorne in der Mitte, daneben Alvi und die nächsten Plätze als Party.
  * Ganz rechts der eigene Platz: eingeloggt das eigene Profilbild, sonst ein freier „+“-Platz.
  */
 export async function Party({ mainLogin, viewer }: { mainLogin: string; viewer: Viewer }) {
@@ -23,7 +23,6 @@ export async function Party({ mainLogin, viewer }: { mainLogin: string; viewer: 
   // Alvi = Creator mit verknüpftem Twitch-Hauptkanal, sonst der mit dem Namen „Alvi“
   const alvi =
     league.creators.find((c) => main && c.profile_id === main.id) ?? league.creators.find((c) => c.name.trim().toLowerCase() === "alvi")
-  const ranked = rows.filter((r) => r.creatorId !== alvi?.id).slice(0, 3)
   const member = (r: LeagueRow, lead = false): Member => {
     const c = byId.get(r.creatorId)
     const place = rows.indexOf(r) + 1
@@ -38,11 +37,14 @@ export async function Party({ mainLogin, viewer }: { mainLogin: string; viewer: 
       lead,
     }
   }
-  const alviRow = alvi ? rows.find((r) => r.creatorId === alvi.id) : undefined
-  const lead = alviRow ? member(alviRow, true) : ranked.length ? member(ranked.shift()!, true) : null
-  const [m1, m2, m3] = ranked.map((r) => member(r))
+  // Platz 1 steht in der Mitte; daneben Alvi (egal auf welchem Platz) und die Bestplatzierten, nach Platz sortiert
+  const others = rows.slice(1)
+  const alviRow = others.find((r) => r.creatorId === alvi?.id)
+  const side = [...(alviRow ? [alviRow] : []), ...others.filter((r) => r !== alviRow)].slice(0, 3).sort((a, b) => rows.indexOf(a) - rows.indexOf(b))
+  const lead = rows.length ? member(rows[0], true) : null
+  const [m1, m2, m3] = side.map((r) => member(r))
 
-  // Reihenfolge links → rechts: 3 · 1 · ALVI · 2 · Du
+  // Reihenfolge links → rechts: dritter Seitenplatz · erster · PLATZ 1 · zweiter · Du
   return (
     <div className="relative">
       {/* Lichtkegel hinter der Party */}
