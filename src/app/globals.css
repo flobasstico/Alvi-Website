@@ -114,3 +114,13 @@ label:has(input:not(:disabled)):active,
 @utility chip {
   @apply inline-flex items-center rounded-sm border border-line bg-panel-2 px-2.5 py-0.5 text-xs font-semibold;
 }
+
+/* Ladebalken bei Seitenwechseln (NavProgress) */
+@keyframes navprogress {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(300%);
+  }
+}

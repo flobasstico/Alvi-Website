@@ -4,6 +4,7 @@ import { getViewer } from "@/lib/supabase/server"
 import { Suspense } from "react"
 import { AuthButton } from "./auth-button"
 import { LoginError } from "./login-error"
+import { NavProgress } from "./nav-progress"
 import { NavLinks } from "./nav-links"
 import { TopTabs } from "./top-tabs"
 
@@ -37,6 +38,7 @@ export async function Header() {
       </div>
       <Suspense fallback={null}>
         <LoginError />
+        <NavProgress />
       </Suspense>
       {profile?.banned && (
         <div className="bg-fail px-4 py-1.5 text-center text-sm font-bold text-white">
