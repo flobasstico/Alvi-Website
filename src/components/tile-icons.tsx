@@ -1,4 +1,6 @@
 /* eslint-disable @next/next/no-img-element */
+import { useId } from "react"
+
 // Kleine Bild-Icons für die Kacheln der Startseite (statt Emojis)
 
 const BOX = "h-12 w-12 shrink-0"
@@ -48,16 +50,18 @@ export function BingoIcon({ className = BOX }: { className?: string }) {
 
 /** Goldbarren-Stapel */
 export function GoldBarsIcon({ className = BOX }: { className?: string }) {
+  // Eindeutige ID, weil das Icon auf einer Seite mehrfach vorkommen kann (z. B. Entdecken)
+  const gold = `gold${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`
   const bar = (x: number, y: number, key: number) => (
     <g key={key}>
-      <path d={`M${x + 3} ${y} H${x + 17} L${x + 20} ${y + 9} H${x} Z`} fill="url(#gold)" stroke="#8a5a00" strokeWidth="1" />
+      <path d={`M${x + 3} ${y} H${x + 17} L${x + 20} ${y + 9} H${x} Z`} fill={`url(#${gold})`} stroke="#8a5a00" strokeWidth="1" />
       <path d={`M${x + 4} ${y + 1.5} H${x + 16}`} stroke="#fff6c2" strokeWidth="1.2" opacity=".9" />
     </g>
   )
   return (
     <svg viewBox="0 0 48 48" className={className} aria-hidden>
       <defs>
-        <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={gold} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#ffe680" />
           <stop offset=".55" stopColor="#f5b301" />
           <stop offset="1" stopColor="#c27c00" />
@@ -82,6 +86,7 @@ export function MapIcon({ url, className = BOX }: { url: string | null | undefin
 
 /** Creator-Liga: kleiner Pokal vor einem Kuchendiagramm */
 export function LeagueIcon({ className = BOX }: { className?: string }) {
+  const cup = `cup${useId().replace(/[^a-zA-Z0-9_-]/g, "")}`
   return (
     <svg viewBox="0 0 48 48" className={className} aria-hidden>
       <circle cx="30" cy="20" r="16" fill="#1b3a80" />
@@ -89,12 +94,12 @@ export function LeagueIcon({ className = BOX }: { className?: string }) {
       <path d="M30 20 L45.2 25 A16 16 0 0 1 22 33.9 Z" fill="#22d3ee" />
       <path d="M30 20 L22 33.9 A16 16 0 0 1 30 4 Z" fill="#f472b6" />
       <circle cx="30" cy="20" r="6" fill="#071640" />
-      <path d="M6 20 H22 V25 A8 8 0 0 1 6 25 Z" fill="url(#cup)" stroke="#8a5a00" strokeWidth="1" />
+      <path d="M6 20 H22 V25 A8 8 0 0 1 6 25 Z" fill={`url(#${cup})`} stroke="#8a5a00" strokeWidth="1" />
       <path d="M6 22 H3 A3 3 0 0 0 6 28 M22 22 H25 A3 3 0 0 1 22 28" fill="none" stroke="#f5b301" strokeWidth="1.6" />
       <rect x="12.5" y="32" width="3" height="6" fill="#c27c00" />
       <rect x="8" y="38" width="12" height="4" rx="1" fill="#f5b301" stroke="#8a5a00" strokeWidth="1" />
       <defs>
-        <linearGradient id="cup" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id={cup} x1="0" y1="0" x2="0" y2="1">
           <stop offset="0" stopColor="#ffe680" />
           <stop offset="1" stopColor="#c27c00" />
         </linearGradient>

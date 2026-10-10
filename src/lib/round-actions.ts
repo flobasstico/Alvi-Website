@@ -14,5 +14,6 @@ export async function deleteRound(kind: RoundKind, id: number, back?: string) {
   const { error } = await supabase.rpc("admin_delete_round", { p_kind: kind, p_id: id })
   if (error) throw new Error(error.message)
   revalidatePath("/", "layout")
-  if (back) redirect(back)
+  // Nur interne Pfade (kein „//andere-seite.de“)
+  if (back && /^\/(?![/\\])/.test(back)) redirect(back)
 }

@@ -69,14 +69,17 @@ label:has(input:not(:disabled)):active,
 }
 
 /* Überschriften wie im Fortnite-Menü: schmal, fett, GROSS */
-.font-display {
-  font-family: var(--font-display), system-ui, sans-serif;
-  letter-spacing: 0.03em;
-  text-transform: uppercase;
-}
-.font-logo {
-  font-family: var(--font-logo), system-ui, sans-serif;
-  letter-spacing: 0.02em;
+/* In der Komponenten-Ebene, damit Utilities wie normal-case oder tracking-* das noch überschreiben können */
+@layer components {
+  .font-display {
+    font-family: var(--font-display), system-ui, sans-serif;
+    letter-spacing: 0.03em;
+    text-transform: uppercase;
+  }
+  .font-logo {
+    font-family: var(--font-logo), system-ui, sans-serif;
+    letter-spacing: 0.02em;
+  }
 }
 
 /* Fortnite-Panel: kantig, dunkles Navy, helle Innenkante oben */
@@ -86,6 +89,8 @@ label:has(input:not(:disabled)):active,
 /* Buttons: GROSS, Display-Schrift, schräge Kanten wie im Spielmenü */
 @utility btn {
   @apply inline-flex items-center justify-center gap-2 rounded-sm px-4 py-2 font-display tracking-wide uppercase transition disabled:cursor-not-allowed disabled:opacity-50;
+  /* Fokus-Rahmen nach innen, sonst schneidet ihn der clip-path ab */
+  @apply focus-visible:outline-3 focus-visible:-outline-offset-[5px] focus-visible:outline-white;
   clip-path: polygon(0.45em 0, 100% 0, calc(100% - 0.45em) 100%, 0 100%);
 }
 @utility btn-primary {

@@ -1,3 +1,4 @@
+import { safeDecode } from "@/lib/site"
 import { imageData, ogImage, ogSupabase } from "@/lib/og"
 import { loadPlayerStats } from "@/lib/player-stats-server"
 
@@ -5,7 +6,7 @@ export const revalidate = 600
 
 /** Zuschauerprofil: Name, Bild, Runden/Siege und bester Minispiel-Wert; privat nur ein neutrales Bild */
 export async function GET(_: Request, { params }: { params: Promise<{ login: string }> }) {
-  const login = decodeURIComponent((await params).login).toLowerCase()
+  const login = safeDecode((await params).login).toLowerCase()
   const supabase = ogSupabase()
   const { data: profile } = /^[a-z0-9_]{2,25}$/.test(login)
     ? await supabase.from("profiles").select("id, display_name, twitch_login, avatar_url, is_public").ilike("twitch_login", login.replace(/[%_\\]/g, "\\$&")).maybeSingle()

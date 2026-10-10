@@ -1,3 +1,4 @@
+import { safeDecode } from "@/lib/site"
 import clsx from "clsx"
 import { ShareButton } from "@/components/share-button"
 import Link from "next/link"
@@ -12,12 +13,12 @@ import { getViewer } from "@/lib/supabase/server"
 import { VisibilityToggle } from "./visibility-toggle"
 
 export async function generateMetadata({ params }: { params: Promise<{ login: string }> }) {
-  const login = decodeURIComponent((await params).login).toLowerCase()
+  const login = safeDecode((await params).login).toLowerCase()
   return ogMeta(`Profil von ${login}`, `Runden, Siege, Minispiel-Rekorde und Abzeichen von ${login} bei Alvi Challenges.`, `/og/profil/${encodeURIComponent(login)}`)
 }
 
 export default async function ProfilPage({ params }: { params: Promise<{ login: string }> }) {
-  const login = decodeURIComponent((await params).login).toLowerCase()
+  const login = safeDecode((await params).login).toLowerCase()
   if (!/^[a-z0-9_]{2,25}$/.test(login)) notFound()
   const { supabase, user } = await getViewer()
   const { data: profile } = await supabase
@@ -49,9 +50,9 @@ export default async function ProfilPage({ params }: { params: Promise<{ login: 
     supabase.rpc("minigame_profile", { p_user: profile.id }),
   ])
   const ids = (suggestions ?? []).map((s) => s.id)
-  const { data: votes } = ids.length ? await supabase.from("suggestion_votes").select("suggestion_id, value").in("suggestion_id", ids) : { data: [] }
+  const { data: counts } = ids.length ? await supabase.rpc("suggestion_counts", { p_ids: ids }) : { data: [] }
   const likesPer = new Map<number, number>()
-  for (const v of votes ?? []) if (v.value === 1) likesPer.set(v.suggestion_id, (likesPer.get(v.suggestion_id) ?? 0) + 1)
+  for (const c of counts ?? []) if (c.likes) likesPer.set(Number(c.suggestion_id), c.likes)
   const likes = [...likesPer.values()].reduce((s, n) => s + n, 0)
 
   const official = stats.parts.filter((p) => p.userId === profile.id)

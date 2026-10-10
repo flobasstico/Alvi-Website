@@ -35,19 +35,30 @@ export function ImageUpload({
     const path = `${folder}/${name}-${Date.now()}.${ext}`
     const { error } = await supabase.storage.from("media").upload(path, file, { contentType: file.type })
     if (error) return setError(error.message)
-    start(() => save(supabase.storage.from("media").getPublicUrl(path).data.publicUrl))
+    persist(supabase.storage.from("media").getPublicUrl(path).data.publicUrl)
+  }
+
+  // Fehler der Server-Action hier anzeigen, statt die ganze Admin-Seite in die Fehleransicht zu schicken
+  function persist(url: string | null) {
+    start(async () => {
+      try {
+        await save(url)
+      } catch {
+        setError("Speichern fehlgeschlagen – bitte neu laden und nochmal versuchen")
+      }
+    })
   }
 
   return (
     <div className="flex flex-col gap-2 text-xs">
       {preview}
       <div className="flex flex-wrap items-center gap-2">
-        <label className="btn-secondary cursor-pointer px-2 py-1 text-xs">
+        <label className="btn-secondary cursor-pointer px-2 py-1 text-xs has-[:focus-visible]:outline-3 has-[:focus-visible]:-outline-offset-[5px] has-[:focus-visible]:outline-white">
           {pending ? "Speichere…" : label}
           <input
             type="file"
             accept="image/png,image/jpeg,image/webp"
-            className="hidden"
+            className="sr-only"
             onChange={(e) => {
               if (e.target.files?.[0]) upload(e.target.files[0])
               e.target.value = ""
@@ -55,7 +66,7 @@ export function ImageUpload({
           />
         </label>
         {current && (
-          <button type="button" className="text-muted underline hover:text-fail" disabled={pending} onClick={() => start(() => save(null))}>
+          <button type="button" className="text-muted underline hover:text-fail" disabled={pending} onClick={() => persist(null)}>
             {resetLabel}
           </button>
         )}

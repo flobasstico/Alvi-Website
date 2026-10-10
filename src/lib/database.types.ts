@@ -320,6 +320,7 @@ export type Database = {
       }
       suggestion_create: { Args: { p_body: string }; Returns: number }
       suggestion_vote: { Args: { p_id: number; p_value: number }; Returns: undefined }
+      suggestion_counts: { Args: { p_ids?: number[] | null }; Returns: { suggestion_id: number; likes: number; dislikes: number }[] }
       bingo_card_create: { Args: { p_tasks: string[]; p_title: string }; Returns: number }
       bingo_finish: { Args: { p_round: number }; Returns: string }
       bingo_join: { Args: { p_round: number; p_code?: string | null }; Returns: string | null }

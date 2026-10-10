@@ -33,6 +33,7 @@ import {
   setCreatorSkin,
   setGameThumb,
   setLootActiveAll,
+  startSeason,
   moveEscalationRule,
   toggleActive,
   updateChallenge,
@@ -82,7 +83,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
 
   return (
     <>
-      <PageTitle title="Admin" subtitle={season ? `Aktuelle Season: ${season.name}` : "Keine aktuelle Season angelegt."} />
+      <PageTitle title="Admin" subtitle={season ? `Aktuelle Season: ${season.name}` : "Keine aktuelle Season – unter „Loot-Pool“ eine neue starten."} />
       <nav className="mb-6 flex flex-wrap gap-1">
         {Object.entries(TABS).map(([key, label]) => (
           <Link
@@ -96,7 +97,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </nav>
       {tab === "challenges" && <ChallengesTab />}
       {tab === "regeln" && <RulesTab category="rad" />}
-      {tab === "loot" && <LootTab seasonId={season?.id ?? null} />}
+      {tab === "loot" && <LootTab seasonId={season?.id ?? null} seasonName={season?.name ?? null} />}
       {tab === "spots" && <SpotsTab seasonId={season?.id ?? null} mapUrl={season?.map_image_url ?? null} />}
       {tab === "bingo" && <BingoTab />}
       {tab === "eskalation" && <EscalationTab />}
@@ -213,7 +214,7 @@ async function RulesTab({ category }: { category: "rad" | "drop" }) {
   )
 }
 
-async function LootTab({ seasonId }: { seasonId: number | null }) {
+async function LootTab({ seasonId, seasonName }: { seasonId: number | null; seasonName: string | null }) {
   const { supabase } = await getViewer()
   const { data } = seasonId
     ? await supabase.from("loot_items").select("*").eq("season_id", seasonId).order("name")
@@ -314,6 +315,23 @@ async function LootTab({ seasonId }: { seasonId: number | null }) {
         {items.length === 0 && <p className="text-muted">Noch keine Items – rechts eine Liste einfügen.</p>}
       </section>
       <aside className="flex h-fit flex-col gap-6">
+        <details className={clsx("panel", !seasonId && "border-accent")} open={!seasonId}>
+          <summary className="cursor-pointer font-display text-xl">
+            {seasonId ? `Season: ${seasonName}` : "⚠️ Keine aktuelle Season"}
+          </summary>
+          <p className="mt-2 text-sm text-muted">
+            Neue Fortnite-Season? Hier eine neue Season starten. Die alte bleibt mit allen Daten erhalten (alte Auktionen, Loadouts).
+          </p>
+          <form action={startSeason} className="mt-3 flex flex-col gap-2">
+            <input name="name" className="input" placeholder="z. B. Kapitel 7 – Season 1" required maxLength={60} />
+            {seasonId && (
+              <label className="flex items-center gap-2 text-sm">
+                <input type="checkbox" name="copy" defaultChecked /> Lootpool (mit Bildern), Karte und Drop-Spots übernehmen
+              </label>
+            )}
+            <button className="btn-secondary">Neue Season starten</button>
+          </form>
+        </details>
         <div className="panel">
           <h2 className="mb-3 font-display text-xl">Lootpool aktualisieren</h2>
           <LootImport disabled={!seasonId} />

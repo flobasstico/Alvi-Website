@@ -9,6 +9,7 @@ import { isYoutubeUrl } from "@/lib/league"
 import { fetchYoutubeAvatar } from "@/lib/youtube"
 import { CHANNELS, iconKey, invalidChannelLine, PAGE_KEYS, safeUrl } from "@/lib/site"
 import { requireAdmin } from "@/lib/supabase/server"
+import { selectAll } from "@/lib/supabase/select-all"
 
 const TOGGLE_TABLES = ["rules", "loot_items", "drop_spots", "bingo_tasks", "escalation_rules"] as const
 const DELETE_TABLES = [...TOGGLE_TABLES, "challenges"] as const
@@ -78,21 +79,26 @@ export async function updateLootItem(form: FormData) {
 /** Setzt das Icon einer einzelnen Variante – jede Seltenheit hat ihr eigenes Bild. */
 export async function setLootIcon(id: number, url: string | null) {
   const supabase = await requireAdmin()
-  done((await supabase.from("loot_items").update({ icon_url: url }).eq("id", id)).error)
+  const safe = url ? safeUrl(url) : null
+  if (url && !safe) throw new Error("Ungültige Bild-Adresse")
+  done((await supabase.from("loot_items").update({ icon_url: safe }).eq("id", id)).error)
 }
 
 /** Ändert alle Seltenheiten eines Items (gleicher Name in derselben Season wie das Item mit `id`). */
 async function updateAllRarities(id: number, values: { icon_url?: string; active?: boolean }) {
   const supabase = await requireAdmin()
-  const { data: item, error } = await supabase.from("loot_items").select("name, season_id").eq("id", id).single()
+  const { data: item, error } = await supabase.from("loot_items").select("name, type, season_id").eq("id", id).single()
   if (error) return done(error)
-  const query = supabase.from("loot_items").update(values).eq("name", item.name)
+  // Gleicher Name UND gleicher Typ – so wie die Admin-Liste gruppiert
+  const query = supabase.from("loot_items").update(values).eq("name", item.name).eq("type", item.type)
   done((await (item.season_id === null ? query.is("season_id", null) : query.eq("season_id", item.season_id))).error)
 }
 
 /** Dasselbe Bild für alle Seltenheiten eines Items */
 export async function setLootIconAll(id: number, url: string) {
-  await updateAllRarities(id, { icon_url: url })
+  const safe = safeUrl(url)
+  if (!safe) throw new Error("Ungültige Bild-Adresse")
+  await updateAllRarities(id, { icon_url: safe })
 }
 
 /** Alle Seltenheiten eines Items aktivieren bzw. deaktivieren */
@@ -214,7 +220,48 @@ export async function addBingoTask(form: FormData) {
 
 export async function setSeasonMap(seasonId: number, url: string | null) {
   const supabase = await requireAdmin()
-  done((await supabase.from("seasons").update({ map_image_url: url }).eq("id", seasonId)).error)
+  const safe = url ? safeUrl(url) : null
+  if (url && !safe) throw new Error("Ungültige Bild-Adresse")
+  done((await supabase.from("seasons").update({ map_image_url: safe }).eq("id", seasonId)).error)
+}
+
+/**
+ * Neue Season starten und als aktuelle setzen. Optional werden Lootpool (mit Bildern), Karte und Drop-Spots
+ * der bisherigen Season übernommen; die alte Season bleibt mit allen Daten erhalten.
+ */
+export async function startSeason(form: FormData) {
+  const supabase = await requireAdmin()
+  const name = str(form, "name").slice(0, 60)
+  if (!name) throw new Error("Name fehlt")
+  const copy = form.get("copy") === "on"
+  const old = await getCurrentSeason(supabase)
+  const { error: offError } = await supabase.from("seasons").update({ is_current: false }).eq("is_current", true)
+  if (offError) throw new Error(offError.message)
+  const { data: season, error } = await supabase
+    .from("seasons")
+    .insert({ name, is_current: true, map_image_url: copy ? (old?.map_image_url ?? null) : null })
+    .select("id")
+    .single()
+  if (error) throw new Error(error.message)
+  if (copy && old) {
+    const [{ data: loot }, { data: spots }] = await Promise.all([
+      selectAll((a, b) => supabase.from("loot_items").select("name, rarity, type, icon_url, active").eq("season_id", old.id).order("id").range(a, b)),
+      selectAll((a, b) => supabase.from("drop_spots").select("name, x, y, active").eq("season_id", old.id).order("id").range(a, b)),
+    ])
+    if (loot.length) {
+      const { error: e } = await supabase
+        .from("loot_items")
+        .insert(loot.map((l) => ({ name: l.name, rarity: l.rarity, type: l.type, icon_url: l.icon_url, active: l.active, season_id: season.id })))
+      if (e) throw new Error(`Lootpool nicht übernommen: ${e.message}`)
+    }
+    if (spots.length) {
+      const { error: e } = await supabase
+        .from("drop_spots")
+        .insert(spots.map((x) => ({ name: x.name, x: x.x, y: x.y, active: x.active, season_id: season.id })))
+      if (e) throw new Error(`Drop-Spots nicht übernommen: ${e.message}`)
+    }
+  }
+  done(null)
 }
 
 /** Alle Drop-Spots einer Season löschen, z. B. nach einer neuen Karte */

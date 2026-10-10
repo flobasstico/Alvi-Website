@@ -23,7 +23,7 @@ export async function createAuction(form: FormData) {
     .from("auctions")
     .insert({
       host_id: user.id,
-      title: String(form.get("title") ?? "").trim() || null,
+      title: String(form.get("title") ?? "").trim().slice(0, 80) || null,
       season_id: season.id,
       start_gold: Math.round(clampInt(form.get("start_gold"), 0, 100000, 500) / 10) * 10,
       items_per_player: clampInt(form.get("items_per_player"), 1, 10, 5),

@@ -135,15 +135,49 @@ function ModeInfo({
   onClose: () => void
 }) {
   const router = useRouter()
+  const box = useRef<HTMLDivElement>(null)
+  const play = useRef<HTMLAnchorElement>(null)
+  const close = useRef(onClose)
+  close.current = onClose
+
+  // Fokus ins Fenster (auf SPIELEN), Tab bleibt im Fenster, Seite dahinter scrollt nicht; beim Schließen Fokus zurück zur Karte
   useEffect(() => {
-    const key = (e: KeyboardEvent) => e.key === "Escape" && onClose()
+    const trigger = document.activeElement as HTMLElement | null
+    const overflow = document.body.style.overflow
+    document.body.style.overflow = "hidden"
+    play.current?.focus()
+    const key = (e: KeyboardEvent) => {
+      if (e.key === "Escape") return close.current()
+      if (e.key !== "Tab" || !box.current) return
+      const items = [...box.current.querySelectorAll<HTMLElement>("a[href], button:not([disabled])")]
+      const first = items[0]
+      const last = items[items.length - 1]
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault()
+        last?.focus()
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault()
+        first?.focus()
+      }
+    }
     document.addEventListener("keydown", key)
-    return () => document.removeEventListener("keydown", key)
-  }, [onClose])
+    return () => {
+      document.removeEventListener("keydown", key)
+      document.body.style.overflow = overflow
+      trigger?.focus?.()
+    }
+  }, [])
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center" onClick={onClose} role="dialog" aria-modal aria-label={game.title}>
-      <div className="w-full max-w-xl overflow-hidden rounded-t-xl border-2 border-white/20 bg-gradient-to-b from-panel-2 to-bg shadow-2xl sm:rounded-md" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 backdrop-blur-sm sm:items-center" onClick={onClose}>
+      <div
+        ref={box}
+        role="dialog"
+        aria-modal="true"
+        aria-label={game.title}
+        className="w-full max-w-xl overflow-hidden rounded-t-xl border-2 border-white/20 bg-gradient-to-b from-panel-2 to-bg shadow-2xl sm:rounded-md"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="relative">
           <GameThumb game={game} image={image} mapUrl={mapUrl} showTitle />
           <button type="button" onClick={onClose} className="absolute right-2 top-2 h-9 w-9 rounded-sm bg-black/60 text-lg hover:bg-black/80" aria-label="Schließen">
@@ -158,7 +192,7 @@ function ModeInfo({
           </div>
           <p className="text-sm text-white/85">{game.text}</p>
           <div className="grid gap-2 sm:grid-cols-2">
-            <Link href={game.href} className="btn-primary py-3 text-xl">
+            <Link ref={play} href={game.href} className="btn-primary py-3 text-xl">
               Spielen
             </Link>
             <button

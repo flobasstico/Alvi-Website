@@ -12,9 +12,11 @@ const DAILY_LIMIT = 5
 export default async function VorschlaegePage({ searchParams }: { searchParams: Promise<{ sort?: string }> }) {
   const sort = (await searchParams).sort === "neu" ? "neu" : "beliebt"
   const { supabase, user, isAdmin } = await getViewer()
-  const [{ data: suggestions }, { data: votes }] = await Promise.all([
+  // Summen über suggestion_counts (wer wie abgestimmt hat, ist nicht öffentlich); eigene Stimmen direkt
+  const [{ data: suggestions }, { data: counts }, { data: mine }] = await Promise.all([
     supabase.from("suggestions").select("*").order("created_at", { ascending: false }).limit(500),
-    selectAll((a, b) => supabase.from("suggestion_votes").select("*").order("suggestion_id").order("user_id").range(a, b)),
+    supabase.rpc("suggestion_counts", {}),
+    user ? selectAll((a, b) => supabase.from("suggestion_votes").select("suggestion_id, value").eq("user_id", user.id).order("suggestion_id").range(a, b)) : { data: [] },
   ])
   const authorIds = [...new Set((suggestions ?? []).map((s) => s.author_id))]
   const { data: authors } = authorIds.length
@@ -22,18 +24,16 @@ export default async function VorschlaegePage({ searchParams }: { searchParams: 
     : { data: [] }
   const authorOf = new Map((authors ?? []).map((a) => [a.id, a]))
 
-  const votesBy = new Map<number, typeof votes>()
-  for (const v of votes) votesBy.set(v.suggestion_id, [...(votesBy.get(v.suggestion_id) ?? []), v])
+  const countOf = new Map((counts ?? []).map((c) => [Number(c.suggestion_id), c]))
+  const myVoteOf = new Map(mine.map((v) => [v.suggestion_id, v.value]))
   const rows = (suggestions ?? []).map((s) => {
-    const own = votesBy.get(s.id) ?? []
-    const likes = own.filter((v) => v.value === 1).length
-    const dislikes = own.filter((v) => v.value === -1).length
+    const c = countOf.get(s.id)
     const author = authorOf.get(s.author_id)
     return {
       ...s,
-      likes,
-      dislikes,
-      myVote: own.find((v) => v.user_id === user?.id)?.value ?? 0,
+      likes: c?.likes ?? 0,
+      dislikes: c?.dislikes ?? 0,
+      myVote: myVoteOf.get(s.id) ?? 0,
       authorName: author?.display_name ?? author?.twitch_login ?? "Unbekannt",
       authorAvatar: author?.avatar_url ?? null,
     }

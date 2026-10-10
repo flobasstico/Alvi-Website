@@ -75,3 +75,12 @@ export function channelsFromSettings(settings: ReadonlyMap<string, string>): Cha
     icon: safeUrl(settings.get(iconKey(c.key))),
   })).filter((c) => c.entries.length > 0)
 }
+
+/** URL-Segment dekodieren, ohne bei kaputten %-Folgen (z. B. „%E0“) abzustürzen */
+export function safeDecode(v: string): string {
+  try {
+    return decodeURIComponent(v)
+  } catch {
+    return v
+  }
+}

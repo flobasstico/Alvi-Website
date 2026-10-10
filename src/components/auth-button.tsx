@@ -3,6 +3,7 @@
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
+import { signInWithTwitch } from "@/lib/twitch-login"
 
 export function AuthButton({ name, avatar, login }: { name: string | null; avatar: string | null; login?: string | null }) {
   const router = useRouter()
@@ -12,12 +13,7 @@ export function AuthButton({ name, avatar, login }: { name: string | null; avata
     return (
       <button
         className="btn bg-[#9146ff] text-white hover:brightness-110"
-        onClick={() =>
-          supabase.auth.signInWithOAuth({
-            provider: "twitch",
-            options: { redirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(location.pathname)}` },
-          })
-        }
+        onClick={() => signInWithTwitch()}
       >
         Mit Twitch einloggen
       </button>

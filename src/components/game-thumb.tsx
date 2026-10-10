@@ -46,7 +46,7 @@ export function GameThumb({
   return (
     <div className={clsx("relative aspect-video overflow-hidden bg-bg [container-type:inline-size]", className)}>
       {image ? (
-        <img src={image} alt="" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
+        <img src={image} alt="" loading="lazy" decoding="async" className="absolute inset-0 h-full w-full object-cover" draggable={false} />
       ) : (
         <>
           <div className="absolute inset-0" style={{ background: `linear-gradient(170deg, ${top} 0%, ${bottom} 100%)` }} />

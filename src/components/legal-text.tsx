@@ -9,7 +9,7 @@ export function LegalText({ text }: { text: string }) {
         const body = (heading ? lines.slice(1) : lines).join("\n").trim()
         return (
           <section key={i}>
-            {heading && <h2 className="mb-1 font-display text-xl">{heading}</h2>}
+            {heading && <h2 className="mb-1 font-display text-xl normal-case">{heading}</h2>}
             {body && <p className="whitespace-pre-line text-sm leading-relaxed">{body}</p>}
           </section>
         )

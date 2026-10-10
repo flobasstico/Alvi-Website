@@ -15,6 +15,9 @@ async function uploadImage(itemId: number, file: File) {
   return supabase.storage.from("media").getPublicUrl(path).data.publicUrl
 }
 
+const SAVE_FAILED = "Speichern fehlgeschlagen – bitte neu laden"
+const FOCUS = "has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-white"
+
 export function ItemIconUpload({
   itemId,
   current,
@@ -37,29 +40,39 @@ export function ItemIconUpload({
     setError(null)
     try {
       const url = await uploadImage(itemId, file)
-      start(() => setLootIcon(itemId, url))
+      // Fehler der Server-Action abfangen, statt die Admin-Seite in die Fehleransicht zu schicken
+      start(async () => {
+        try {
+          await setLootIcon(itemId, url)
+        } catch {
+          setError(SAVE_FAILED)
+        }
+      })
     } catch (e) {
       setError((e as Error).message)
     }
   }
 
   return (
-    <label
-      className="relative cursor-pointer"
-      title={current ? "Bild ersetzen" : "Bild hochladen"}
-    >
-      <LoadoutSlot item={{ name, rarity, type, iconUrl: current }} index={0} size={size} />
-      <span className="absolute -bottom-1 -right-1 rounded-full bg-accent px-1 text-[10px] font-bold text-black">
-        {pending ? "…" : "⬆"}
-      </span>
-      <input
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        className="hidden"
-        onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])}
-      />
-      {error && <span className="absolute left-14 top-0 whitespace-nowrap text-xs text-fail">{error}</span>}
-    </label>
+    <span className="relative">
+      <label className={`relative block cursor-pointer rounded-lg ${FOCUS}`} title={current ? "Bild ersetzen" : "Bild hochladen"}>
+        <LoadoutSlot item={{ name, rarity, type, iconUrl: current }} index={0} size={size} />
+        <span className="absolute -bottom-1 -right-1 rounded-full bg-accent px-1 text-[10px] font-bold text-black">
+          {pending ? "…" : "⬆"}
+        </span>
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="sr-only"
+          aria-label={`Bild für ${name} hochladen`}
+          onChange={(e) => {
+            if (e.target.files?.[0]) upload(e.target.files[0])
+            e.target.value = ""
+          }}
+        />
+      </label>
+      {error && <span className="absolute left-14 top-0 z-10 whitespace-nowrap rounded bg-bg px-1 text-xs text-fail">{error}</span>}
+    </span>
   )
 }
 
@@ -72,25 +85,36 @@ export function ItemIconUploadAll({ itemId }: { itemId: number }) {
     setError(null)
     try {
       const url = await uploadImage(itemId, file)
-      start(() => setLootIconAll(itemId, url))
+      start(async () => {
+        try {
+          await setLootIconAll(itemId, url)
+        } catch {
+          setError(SAVE_FAILED)
+        }
+      })
     } catch (e) {
       setError((e as Error).message)
     }
   }
 
   return (
-    <label className="cursor-pointer rounded-md bg-panel-2 px-2 py-0.5 text-xs font-semibold text-muted hover:text-white" title="Dieses Bild wird bei allen Seltenheiten eingesetzt">
-      {pending ? "Wird gespeichert …" : "🖼 Ein Bild für alle Seltenheiten"}
-      <input
-        type="file"
-        accept="image/png,image/jpeg,image/webp"
-        className="hidden"
-        onChange={(e) => {
-          if (e.target.files?.[0]) upload(e.target.files[0])
-          e.target.value = ""
-        }}
-      />
-      {error && <span className="ml-2 text-fail">{error}</span>}
-    </label>
+    <span className="inline-flex items-center gap-2">
+      <label
+        className={`cursor-pointer rounded-md bg-panel-2 px-2 py-0.5 text-xs font-semibold text-muted hover:text-white ${FOCUS}`}
+        title="Dieses Bild wird bei allen Seltenheiten eingesetzt"
+      >
+        {pending ? "Wird gespeichert …" : "🖼 Ein Bild für alle Seltenheiten"}
+        <input
+          type="file"
+          accept="image/png,image/jpeg,image/webp"
+          className="sr-only"
+          onChange={(e) => {
+            if (e.target.files?.[0]) upload(e.target.files[0])
+            e.target.value = ""
+          }}
+        />
+      </label>
+      {error && <span className="text-xs text-fail">{error}</span>}
+    </span>
   )
 }
