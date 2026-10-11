@@ -20,7 +20,7 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
   const params = await searchParams
   const sort = SORTS.includes(params.sort as LeagueSort) ? (params.sort as LeagueSort) : "ligapunkte"
   const { supabase, isAdmin } = await getViewer()
-  const { creators, challenges, results } = await loadLeague(supabase)
+  const { creators, challenges, results, videos } = await loadLeague(supabase)
 
   const rows = leagueTable(challenges, results, creators, sort)
   const colors = creatorColors(creators)
@@ -147,8 +147,16 @@ export default async function LigaPage({ searchParams }: { searchParams: Promise
                   <span className="text-xs text-muted">
                     {new Date(c.played_at + "T12:00:00").toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" })}
                   </span>
-                  <span className="ml-auto flex items-center gap-2">
-                    <YoutubeButton url={c.youtube_url} title={c.title} />
+                  <span className="ml-auto flex flex-wrap items-center justify-end gap-2">
+                    {/* Ein Video pro Creator-Kanal (z. B. Alvis und Magicans Sicht); ältere Einträge nur mit Hauptvideo */}
+                    {(() => {
+                      const own = videos.filter((v) => v.challenge_id === c.id)
+                      return own.length ? (
+                        own.map((v) => <YoutubeButton key={v.creator_id} url={v.url} title={`${c.title} (${names.get(v.creator_id) ?? "Video"})`} label={names.get(v.creator_id) ?? "Video"} />)
+                      ) : (
+                        <YoutubeButton url={c.youtube_url} title={c.title} />
+                      )
+                    })()}
                     {isAdmin && (
                       <>
                         <Link href={`/admin?tab=liga&bearbeiten=${c.id}`} className="text-sm text-muted underline hover:text-white">

@@ -195,6 +195,12 @@ export type Database = {
         Update: { category?: string | null; created_at?: string; id?: never; played_at?: string; scoring?: string; title?: string; youtube_url?: string }
         Relationships: Rel[]
       }
+      league_videos: {
+        Row: { id: number; challenge_id: number; creator_id: number; url: string; position: number; created_at: string }
+        Insert: { id?: never; challenge_id: number; creator_id: number; url: string; position?: number; created_at?: string }
+        Update: { id?: never; challenge_id?: number; creator_id?: number; url?: string; position?: number; created_at?: string }
+        Relationships: Rel[]
+      }
       league_results: {
         Row: { challenge_id: number; creator_id: number; placement: number; points: number | null; won: boolean }
         Insert: { challenge_id: number; creator_id: number; placement: number; points?: number | null; won?: boolean }
@@ -292,6 +298,7 @@ export type Database = {
       admin_set_banned: { Args: { p_user: string; p_banned: boolean }; Returns: undefined }
       admin_approve_card: { Args: { p_card: number }; Returns: undefined }
       join_code: { Args: { p_kind: string; p_id: number }; Returns: string | null }
+      league_save_videos: { Args: { p_challenge: number; p_videos: { creator_id: number; url: string }[] }; Returns: undefined }
       league_save_challenge: {
         Args: { p_id: number | null; p_title: string; p_category: string | null; p_played_at: string | null; p_scoring: string; p_video: string; p_results: Json }
         Returns: number

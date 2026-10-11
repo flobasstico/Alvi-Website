@@ -14,6 +14,7 @@ import {
   type Source,
 } from "@/lib/constants"
 import { creatorColors } from "@/lib/league"
+import { loadLeague } from "@/lib/league-server"
 import { checkTwitch } from "@/lib/twitch-live"
 import { getCurrentSeason } from "@/lib/season"
 import { loadSiteSettings, safeUrl } from "@/lib/site"
@@ -642,23 +643,43 @@ async function UsersTab({ q }: { q: string }) {
 
 async function LeagueTab({ edit }: { edit: number | null }) {
   const { supabase } = await getViewer()
-  const [{ data: creators }, { data: cats }, editing] = await Promise.all([
+  const [{ data: creators }, league, settings] = await Promise.all([
     supabase.from("creators").select("*").order("name"),
-    supabase.from("league_challenges").select("category").not("category", "is", null),
-    edit
-      ? Promise.all([
-          supabase.from("league_challenges").select("*").eq("id", edit).maybeSingle(),
-          supabase.from("league_results").select("*").eq("challenge_id", edit),
-        ])
-      : null,
+    loadLeague(supabase),
+    loadSiteSettings(supabase),
   ])
   const { data: links } = await supabase
     .from("profiles")
     .select("id, twitch_login")
     .in("id", (creators ?? []).map((c) => c.profile_id).filter((x): x is string => !!x))
   const loginOf = new Map((links ?? []).map((p) => [p.id, p.twitch_login]))
-  const categories = [...new Set((cats ?? []).map((c) => c.category!).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"))
-  const editData = editing?.[0].data ? { challenge: editing[0].data, results: editing[1].data ?? [] } : null
+  const categories = [...new Set(league.challenges.map((c) => c.category!).filter(Boolean))].sort((a, b) => a.localeCompare(b, "de"))
+  const editChallenge = edit ? league.challenges.find((c) => c.id === edit) : undefined
+  const editData = editChallenge
+    ? {
+        challenge: editChallenge,
+        results: league.results.filter((r) => r.challenge_id === edit),
+        videos: league.videos.filter((v) => v.challenge_id === edit),
+      }
+    : null
+  // Für die Doppel-Warnung: Datum und Teilnehmer aller Challenges
+  const participants = new Map<number, number[]>()
+  for (const r of league.results) participants.set(r.challenge_id, [...(participants.get(r.challenge_id) ?? []), r.creator_id])
+  const existing = league.challenges.map((c) => ({ id: c.id, title: c.title, played_at: c.played_at, creatorIds: participants.get(c.id) ?? [] }))
+  // Alvis Kanal ist beim neuen Eintrag vorausgewählt (verknüpfter Hauptkanal, sonst Name „Alvi“)
+  const mainLogin = (settings.get("main_creator_login")?.trim() || "alvivb").toLowerCase()
+  const alvi =
+    (creators ?? []).find((c) => c.profile_id && loginOf.get(c.profile_id)?.toLowerCase() === mainLogin) ??
+    (creators ?? []).find((c) => c.name.trim().toLowerCase() === "alvi")
+  // Übersicht pro Kanal: wie viele Videos aus welchem Zeitraum schon eingepflegt sind
+  const playedAt = new Map(league.challenges.map((c) => [c.id, c.played_at]))
+  const channels = (creators ?? [])
+    .map((c) => {
+      const dates = league.videos.filter((v) => v.creator_id === c.id).map((v) => playedAt.get(v.challenge_id)!).filter(Boolean).sort()
+      return { id: c.id, name: c.name, count: dates.length, from: dates[0], to: dates[dates.length - 1] }
+    })
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, "de"))
+  const day = (d?: string) => (d ? new Date(d + "T12:00:00").toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" }) : "")
 
   const autoColors = creatorColors(creators ?? [])
 
@@ -675,10 +696,40 @@ async function LeagueTab({ edit }: { edit: number | null }) {
             </>
           )}
         </p>
-        <LeagueEntry key={edit ?? "neu"} creators={creators ?? []} categories={categories} edit={editData} />
+        <LeagueEntry
+          key={edit ?? "neu"}
+          creators={creators ?? []}
+          categories={categories}
+          edit={editData}
+          existing={existing}
+          defaultChannel={alvi?.id ?? null}
+        />
       </section>
 
-      <aside className="flex flex-col gap-6">
+      <section className="panel h-fit lg:col-start-1">
+        <h2 className="mb-1 font-display text-xl">Eingepflegte Videos pro Kanal</h2>
+        <p className="mb-3 text-sm text-muted">Zeitraum der Challenges, zu denen es ein Video des Kanals gibt – so siehst du, wo du beim Einpflegen weitermachen musst.</p>
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-line text-left text-xs uppercase text-muted">
+              <th className="py-1.5">Kanal</th>
+              <th className="py-1.5 text-right">Videos</th>
+              <th className="py-1.5 text-right">Zeitraum</th>
+            </tr>
+          </thead>
+          <tbody>
+            {channels.map((c) => (
+              <tr key={c.id} className="border-b border-line/50">
+                <td className="py-1.5 font-semibold">{c.name}</td>
+                <td className="py-1.5 text-right tabular-nums">{c.count}</td>
+                <td className="py-1.5 text-right text-muted">{c.count ? `${day(c.from)} – ${day(c.to)}` : "noch keine"}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </section>
+
+      <aside className="flex flex-col gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
         <section className="panel">
           <h2 className="mb-2 font-display text-xl">Creator</h2>
           <ul className="divide-y divide-line">

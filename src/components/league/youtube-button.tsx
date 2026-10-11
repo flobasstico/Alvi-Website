@@ -12,11 +12,14 @@ export function YoutubeButton({
   url,
   title,
   kind = "video",
+  label = "Video",
   children,
 }: {
   url: string
   title: string
   kind?: "video" | "kanal"
+  /** Beschriftung des Video-Buttons, z. B. der Kanal („Magican“) */
+  label?: string
   children?: React.ReactNode
 }) {
   const [open, setOpen] = useState(false)
@@ -35,7 +38,7 @@ export function YoutubeButton({
           className="flex items-center gap-1.5 rounded-lg bg-[#ff0033]/15 px-2.5 py-1 text-sm font-bold text-white transition hover:bg-[#ff0033]/30"
           title="Video auf YouTube ansehen"
         >
-          <PlatformIcon platform="link_youtube" className="h-5 w-5" /> Video
+          <PlatformIcon platform="link_youtube" className="h-5 w-5" /> {label}
         </button>
       ) : (
         <button

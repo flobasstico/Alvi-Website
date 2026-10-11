@@ -17,6 +17,8 @@ export type LeagueChallenge = {
   scoring: string
   youtube_url: string
 }
+/** Ein Video zu einer Liga-Challenge – je Creator-Kanal höchstens eins */
+export type LeagueVideo = { challenge_id: number; creator_id: number; url: string; position: number }
 export type LeagueResult = { challenge_id: number; creator_id: number; placement: number; points: number | null; won: boolean }
 
 /** Automatische Farben (gut unterscheidbar auf dunklem Hintergrund) */
