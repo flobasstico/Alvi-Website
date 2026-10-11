@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { useSyncExternalStore } from "react"
-import { DEFAULT_GAME, gameBySlug } from "@/lib/games"
+import { actionLabel, DEFAULT_GAME, gameBySlug } from "@/lib/games"
 import { onModeChange, readMode } from "@/lib/lobby-mode"
 import { GameThumb } from "../game-thumb"
 
@@ -27,7 +27,7 @@ export function SelectedMode({ thumbs, mapUrl }: { thumbs: Record<string, string
         </div>
       </Link>
       <Link href={game.href} className="btn-primary w-full py-4 text-3xl tracking-widest">
-        Spielen
+        {actionLabel(game)}
       </Link>
     </div>
   )

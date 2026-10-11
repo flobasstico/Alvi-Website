@@ -4,7 +4,7 @@ import clsx from "clsx"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState, useSyncExternalStore } from "react"
-import { DEFAULT_GAME, GAMES, gameBySlug, type Game } from "@/lib/games"
+import { actionLabel, DEFAULT_GAME, GAMES, gameBySlug, type Game } from "@/lib/games"
 import { onModeChange, readMode, saveMode } from "@/lib/lobby-mode"
 import { GameThumb } from "../game-thumb"
 
@@ -44,7 +44,7 @@ export function DiscoverRows({
           {running && <p className="text-xs font-semibold text-accent sm:text-sm">▶ Läuft gerade: {running}</p>}
           <div className="mt-1 flex flex-wrap gap-2">
             <Link href={feature.href} className="btn-primary px-5 text-lg">
-              Spielen
+              {actionLabel(feature)}
             </Link>
             <button type="button" className="btn-secondary px-4" onClick={() => setOpen(feature)}>
               Infos
@@ -193,7 +193,7 @@ function ModeInfo({
           <p className="text-sm text-white/85">{game.text}</p>
           <div className="grid gap-2 sm:grid-cols-2">
             <Link ref={play} href={game.href} className="btn-primary py-3 text-xl">
-              Spielen
+              {actionLabel(game)}
             </Link>
             <button
               type="button"

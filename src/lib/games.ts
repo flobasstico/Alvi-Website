@@ -177,6 +177,8 @@ export const GAMES: readonly Game[] = [
 export const DEFAULT_GAME = "rad"
 export const gameBySlug = (slug: string | null | undefined) => GAMES.find((g) => g.slug === slug)
 export const thumbKey = (slug: string) => `thumb_${slug}`
+/** Button-Text: Liga, Stats, Ranglisten und Vorschläge werden „geöffnet“, alles andere „gespielt“ */
+export const actionLabel = (game: Game) => (game.category === "community" ? "Öffnen" : "Spielen")
 
 /** Eigene Vorschaubilder aus den Seiteneinstellungen (nur gültige Adressen) */
 export function gameThumbs(settings: ReadonlyMap<string, string>, safeUrl: (v: string | undefined) => string | null) {
