@@ -17,7 +17,7 @@ import { creatorColors } from "@/lib/league"
 import { checkTwitch } from "@/lib/twitch-live"
 import { getCurrentSeason } from "@/lib/season"
 import { loadSiteSettings, safeUrl } from "@/lib/site"
-import { GAMES, gameThumbs } from "@/lib/games"
+import { GAMES, gameThumbs, LOBBY_BG, thumbKey } from "@/lib/games"
 import { GameThumb } from "@/components/game-thumb"
 import { getViewer } from "@/lib/supabase/server"
 import {
@@ -524,6 +524,7 @@ async function SiteTab() {
   const { supabase } = await getViewer()
   const [settings, season] = await Promise.all([loadSiteSettings(supabase), getCurrentSeason(supabase)])
   const thumbs = gameThumbs(settings, safeUrl)
+  const lobbyBg = safeUrl(settings.get(thumbKey(LOBBY_BG)))
   const channel = settings.get("main_creator_login")?.trim() || "alvivb"
   const twitch = await checkTwitch(channel)
   return (
@@ -543,11 +544,32 @@ async function SiteTab() {
       </section>
       <SiteSettingsForm values={Object.fromEntries(settings)} />
       <section className="panel">
-        <h2 className="mb-1 font-display text-xl">Vorschaubilder der Modi</h2>
+        <h2 className="mb-1 font-display text-xl">Lobby-Hintergrund & Vorschaubilder der Modi</h2>
         <p className="mb-4 text-sm text-muted">
-          Für Lobby und Entdecken. Ohne eigenes Bild wird das gezeichnete Bild gezeigt. Am besten im Format 16:9 (z. B. 1280 × 720).
+          Erste Kachel: Hintergrund der Lobby (Startseite). Die übrigen sind die Vorschaubilder der Modi für Lobby und Entdecken – ohne eigenes Bild wird das gezeichnete gezeigt. Am besten im Format 16:9 (z. B. 1280 × 720).
         </p>
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {/* Hintergrundbild der Lobby (Startseite) */}
+          <li>
+            <ImageUpload
+              folder="thumbs"
+              name={LOBBY_BG}
+              current={lobbyBg}
+              save={setGameThumb.bind(null, LOBBY_BG)}
+              label={lobbyBg ? "Bild ersetzen" : "Eigenes Bild hochladen"}
+              resetLabel="Standardbild verwenden"
+              preview={
+                <div className="relative aspect-video overflow-hidden rounded-md border border-accent/60">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={lobbyBg ?? "/lobby-bg.webp"} alt="" className="absolute inset-0 h-full w-full object-cover" />
+                  <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent px-3 pb-2 pt-8">
+                    <div className="font-display text-xl leading-none">Lobby-Hintergrund</div>
+                    <div className="text-[11px] text-white/80">Querformat, am besten 1920 × 1080</div>
+                  </div>
+                </div>
+              }
+            />
+          </li>
           {GAMES.map((g) => (
             <li key={g.slug}>
               <ImageUpload

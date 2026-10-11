@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { ITEM_TYPES, RARITIES, STATUSES, type Status } from "@/lib/constants"
-import { gameBySlug, thumbKey } from "@/lib/games"
+import { gameBySlug, LOBBY_BG, thumbKey } from "@/lib/games"
 import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
 import { isYoutubeUrl } from "@/lib/league"
@@ -337,10 +337,10 @@ export async function setChannelIcon(channelKey: string, url: string | null) {
   done((await supabase.from("site_settings").upsert({ key, value: safe })).error)
 }
 
-/** Eigenes Vorschaubild eines Modus (Lobby/Entdecken); null = gezeichnetes Bild */
+/** Eigenes Vorschaubild eines Modus (Lobby/Entdecken) oder das Lobby-Hintergrundbild; null = Standardbild */
 export async function setGameThumb(slug: string, url: string | null) {
   const supabase = await requireAdmin()
-  if (!gameBySlug(slug)) throw new Error("Unbekannter Modus")
+  if (slug !== LOBBY_BG && !gameBySlug(slug)) throw new Error("Unbekannter Modus")
   const key = thumbKey(slug)
   if (!url) return done((await supabase.from("site_settings").delete().eq("key", key)).error)
   const safe = safeUrl(url)

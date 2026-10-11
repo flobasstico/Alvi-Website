@@ -177,6 +177,8 @@ export const GAMES: readonly Game[] = [
 export const DEFAULT_GAME = "rad"
 export const gameBySlug = (slug: string | null | undefined) => GAMES.find((g) => g.slug === slug)
 export const thumbKey = (slug: string) => `thumb_${slug}`
+/** Eigenes Hintergrundbild der Lobby (Schlüssel thumb_lobby, im Admin unter „Seite & Kanäle“) */
+export const LOBBY_BG = "lobby"
 /** Button-Text: Liga, Stats, Ranglisten und Vorschläge werden „geöffnet“, alles andere „gespielt“ */
 export const actionLabel = (game: Game) => (game.category === "community" ? "Öffnen" : "Spielen")
 

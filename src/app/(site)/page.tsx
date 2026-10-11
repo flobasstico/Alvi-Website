@@ -1,3 +1,4 @@
+import clsx from "clsx"
 import Link from "next/link"
 import { Suspense } from "react"
 import { ChannelLinks } from "@/components/channel-links"
@@ -5,7 +6,7 @@ import { LiveBanner } from "@/components/live-banner"
 import { Party, PartySkeleton } from "@/components/lobby/party"
 import { Quests, QuestsSkeleton } from "@/components/lobby/quests"
 import { SelectedMode } from "@/components/lobby/selected-mode"
-import { gameThumbs } from "@/lib/games"
+import { gameThumbs, LOBBY_BG, thumbKey } from "@/lib/games"
 import { getCurrentSeason } from "@/lib/season"
 import { channelsFromSettings, loadSiteSettings, safeUrl } from "@/lib/site"
 import { getViewer } from "@/lib/supabase/server"
@@ -22,6 +23,8 @@ export default async function Lobby() {
     getCurrentSeason(supabase),
   ])
   const channels = channelsFromSettings(settings)
+  // Im Admin hochgeladenes Hintergrundbild, sonst das Standardbild
+  const lobbyBg = safeUrl(settings.get(thumbKey(LOBBY_BG)))
   const mainLogin = settings.get("main_creator_login")?.trim() || "alvivb"
   const viewer = profile
     ? { name: profile.display_name ?? profile.twitch_login ?? "Du", avatar: profile.avatar_url, login: profile.twitch_login }
@@ -34,7 +37,11 @@ export default async function Lobby() {
       {/* Lobby-Hintergrund: Fortnite-Landschaft, oben/unten abgedunkelt für lesbare Texte (am Handy kleinere Datei) */}
       <div
         aria-hidden
-        className="lobby-bg pointer-events-none fixed inset-0 -z-10 bg-[url(/lobby-bg-mobil.webp)] bg-cover bg-[position:62%_center] sm:bg-[url(/lobby-bg.webp)] sm:bg-center"
+        className={clsx(
+          "lobby-bg pointer-events-none fixed inset-0 -z-10 bg-cover bg-[position:62%_center] sm:bg-center",
+          !lobbyBg && "bg-[url(/lobby-bg-mobil.webp)] sm:bg-[url(/lobby-bg.webp)]",
+        )}
+        style={lobbyBg ? { backgroundImage: `url("${lobbyBg}")` } : undefined}
       >
         <div className="absolute inset-0 bg-[linear-gradient(180deg,#05103acc_0%,#05103a55_30%,#05103a33_55%,#05103aaa_85%,#05103aee_100%)]" />
         <div className="absolute inset-0 bg-[radial-gradient(120%_80%_at_50%_45%,transparent_50%,#05103a99_100%)]" />
