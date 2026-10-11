@@ -15,7 +15,7 @@ import {
 } from "@/lib/streamelements"
 import { getViewer } from "@/lib/supabase/server"
 
-export const metadata = { title: "Community-Ranglisten" }
+export const metadata = { title: "Twitch-Ranglisten" }
 
 const BOARDS: { key: SeBoard; label: string; unit: string }[] = [
   { key: "watchtime", label: "⏱️ Watchtime", unit: "Zuschauzeit" },
@@ -67,7 +67,7 @@ export default async function RanglistenPage({ searchParams }: { searchParams: P
   return (
     <>
       <PageTitle
-        title="Community-Ranglisten"
+        title="Twitch-Ranglisten"
         subtitle="Wer schaut am meisten zu? Watchtime und Kanalpunkte aus Alvis Stream – dieselben Werte wie bei !watchtime und !points im Chat – und die Bestenlisten der Minispiele."
       />
 

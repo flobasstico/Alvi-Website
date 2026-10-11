@@ -62,7 +62,7 @@ export const NAV = [
   { href: "/minispiele", label: "Minispiele" },
   { href: "/liga", label: "Creator-Liga" },
   { href: "/stats", label: "Stats" },
-  { href: "/ranglisten", label: "Ranglisten" },
+  { href: "/ranglisten", label: "Twitch-Ranglisten" },
   { href: "/vorschlaege", label: "Community-Vorschläge" },
 ] as const
 
@@ -72,6 +72,6 @@ export const TOP_NAV = [
   { href: "/entdecken", label: "Entdecken" },
   { href: "/liga", label: "Liga" },
   { href: "/stats", label: "Stats" },
-  { href: "/ranglisten", label: "Ranglisten" },
+  { href: "/ranglisten", label: "Twitch-Ranglisten" },
   { href: "/minispiele", label: "Minispiele" },
 ] as const

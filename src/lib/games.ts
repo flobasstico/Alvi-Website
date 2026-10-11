@@ -154,7 +154,7 @@ export const GAMES: readonly Game[] = [
     slug: "ranglisten",
     href: "/ranglisten",
     emoji: "📺",
-    title: "Ranglisten",
+    title: "Twitch-Ranglisten",
     text: "Watchtime und Punkte aus Alvis Stream – und die Bestenlisten der Minispiele.",
     players: null,
     multiplayer: false,
