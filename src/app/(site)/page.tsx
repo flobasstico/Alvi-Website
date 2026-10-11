@@ -4,15 +4,15 @@ import { Suspense } from "react"
 import { ChannelLinks } from "@/components/channel-links"
 import { LiveBanner } from "@/components/live-banner"
 import { Party, PartySkeleton } from "@/components/lobby/party"
-import { Quests, QuestsSkeleton } from "@/components/lobby/quests"
+import { LatestVideo, LatestVideoSkeleton } from "@/components/lobby/latest-video"
 import { SelectedMode } from "@/components/lobby/selected-mode"
 import { gameThumbs, LOBBY_BG, thumbKey } from "@/lib/games"
 import { getCurrentSeason } from "@/lib/season"
-import { channelsFromSettings, loadSiteSettings, safeUrl } from "@/lib/site"
+import { channelsFromSettings, loadSiteSettings, parseChannelLinks, safeUrl } from "@/lib/site"
 import { getViewer } from "@/lib/supabase/server"
 
 /**
- * Startseite als Fortnite-Lobby: links Titel, Kanäle und Aufträge (Stats), in der Mitte die Party
+ * Startseite als Fortnite-Lobby: links neuestes YouTube-Video und Kanäle, oben mittig der Titel, in der Mitte die Party
  * (Alvi + Top-Creator der Liga), rechts der ausgewählte Modus mit SPIELEN. Am Handy untereinander.
  */
 export default async function Lobby() {
@@ -23,6 +23,8 @@ export default async function Lobby() {
     getCurrentSeason(supabase),
   ])
   const channels = channelsFromSettings(settings)
+  // Neuestes Video: erster YouTube-Kanal aus den Seiteneinstellungen (wie beim YouTube-Icon)
+  const youtubeUrl = parseChannelLinks(settings.get("link_youtube"), "YouTube")[0]?.url ?? null
   // Im Admin hochgeladenes Hintergrundbild, sonst das Standardbild
   const lobbyBg = safeUrl(settings.get(thumbKey(LOBBY_BG)))
   const mainLogin = settings.get("main_creator_login")?.trim() || "alvivb"
@@ -30,8 +32,8 @@ export default async function Lobby() {
     ? { name: profile.display_name ?? profile.twitch_login ?? "Du", avatar: profile.avatar_url, login: profile.twitch_login }
     : null
 
-  // Desktop wie das Fortnite-HUD: Titel oben mittig, Party unten mittig, Aufträge/Kanäle links, Event/Modus rechts.
-  // Am Handy der Reihe nach: Titel, Party, Modus, Event, Aufträge, Kanäle.
+  // Desktop wie das Fortnite-HUD: Titel oben mittig, Party unten mittig, Video/Kanäle links, Event/Modus rechts.
+  // Am Handy der Reihe nach: Titel, Party, Modus, Event, Video, Kanäle.
   return (
     <>
       {/* Lobby-Hintergrund: Fortnite-Landschaft, oben/unten abgedunkelt für lesbare Texte (am Handy kleinere Datei) */}
@@ -86,9 +88,15 @@ export default async function Lobby() {
           </span>
         </Link>
 
-        <section className="lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start">
-          <Suspense fallback={<QuestsSkeleton />}>
-            <Quests active={active ?? []} />
+        <section className="flex flex-col gap-2 lg:col-start-1 lg:row-span-2 lg:row-start-1 lg:self-start">
+          {(active ?? []).map((c) => (
+            <div key={c.id} className="-skew-x-3 border-l-4 border-accent bg-black/60 px-3 py-1.5 shadow-lg">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-accent">Läuft gerade</div>
+              <div className="truncate text-sm font-semibold">{c.title}</div>
+            </div>
+          ))}
+          <Suspense fallback={<LatestVideoSkeleton />}>
+            <LatestVideo channelUrl={youtubeUrl} />
           </Suspense>
         </section>
 

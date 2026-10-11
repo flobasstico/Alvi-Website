@@ -9,6 +9,8 @@ const securityHeaders = [
 ]
 
 const nextConfig: NextConfig = {
+  // Vorschaubilder von YouTube laufen über den eigenen Server (Besucher laden nichts direkt von Google)
+  images: { remotePatterns: [{ protocol: "https", hostname: "i.ytimg.com", pathname: "/vi/**" }] },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }]
   },
