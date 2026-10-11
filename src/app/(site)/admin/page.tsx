@@ -70,7 +70,7 @@ type Tab = keyof typeof TABS
 // Der Abgleich der YouTube-Kanäle (Server-Action) kann beim ersten Mal länger dauern
 export const maxDuration = 60
 
-type AdminParams = { tab?: string; q?: string; bearbeiten?: string; video?: string; vstatus?: string; vkanal?: string; vohne?: string; vmehr?: string }
+type AdminParams = { tab?: string; q?: string; bearbeiten?: string; video?: string; vstatus?: string; vkanal?: string; vohne?: string; vmehr?: string; vvon?: string; vbis?: string }
 
 export default async function AdminPage({ searchParams }: { searchParams: Promise<AdminParams> }) {
   const { supabase, user, isAdmin } = await getViewer()

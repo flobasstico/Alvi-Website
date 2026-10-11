@@ -10,7 +10,16 @@ import { saveLeagueKeywords, setChannelVideoHidden } from "./actions"
 import { SyncButton } from "./sync-button"
 
 type Supabase = Awaited<ReturnType<typeof getViewer>>["supabase"]
-export type VideoFilter = { status: "offen" | "eingepflegt" | "ausgeblendet" | "alle"; kanal: number | null; ohne: boolean; mehr: number }
+export type VideoFilter = {
+  status: "offen" | "eingepflegt" | "ausgeblendet" | "alle"
+  kanal: number | null
+  ohne: boolean
+  mehr: number
+  /** Zeitraum (Upload-Datum, Berliner Zeit), jeweils YYYY-MM-DD, „bis“ einschließlich */
+  von: string | null
+  bis: string | null
+}
+const DATE = /^\d{4}-\d{2}-\d{2}$/
 
 const STATUS = [
   { key: "offen", label: "Offen" },
@@ -19,12 +28,14 @@ const STATUS = [
   { key: "alle", label: "Alle" },
 ] as const
 
-export function parseVideoFilter(p: { vstatus?: string; vkanal?: string; vohne?: string; vmehr?: string }): VideoFilter {
+export function parseVideoFilter(p: { vstatus?: string; vkanal?: string; vohne?: string; vmehr?: string; vvon?: string; vbis?: string }): VideoFilter {
   return {
     status: STATUS.some((s) => s.key === p.vstatus) ? (p.vstatus as VideoFilter["status"]) : "offen",
     kanal: Number(p.vkanal) || null,
     ohne: p.vohne === "1",
     mehr: Math.min(20, Math.max(1, Number(p.vmehr) || 1)),
+    von: p.vvon && DATE.test(p.vvon) ? p.vvon : null,
+    bis: p.vbis && DATE.test(p.vbis) ? p.vbis : null,
   }
 }
 
@@ -58,7 +69,11 @@ export async function ChannelVideos({
     if (id) inLeague.set(id, v.challenge_id)
   }
 
-  const candidates = videos.filter((v) => filter.ohne || matchesKeywords(v.title, keywords))
+  // Upload-Tag in Berliner Zeit (YYYY-MM-DD) – Zeitraum gilt für Liste und Zähler
+  const berlinDay = (iso: string) => new Date(iso).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" })
+  const candidates = videos
+    .filter((v) => filter.ohne || matchesKeywords(v.title, keywords))
+    .filter((v) => (!filter.von || berlinDay(v.published_at) >= filter.von) && (!filter.bis || berlinDay(v.published_at) <= filter.bis))
   const counts = {
     offen: candidates.filter((v) => !v.hidden && !inLeague.has(v.video_id)).length,
     eingepflegt: candidates.filter((v) => inLeague.has(v.video_id)).length,
@@ -87,9 +102,12 @@ export async function ChannelVideos({
     if (f.kanal) q.set("vkanal", String(f.kanal))
     if (f.ohne) q.set("vohne", "1")
     if (f.mehr > 1) q.set("vmehr", String(f.mehr))
+    if (f.von) q.set("vvon", f.von)
+    if (f.bis) q.set("vbis", f.bis)
     return `/admin?${q}#kanal-videos`
   }
   const day = (iso: string) => new Date(iso).toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric", timeZone: "Europe/Berlin" })
+  const dayOf = (d: string) => day(d + "T12:00:00Z")
 
   return (
     <section id="kanal-videos" className="panel lg:col-start-1">
@@ -135,6 +153,29 @@ export async function ChannelVideos({
           <button className="btn-secondary px-3 py-1.5 text-sm">Speichern</button>
         </form>
       </div>
+
+      {/* Zeitraum: nur Videos mit Upload-Datum in diesem Bereich (alle anderen Filter bleiben erhalten) */}
+      <form action="/admin#kanal-videos" className="mb-3 flex flex-wrap items-center gap-2 text-sm">
+        <input type="hidden" name="tab" value="liga" />
+        {filter.status !== "offen" && <input type="hidden" name="vstatus" value={filter.status} />}
+        {filter.kanal && <input type="hidden" name="vkanal" value={filter.kanal} />}
+        {filter.ohne && <input type="hidden" name="vohne" value="1" />}
+        <span className="text-muted">Zeitraum:</span>
+        <label className="flex items-center gap-1">
+          von
+          <input type="date" name="vvon" defaultValue={filter.von ?? ""} className="input w-auto py-1 text-sm" />
+        </label>
+        <label className="flex items-center gap-1">
+          bis
+          <input type="date" name="vbis" defaultValue={filter.bis ?? ""} className="input w-auto py-1 text-sm" />
+        </label>
+        <button className="btn-secondary px-3 py-1 text-sm">Anwenden</button>
+        {(filter.von || filter.bis) && (
+          <Link href={href({ von: null, bis: null, mehr: 1 })} className="chip border-accent-2 text-accent-2" title="Zeitraum entfernen">
+            {filter.von ? dayOf(filter.von) : "Anfang"} – {filter.bis ? dayOf(filter.bis) : "heute"} ✕
+          </Link>
+        )}
+      </form>
 
       <div className="mb-3 flex flex-wrap gap-1.5 text-sm">
         {STATUS.map((s) => (
