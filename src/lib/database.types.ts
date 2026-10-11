@@ -195,6 +195,18 @@ export type Database = {
         Update: { category?: string | null; created_at?: string; id?: never; played_at?: string; scoring?: string; title?: string; youtube_url?: string }
         Relationships: Rel[]
       }
+      channel_videos: {
+        Row: { video_id: string; creator_id: number; title: string; published_at: string; duration_s: number | null; is_short: boolean; hidden: boolean; fetched_at: string }
+        Insert: { video_id: string; creator_id: number; title: string; published_at: string; duration_s?: number | null; is_short?: boolean; hidden?: boolean; fetched_at?: string }
+        Update: { video_id?: string; creator_id?: number; title?: string; published_at?: string; duration_s?: number | null; is_short?: boolean; hidden?: boolean; fetched_at?: string }
+        Relationships: Rel[]
+      }
+      channel_sync: {
+        Row: { creator_id: number; channel_id: string | null; uploads_playlist: string | null; synced_at: string | null; error: string | null; video_count: number }
+        Insert: { creator_id: number; channel_id?: string | null; uploads_playlist?: string | null; synced_at?: string | null; error?: string | null; video_count?: number }
+        Update: { creator_id?: number; channel_id?: string | null; uploads_playlist?: string | null; synced_at?: string | null; error?: string | null; video_count?: number }
+        Relationships: Rel[]
+      }
       league_videos: {
         Row: { id: number; challenge_id: number; creator_id: number; url: string; position: number; created_at: string }
         Insert: { id?: never; challenge_id: number; creator_id: number; url: string; position?: number; created_at?: string }

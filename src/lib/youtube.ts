@@ -115,3 +115,45 @@ export function timeAgo(iso: string, now = Date.now()): string {
   const y = Math.round(d / 365)
   return y <= 1 ? "vor 1 Jahr" : `vor ${y} Jahren`
 }
+
+/** Video-ID (11 Zeichen) aus einem YouTube-Link: watch?v=, youtu.be/, /shorts/, /live/, /embed/ */
+export function videoIdFromUrl(url: string): string | null {
+  try {
+    const u = new URL(url.trim())
+    const host = u.hostname.replace(/^(www\.|m\.)/, "")
+    let id: string | null = null
+    if (host === "youtu.be") id = u.pathname.slice(1).split("/")[0]
+    else if (host === "youtube.com") id = u.searchParams.get("v") ?? u.pathname.match(/^\/(?:shorts|live|embed)\/([^/?#]+)/)?.[1] ?? null
+    return id && /^[\w-]{11}$/.test(id) ? id : null
+  } catch {
+    return null
+  }
+}
+
+/** ISO-8601-Dauer der YouTube-API („PT1H2M30S“) in Sekunden */
+export function isoDurationSeconds(iso: string | null | undefined): number | null {
+  const m = iso?.match(/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/)
+  if (!m) return null
+  const [, d, h, min, s] = m.map((x) => Number(x ?? 0))
+  return d * 86400 + h * 3600 + min * 60 + s
+}
+
+/** Short: höchstens 3 Minuten lang oder „#shorts“ im Titel */
+export function isShortVideo(title: string, durationS: number | null): boolean {
+  return /#shorts?\b/i.test(title) || (durationS !== null && durationS <= 180)
+}
+
+/** Stichwörter aus dem Admin-Feld (kommagetrennt); Standard „Challenge“ */
+export function parseKeywords(value: string | null | undefined): string[] {
+  const list = (value ?? "")
+    .split(/[,\n]/)
+    .map((k) => k.trim().toLowerCase())
+    .filter(Boolean)
+  return list.length ? [...new Set(list)] : ["challenge"]
+}
+
+/** Enthält der Titel eines der Stichwörter? (Groß-/Kleinschreibung egal) */
+export function matchesKeywords(title: string, keywords: string[]): boolean {
+  const t = title.toLowerCase()
+  return keywords.some((k) => t.includes(k))
+}

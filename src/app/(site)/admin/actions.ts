@@ -7,6 +7,7 @@ import { parseLootList, type ItemType } from "@/lib/loot-import"
 import { getCurrentSeason } from "@/lib/season"
 import { isYoutubeUrl } from "@/lib/league"
 import { fetchYoutubeAvatar } from "@/lib/youtube"
+import { syncChannel } from "@/lib/youtube-sync"
 import { CHANNELS, iconKey, invalidChannelLine, PAGE_KEYS, safeUrl } from "@/lib/site"
 import { requireAdmin } from "@/lib/supabase/server"
 import { selectAll } from "@/lib/supabase/select-all"
@@ -398,4 +399,60 @@ export async function deleteCreator(form: FormData) {
   const { count } = await supabase.from("league_results").select("creator_id", { count: "exact", head: true }).eq("creator_id", id)
   if (count) throw new Error("Dieser Creator hat schon Ergebnisse – erst die Challenges löschen oder ändern")
   done((await supabase.from("creators").delete().eq("id", id)).error)
+}
+
+/**
+ * Creator-Kanäle mit YouTube abgleichen: neue Videos in channel_videos speichern (Ausgeblendete bleiben ausgeblendet).
+ * Kanäle laufen parallel; Fehler je Kanal landen in channel_sync und werden im Admin angezeigt.
+ */
+export async function syncChannelVideos() {
+  const supabase = await requireAdmin()
+  const [{ data: creators }, { data: syncs }, { data: known }] = await Promise.all([
+    supabase.from("creators").select("id, youtube_url"),
+    supabase.from("channel_sync").select("*"),
+    selectAll((a, b) => supabase.from("channel_videos").select("video_id, creator_id").order("video_id").range(a, b)),
+  ])
+  const syncOf = new Map((syncs ?? []).map((x) => [x.creator_id, x]))
+  await Promise.all(
+    (creators ?? [])
+      .filter((c) => c.youtube_url)
+      .map(async (c) => {
+        const own = new Set(known.filter((k) => k.creator_id === c.id).map((k) => k.video_id))
+        const prev = syncOf.get(c.id)
+        const r = await syncChannel(c.youtube_url!, own, prev ? { channelId: prev.channel_id, uploads: prev.uploads_playlist } : undefined)
+        if (r.videos.length) {
+          const rows = r.videos.map((v) => ({ ...v, creator_id: c.id, fetched_at: new Date().toISOString() }))
+          for (let i = 0; i < rows.length; i += 500) {
+            const { error } = await supabase.from("channel_videos").upsert(rows.slice(i, i + 500), { onConflict: "video_id" })
+            if (error) r.error = error.message
+          }
+        }
+        await supabase.from("channel_sync").upsert({
+          creator_id: c.id,
+          channel_id: r.channelId,
+          uploads_playlist: r.uploads,
+          synced_at: new Date().toISOString(),
+          error: r.error,
+          video_count: own.size + r.videos.length,
+        })
+      }),
+  )
+  revalidatePath("/admin")
+}
+
+/** Kanal-Video aus der Liste aus- oder wieder einblenden */
+export async function setChannelVideoHidden(form: FormData) {
+  const supabase = await requireAdmin()
+  const id = str(form, "video_id")
+  if (!/^[\w-]{11}$/.test(id)) throw new Error("Ungültiges Video")
+  const { error } = await supabase.from("channel_videos").update({ hidden: str(form, "hidden") === "true" }).eq("video_id", id)
+  if (error) throw new Error(error.message)
+  revalidatePath("/admin")
+}
+
+/** Stichwörter für die Challenge-Erkennung (kommagetrennt) */
+export async function saveLeagueKeywords(form: FormData) {
+  const supabase = await requireAdmin()
+  const value = str(form, "keywords").slice(0, 500)
+  done((await supabase.from("site_settings").upsert({ key: "liga_stichwoerter", value })).error)
 }

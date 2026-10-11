@@ -41,6 +41,7 @@ import {
   updateEscalationRule,
   updateLootItem,
 } from "./actions"
+import { ChannelVideos, parseVideoFilter, type VideoFilter } from "./channel-videos"
 import { ImageUpload } from "./image-upload"
 import { ItemIconUpload, ItemIconUploadAll } from "./item-icon-upload"
 import { LeagueEntry } from "./league-entry"
@@ -66,7 +67,12 @@ const TABS = {
 } as const
 type Tab = keyof typeof TABS
 
-export default async function AdminPage({ searchParams }: { searchParams: Promise<{ tab?: string; q?: string; bearbeiten?: string }> }) {
+// Der Abgleich der YouTube-Kanäle (Server-Action) kann beim ersten Mal länger dauern
+export const maxDuration = 60
+
+type AdminParams = { tab?: string; q?: string; bearbeiten?: string; video?: string; vstatus?: string; vkanal?: string; vohne?: string; vmehr?: string }
+
+export default async function AdminPage({ searchParams }: { searchParams: Promise<AdminParams> }) {
   const { supabase, user, isAdmin } = await getViewer()
   if (!isAdmin) {
     return (
@@ -78,7 +84,8 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       </div>
     )
   }
-  const { tab: rawTab, q, bearbeiten } = await searchParams
+  const params = await searchParams
+  const { tab: rawTab, q, bearbeiten } = params
   const tab: Tab = rawTab && rawTab in TABS ? (rawTab as Tab) : "challenges"
   const season = await getCurrentSeason(supabase)
 
@@ -104,7 +111,7 @@ export default async function AdminPage({ searchParams }: { searchParams: Promis
       {tab === "eskalation" && <EscalationTab />}
       {tab === "dropregeln" && <RulesTab category="drop" />}
       {tab === "seite" && <SiteTab />}
-      {tab === "liga" && <LeagueTab edit={Number(bearbeiten) || null} />}
+      {tab === "liga" && <LeagueTab edit={Number(bearbeiten) || null} videoId={params.video ?? null} filter={parseVideoFilter(params)} />}
       {tab === "nutzer" && <UsersTab q={q ?? ""} />}
     </>
   )
@@ -641,7 +648,7 @@ async function UsersTab({ q }: { q: string }) {
   )
 }
 
-async function LeagueTab({ edit }: { edit: number | null }) {
+async function LeagueTab({ edit, videoId, filter }: { edit: number | null; videoId: string | null; filter: VideoFilter }) {
   const { supabase } = await getViewer()
   const [{ data: creators }, league, settings] = await Promise.all([
     supabase.from("creators").select("*").order("name"),
@@ -660,6 +667,19 @@ async function LeagueTab({ edit }: { edit: number | null }) {
         challenge: editChallenge,
         results: league.results.filter((r) => r.challenge_id === edit),
         videos: league.videos.filter((v) => v.challenge_id === edit),
+      }
+    : null
+  // „Eintragen“ aus der Kanal-Videoliste: Titel, Datum und Video vorausfüllen
+  const { data: fromVideo } =
+    !editData && videoId && /^[\w-]{11}$/.test(videoId)
+      ? await supabase.from("channel_videos").select("video_id, creator_id, title, published_at").eq("video_id", videoId).maybeSingle()
+      : { data: null }
+  const prefill = fromVideo
+    ? {
+        title: fromVideo.title.slice(0, 80),
+        date: new Date(fromVideo.published_at).toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }),
+        creatorId: fromVideo.creator_id,
+        url: `https://www.youtube.com/watch?v=${fromVideo.video_id}`,
       }
     : null
   // Für die Doppel-Warnung: Datum und Teilnehmer aller Challenges
@@ -697,7 +717,8 @@ async function LeagueTab({ edit }: { edit: number | null }) {
           )}
         </p>
         <LeagueEntry
-          key={edit ?? "neu"}
+          key={edit ?? videoId ?? "neu"}
+          prefill={prefill}
           creators={creators ?? []}
           categories={categories}
           edit={editData}
@@ -705,6 +726,14 @@ async function LeagueTab({ edit }: { edit: number | null }) {
           defaultChannel={alvi?.id ?? null}
         />
       </section>
+
+      <ChannelVideos
+        supabase={supabase}
+        creators={creators ?? []}
+        leagueVideos={league.videos}
+        keywordsValue={settings.get("liga_stichwoerter")}
+        filter={filter}
+      />
 
       <section className="panel h-fit lg:col-start-1">
         <h2 className="mb-1 font-display text-xl">Eingepflegte Videos pro Kanal</h2>
@@ -729,7 +758,7 @@ async function LeagueTab({ edit }: { edit: number | null }) {
         </table>
       </section>
 
-      <aside className="flex flex-col gap-6 lg:col-start-2 lg:row-span-2 lg:row-start-1">
+      <aside className="flex flex-col gap-6 lg:col-start-2 lg:row-span-3 lg:row-start-1">
         <section className="panel">
           <h2 className="mb-2 font-display text-xl">Creator</h2>
           <ul className="divide-y divide-line">

@@ -19,6 +19,7 @@ export function LeagueEntry({
   edit,
   existing,
   defaultChannel,
+  prefill = null,
 }: {
   creators: Creator[]
   categories: string[]
@@ -26,17 +27,21 @@ export function LeagueEntry({
   existing: ExistingChallenge[]
   /** Kanal, der beim neuen Eintrag vorausgewählt ist (Alvi) */
   defaultChannel: number | null
+  /** Aus der Kanal-Videoliste: Titel, Datum und erstes Video vorausfüllen */
+  prefill?: { title: string; date: string; creatorId: number; url: string } | null
 }) {
   const router = useRouter()
-  const [title, setTitle] = useState(edit?.challenge.title ?? "")
+  const [title, setTitle] = useState(edit?.challenge.title ?? prefill?.title ?? "")
   // Ein Video pro Kanal; ältere Einträge haben nur den Hauptlink (dann Alvis Kanal vorauswählen)
   const [videos, setVideos] = useState<VideoRow[]>(() =>
     edit?.videos.length
       ? edit.videos.map((v) => ({ creatorId: v.creator_id, url: v.url }))
-      : [{ creatorId: defaultChannel, url: edit?.challenge.youtube_url ?? "" }],
+      : prefill
+        ? [{ creatorId: prefill.creatorId, url: prefill.url }]
+        : [{ creatorId: defaultChannel, url: edit?.challenge.youtube_url ?? "" }],
   )
   const [category, setCategory] = useState(edit?.challenge.category ?? "")
-  const [date, setDate] = useState(edit?.challenge.played_at ?? new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))
+  const [date, setDate] = useState(edit?.challenge.played_at ?? prefill?.date ?? new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Berlin" }))
   const [entries, setEntries] = useState<Record<number, Entry>>(() =>
     Object.fromEntries(
       creators.map((c) => {

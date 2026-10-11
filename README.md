@@ -89,3 +89,16 @@ Schreibrechte erzwingt die Datenbank per Row Level Security. Stammdaten und Live
 ## Layout zurücksetzen
 
 Das klassische Layout vor dem Fortnite-Umbau liegt im Branch `layout-klassisch`. Die Commits des Umbaus beginnen mit `Fortnite-Layout:` und lassen sich gezielt rückgängig machen (`git revert`), ohne spätere Änderungen zu verlieren.
+
+## Liga-Videos aus den Kanälen (YouTube-API)
+
+Unter `/admin?tab=liga` → „Videos aus den Kanälen“ gleicht „Kanäle jetzt abgleichen“ alle Creator-Kanäle (YouTube-Link beim Creator) ab. Shorts fallen raus, Challenge-Videos werden über Stichwörter im Titel erkannt (Standard „Challenge“, im Admin erweiterbar). Jedes Video zeigt, ob es schon in der Liga steckt; „Eintragen“ füllt das Formular vor, „Ausblenden“ entfernt unpassende Treffer dauerhaft.
+
+Für alle (auch alte) Videos braucht es einen kostenlosen API-Schlüssel:
+
+1. [console.cloud.google.com](https://console.cloud.google.com) → oben „Projekt auswählen“ → „Neues Projekt“ (z. B. „Alvi Website“).
+2. „APIs & Dienste“ → „Bibliothek“ → „YouTube Data API v3“ → „Aktivieren“.
+3. „APIs & Dienste“ → „Anmeldedaten“ → „Anmeldedaten erstellen“ → „API-Schlüssel“. Danach beim Schlüssel „API-Einschränkungen“ → nur „YouTube Data API v3“ erlauben.
+4. In Vercel → Projekt → Settings → Environment Variables: `YOUTUBE_API_KEY` = Schlüssel, dann neu deployen.
+
+Das Gratis-Kontingent (10.000 Einheiten/Tag) reicht locker: ein Abgleich kostet ca. 1 Einheit pro 50 Videos.
