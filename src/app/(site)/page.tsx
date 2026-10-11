@@ -59,17 +59,18 @@ export default async function Lobby() {
             Stellt eure eigenen Fortnite-Challenges zusammen oder spielt die eures Lieblingscreators nach! Die Challenges der Creator werden
             sogar getrackt – wer ist der Beste?
           </p>
+          {/* Live-Hinweis direkt unter dem Text – nur sichtbar, wenn Alvi live ist */}
+          <div className="mt-4 flex w-full min-w-0 justify-center empty:hidden">
+            <Suspense fallback={null}>
+              <LiveBanner login={mainLogin} />
+            </Suspense>
+          </div>
         </section>
 
         <section className="flex flex-col items-center gap-4 lg:col-start-2 lg:row-span-2 lg:row-start-2 lg:justify-end">
           <Suspense fallback={<PartySkeleton />}>
             <Party mainLogin={mainLogin} viewer={viewer} />
           </Suspense>
-          <div className="flex w-full min-w-0 justify-center empty:hidden">
-            <Suspense fallback={null}>
-              <LiveBanner login={mainLogin} />
-            </Suspense>
-          </div>
         </section>
 
         <section className="mx-auto w-full max-w-md lg:col-start-3 lg:row-span-2 lg:row-start-2 lg:max-w-none lg:self-end">
