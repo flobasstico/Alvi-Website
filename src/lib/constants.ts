@@ -49,16 +49,9 @@ export const STATUS_LABEL: Record<Status, string> = {
   gescheitert: "Gescheitert",
 }
 
+// Menü (☰): die einzelnen Spiele/Challenges stehen in „Entdecken“, nicht mehr hier
 export const NAV = [
   { href: "/entdecken", label: "Entdecken (alle Modi)" },
-  { href: "/eskalation", label: "Eskalation" },
-  { href: "/auktion", label: "Auktion" },
-  { href: "/bingo", label: "Bingo" },
-  { href: "/loadout", label: "Loadout" },
-  { href: "/rad", label: "Glücksrad" },
-  { href: "/drop", label: "Drop-Spot" },
-  { href: "/winchallenge", label: "Winchallenge" },
-  { href: "/olympiade", label: "Olympiade" },
   { href: "/minispiele", label: "Minispiele" },
   { href: "/liga", label: "Creator-Liga" },
   { href: "/stats", label: "Stats" },
